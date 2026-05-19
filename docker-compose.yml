@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: lol_postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: lol_tournament
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:latest
+    container_name: lol_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+
+  api:
+    build:
+      context: ./api
+
+    container_name: lol_api
+
+    ports:
+      - "3000:3000"
+
+    env_file:
+      - ./api/.env
+
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+
+    depends_on:
+      - postgres
+
+  web:
+    build:
+      context: ./web
+
+    container_name: lol_web
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
