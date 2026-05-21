@@ -1,4 +1,4 @@
-import { mySupabase } from "../lib/supabase";
+import { mySupabase } from "../lib/supabase/supabase";
 import { useEffect, useState } from "react";
 
 export function useAuth() {

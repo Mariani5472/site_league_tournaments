@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { mySupabase } from "../lib/supabase";
+import { mySupabase } from "../lib/supabase/supabase";
 
 type FormData = {
   email: string;
