@@ -1,28 +1,6 @@
-import { mySupabase } from "../lib/supabase/supabase";
-import { useEffect, useState } from "react";
+import { AuthContext } from "@/contexts/AuthContext";
+import { useContext } from "react";
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    mySupabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-
-    const {
-      data: { subscription }
-    } = mySupabase.auth.onAuthStateChange(
-      (_, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  return {
-    user
-  };
+  return useContext(AuthContext);
 }
