@@ -1,7 +1,7 @@
-import { DashboardPage } from "@/pages/DashBoardPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { DashboardPage } from "@/pages/DashboardPage";
 
 export function AppRoutes() {
   return (

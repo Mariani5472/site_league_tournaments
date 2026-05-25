@@ -7,13 +7,7 @@ export async function authMiddleware(
   response: Response,
   next: NextFunction
 ) {
-  const authHeader =
-    request.headers.authorization;
-
-  console.log((
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_PUBLISHABLE_KEY
-  ))
+  const authHeader = request.headers.authorization;
 
   if (!authHeader) {
     return response.status(401).json({
@@ -21,13 +15,9 @@ export async function authMiddleware(
     });
   }
 
-  const token = authHeader.replace(
-    "Bearer ",
-    ""
-  );
+  const token = authHeader.replace("Bearer ", "");
 
-  const { data, error } =
-    await supabase.auth.getUser(token);
+  const { data, error } = await supabase.auth.getUser(token);
 
   if (error || !data.user) {
     return response.status(401).json({

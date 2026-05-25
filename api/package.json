@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "nodemon --legacy-watch --watch src --ext ts -c/server-exec tsx sr.ts",
+    "migrate:create": "npx node-pg-migrate create",
+    "migrate:up": "npx node-pg-migrate up",
+    "migrate:down": "npx node-pg-migrate down"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +29,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.0",
     "@types/pg": "^8.20.0",
-    "tsx": "^4.22.2",
+    "node-pg-migrate": "^8.0.4",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }
 }

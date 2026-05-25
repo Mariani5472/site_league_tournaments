@@ -7,15 +7,8 @@ type FormData = {
 };
 
 export function LoginPage() {
-  const { 
-    signIn, 
-    user 
-  } = useAuth();
-
-  const {
-    register,
-    handleSubmit
-  } = useForm<FormData>();
+  const { signIn, signOut, user } = useAuth();
+  const { register, handleSubmit } = useForm<FormData>();
 
   async function handleLogin(data: FormData) {
     try {
@@ -27,11 +20,17 @@ export function LoginPage() {
 
   if (user) {
     return (
-      <h1>User : {user.email}</h1>
+      <>
+        <button type="button" onClick={signOut}>
+          logout
+        </button>
+          <h1>User : {user.email}</h1>
+      </>
     );
   }
 
   return (
+    
     <form
       onSubmit={handleSubmit(handleLogin)}
       className="flex flex-col gap-4"

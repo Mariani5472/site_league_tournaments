@@ -27,37 +27,26 @@ services:
   api:
     build:
       context: ./api
-
     container_name: lol_api
-
     ports:
       - "3000:3000"
-
     env_file:
       - ./api/.env
-
     volumes:
       - ./api:/app
       - /app/node_modules
-
     depends_on:
       - postgres
-
   web:
     build:
       context: ./web
-
     container_name: lol_web
-
     ports:
       - "5173:5173"
-
     volumes:
       - ./web:/app
       - /app/node_modules
-
     depends_on:
       - api
-
 volumes:
   postgres_data:
