@@ -60,8 +60,7 @@ export class LeaguesController {
   }
 
   async requestJoin(request: Request, response: Response) {
-    const leagueId = request.params.id[0] ?? request.params.id;
-
+    const leagueId = request.params.id as string;
     const userId = request.user.id;
 
     await this.leaguesService.requestJoin({
@@ -75,8 +74,8 @@ export class LeaguesController {
   }
 
   async approveRequest(request: Request, response: Response) {
-    const leagueId = request.params.id[0] ?? request.params.id;
-    const requestId = request.params.requestId[0] ?? request.params.requestId;
+    const leagueId = request.params.id as string;
+    const requestId = request.params.requestId as string;
     const approverId = request.user.id;
 
     await this.leaguesService.approveJoinRequest({
@@ -91,8 +90,8 @@ export class LeaguesController {
   }
 
   async rejectRequest(request: Request, response: Response) {
-    const leagueId = request.params.id[0] ?? request.params.id;
-    const requestId = request.params.requestId[0] ?? request.params.requestId;
+    const leagueId = request.params.id as string;
+    const requestId = request.params.requestId as string;
     const rejecterId = request.user.id;
 
     await this.leaguesService.rejectJoinRequest({
@@ -106,4 +105,80 @@ export class LeaguesController {
       .send();
   }
 
+  async updateMemberRole(request: Request, response: Response) {
+    const leagueId = request.params.id as string;
+    const memberId = request.params.memberId as string;
+    const actorId = request.user.id;
+    const { role } = request.body;
+
+    await this.leaguesService.updateMemberRole({
+      leagueId,
+      memberId,
+      actorId,
+      role
+    });
+
+    return response
+      .status(204)
+      .send();
+  }
+
+  async kickMember(request: Request, response: Response) {
+    const leagueId = request.params.id as string;
+    const memberId = request.params.memberId as string;
+    const actorId = request.user.id;
+
+    await this.leaguesService.kickMember({
+      leagueId,
+      memberId,
+      actorId
+    });
+
+    return response
+      .status(204)
+      .send();
+  }
+
+  async leave(request: Request, response: Response) {
+    const leagueId = request.params.id as string;
+    const userId = request.user.id;
+
+    await this.leaguesService.leaveLeague({
+      leagueId,
+      userId
+    });
+
+    return response
+      .status(204)
+      .send();
+  }
+
+  async update(request: Request, response: Response) {
+    const leagueId = request.params.id as string;
+    const actorId = request.user.id;
+
+    await this.leaguesService.updateLeague({
+      leagueId,
+      actorId,
+      ...request.body
+    });
+
+    return response
+      .status(204)
+      .send();
+  }
+
+  async delete(request: Request, response: Response) {
+    const leagueId = request.params.id as string;
+    const actorId = request.user.id;
+
+    await this.leaguesService.deleteLeague({
+      leagueId,
+      actorId
+    });
+
+    return response
+      .status(204)
+      .send();
+  }
 }

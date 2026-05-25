@@ -228,12 +228,80 @@ export class LeaguesRepository {
   async rejectRequest(requestId: string) {
     const query = `
       UPDATE league_join_requests
-      SET status = 'approved'
+      SET status = 'rejected'
+      WHERE id = $1
+      RETURNING *
+    `;
+
+    const result = await db.query(query, [requestId]);
+
+    return result.rows[0];
+  }
+
+  async updateMemberRole(params: {
+    leagueId: string;
+    userId: string;
+    role: string;
+  }) {
+    const query = `
+    UPDATE league_members
+    SET role = $3
+    WHERE league_id = $1
+      AND user_id = $2
+  `;
+
+    await db.query(query, [
+      params.leagueId,
+      params.userId,
+      params.role
+    ]);
+  }
+
+  async removeMember(params: {
+    leagueId: string;
+    userId: string;
+  }) {
+    const query = `
+      DELETE FROM league_members
+      WHERE league_id = $1
+        AND user_id = $2
+    `;
+
+    await db.query(query, [
+      params.leagueId,
+      params.userId
+    ]);
+  }
+
+  async updateLeague(params: {
+    leagueId: string;
+    name?: string;
+    description?: string;
+    maxPlayers?: number;
+  }) {
+    const query = `
+      UPDATE leagues
+      SET
+        name = COALESCE($2, name),
+        description = COALESCE($3, description),
+        max_players = COALESCE($4, max_players)
       WHERE id = $1
     `;
 
     await db.query(query, [
-      requestId
+      params.leagueId,
+      params.name ?? null,
+      params.description ?? null,
+      params.maxPlayers ?? null
     ]);
+  }
+
+  async deleteLeague(leagueId: string) {
+    const query = `
+      DELETE FROM leagues
+      WHERE id = $1
+    `;
+
+    await db.query(query, [leagueId]);
   }
 }

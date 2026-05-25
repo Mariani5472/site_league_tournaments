@@ -160,26 +160,24 @@ export class LeaguesService {
     requestId: string;
     rejecterId: string;
   }) {
-    const league = await this.leaguesRepository.findById(
-      params.leagueId
-    );
+    const league = await this.leaguesRepository.findById(params.leagueId);
 
     if (!league) {
       throw new Error("League not found");
     }
 
-    const approverMember = await this.leaguesRepository.findMember({
+    const actorMember = await this.leaguesRepository.findMember({
       leagueId: params.leagueId,
       userId: params.rejecterId
     });
 
-    if (!approverMember) {
+    if (!actorMember) {
       throw new Error("Not a league member");
     }
 
     const allowedRoles = ["owner", "admin"];
 
-    if (!allowedRoles.includes(approverMember.role)) {
+    if (!allowedRoles.includes(actorMember.role)) {
       throw new Error("Insufficient permissions");
     }
 
@@ -198,5 +196,161 @@ export class LeaguesService {
     }
 
     await this.leaguesRepository.rejectRequest(params.requestId);
+  }
+
+  async updateMemberRole(params: {
+    leagueId: string;
+    memberId: string;
+    actorId: string;
+    role: string;
+  }) {
+    const allowedRoles = ["admin", "player", "spec"];
+
+    if (!allowedRoles.includes(params.role)) {
+      throw new Error("Invalid role");
+    }
+
+    const actorMember = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.actorId
+    });
+
+    if (!actorMember) {
+      throw new Error("Not a league member");
+    }
+
+    if (actorMember.role !== "owner") {
+      throw new Error("Only owner can update roles");
+    }
+
+    const targetMember = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.memberId
+    });
+
+    if (!targetMember) {
+      throw new Error("Member not found");
+    }
+
+    if (targetMember.role === "owner") {
+      throw new Error("Cannot update owner role");
+    }
+
+    await this.leaguesRepository.updateMemberRole({
+      leagueId: params.leagueId,
+      userId: params.memberId,
+      role: params.role
+    });
+  }
+
+  async kickMember(params: {
+    leagueId: string;
+    memberId: string;
+    actorId: string;
+  }) {
+    const actorMember = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.actorId
+    });
+
+    if (!actorMember) {
+      throw new Error("Not a league member");
+    }
+
+    const targetMember = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.memberId
+    });
+
+    if (!targetMember) {
+      throw new Error("Member not found");
+    }
+
+    const allowedRoles = ["owner", "admin"];
+
+    if (!allowedRoles.includes(actorMember.role)) {
+      throw new Error("Insufficient permissions");
+    }
+
+    if (targetMember.role === "owner") {
+      throw new Error("Cannot kick owner");
+    }
+
+    if (actorMember.role === "admin" && targetMember.role === "admin") {
+      throw new Error("Admin cannot kick another admin");
+    }
+
+    await this.leaguesRepository.removeMember({
+      leagueId: params.leagueId,
+      userId: params.memberId
+    });
+  }
+
+  async leaveLeague(params: {
+    leagueId: string;
+    userId: string;
+  }) {
+    const member = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.userId
+    });
+
+    if (!member) {
+      throw new Error("Not a league member");
+    }
+
+    if (member.role === "owner") {
+      throw new Error("Owner cannot leave league");
+    }
+
+    await this.leaguesRepository.removeMember({
+      leagueId: params.leagueId,
+      userId: params.userId
+    });
+  }
+
+  async updateLeague(params: {
+    leagueId: string;
+    actorId: string;
+    name?: string;
+    description?: string;
+    maxPlayers?: number;
+  }) {
+    const member = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.actorId
+    });
+
+    if (!member) {
+      throw new Error("Not a league member");
+    }
+
+    const allowedRoles = ["owner", "admin"];
+
+    if (!allowedRoles.includes(member.role)) {
+      throw new Error("Insufficient permissions");
+    }
+
+    await this.leaguesRepository.updateLeague(params);
+  }
+
+  async deleteLeague(params: {
+    leagueId: string;
+    actorId: string;
+  }) {
+    const member = await this.leaguesRepository.findMember({
+      leagueId: params.leagueId,
+      userId: params.actorId
+    });
+
+    if (!member) {
+      throw new Error("Not a league member");
+    }
+
+    if (member.role !== "owner") {
+      throw new Error("Only owner can delete league");
+    }
+
+    await this.leaguesRepository.deleteLeague(params.leagueId);
   }
 }

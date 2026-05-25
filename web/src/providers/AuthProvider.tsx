@@ -1,14 +1,15 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AuthContext, type LoginDto } from "./AuthContext";
+import { AuthContext, type LoginDto } from "../contexts/AuthContext";
 import { mySupabase } from "@/lib/supabase/supabase";
 import { api } from "@/services/api";
+import type { User } from "@supabase/supabase-js";
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function loadUser() {

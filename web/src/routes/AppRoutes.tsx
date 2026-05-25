@@ -1,21 +1,31 @@
-import { LoginPage } from "@/pages/LoginPage";
+import { LoginPage } from "@/modules/login/pages/LoginPage";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { ProtectedRoute } from "./ProtectedRoute";
-import { DashboardPage } from "@/pages/DashboardPage";
+import { DashboardPage } from "@/modules/dashboard/pages/DashboardPage";
+import { PublicLayout } from "@/layouts/PublicLayout";
+import { ProtectedLayout } from "@/layouts/ProtectedLayout";
+import { MyLeaguesPage } from "@/modules/leagues/pages/MyLeaguesPage";
 
 export function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route 
+          element={<PublicLayout />} 
+        >
+          <Route path="/login" element={<LoginPage />} />
+        </Route>          
         <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
+          element={<ProtectedLayout />}
+        >
+          <Route
+            path="/dashboard"
+            element={<DashboardPage />}
+          />
+          <Route
+            path="/leagues"
+            element={<MyLeaguesPage />}
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
