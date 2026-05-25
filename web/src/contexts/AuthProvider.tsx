@@ -28,7 +28,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw error;
     }
 
-    await api.post("/users/sync");
+    await api.post("/auth/sync");
 
     const { data: userData } = await mySupabase.auth.getUser();
 

@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-
 import { useAuth } from "@/hooks/useAuth";
 
 type FormData = {
@@ -8,7 +7,10 @@ type FormData = {
 };
 
 export function LoginPage() {
-  const { signIn } = useAuth();
+  const { 
+    signIn, 
+    user 
+  } = useAuth();
 
   const {
     register,
@@ -23,12 +25,18 @@ export function LoginPage() {
     }
   }
 
+  if (user) {
+    return (
+      <h1>User : {user.email}</h1>
+    );
+  }
+
   return (
     <form
       onSubmit={handleSubmit(handleLogin)}
       className="flex flex-col gap-4"
     >
-      <input {...register("email")} />
+      <input style={{color: "black" }} {...register("email")} />
 
       <input
         type="password"
