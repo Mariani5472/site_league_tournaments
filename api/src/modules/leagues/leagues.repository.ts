@@ -118,6 +118,51 @@ export class LeaguesRepository {
     return result.rows;
   }
 
+  async listLeagueMembers(leagueId: string) {
+    const query = `
+    SELECT 
+      u.*,
+      lm.role,
+      lm.wins,
+      lm.losses
+    FROM league_members lm
+    INNER JOIN users u
+      ON lm.user_id = u.id
+    WHERE league_id = $1
+  `;
+
+    const result = await db.query(query, [leagueId]);
+
+    return result.rows;
+  }
+
+  async listLeaguePendingRequests(leagueId: string) {
+    const query = `
+      SELECT
+        ljr.id,
+        ljr.status,
+        ljr.created_at,
+
+        u.id AS user_id,
+        u.nickname,
+        u.avatar_url
+
+      FROM league_join_requests ljr
+
+      INNER JOIN users u
+        ON u.id = ljr.user_id
+
+      WHERE ljr.league_id = $1
+        AND ljr.status = 'pending'
+
+      ORDER BY ljr.created_at ASC
+    `;
+
+    const result = await db.query(query, [leagueId]);
+
+    return result.rows;
+  }
+
   async findMember(params: {
     leagueId: string;
     userId: string;

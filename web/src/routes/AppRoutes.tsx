@@ -4,6 +4,7 @@ import { DashboardPage } from "@/modules/dashboard/pages/DashboardPage";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { MyLeaguesPage } from "@/modules/leagues/pages/MyLeaguesPage";
+import { LeaguePage } from "@/modules/leagues/pages/LeaguePage";
 
 export function AppRoutes() {
   return (
@@ -24,6 +25,10 @@ export function AppRoutes() {
           <Route
             path="/leagues"
             element={<MyLeaguesPage />}
+          />
+          <Route
+            path="/leagues/:id"
+            element={<LeaguePage />}
           />
         </Route>
       </Routes>

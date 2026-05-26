@@ -20,6 +20,18 @@ export class LeaguesService {
     return await this.leaguesRepository.listUserLeagues(userId);
   }
 
+  async show(leagueId: string) {
+    return await this.leaguesRepository.findById(leagueId);
+  }
+
+  async members(leagueId: string) {
+    return await this.leaguesRepository.listLeagueMembers(leagueId);
+  }
+
+  async listPendingRequests(leagueId: string) {
+    return await this.leaguesRepository.listLeaguePendingRequests(leagueId);
+  }
+
   async listPublicLeagues() {
     return await this.leaguesRepository.listPublic();
   }

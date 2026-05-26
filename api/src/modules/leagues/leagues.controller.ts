@@ -18,19 +18,22 @@ export class LeaguesController {
   }
 
   async show(request: Request, response: Response) {
-    const leagues = await this.leaguesService.listPublicLeagues();
+    const leagueId = request.params.id as string;
+    const league = await this.leaguesService.show(leagueId);
     return response
-      .json(leagues);
+      .json(league);
   }
 
   async members(request: Request, response: Response) {
-    const leagues = await this.leaguesService.listPublicLeagues();
+    const leagueId = request.params.id as string;
+    const members = await this.leaguesService.members(leagueId);
     return response
-      .json(leagues);
+      .json(members);
   }
 
   async requests(request: Request, response: Response) {
-    const leagues = await this.leaguesService.listPublicLeagues();
+    const leagueId = request.params.id as string;
+    const leagues = await this.leaguesService.listPendingRequests(leagueId);
     return response
       .json(leagues);
   }
