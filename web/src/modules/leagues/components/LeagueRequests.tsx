@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { approveRequest, rejectRequest } from "../services/leagues.service";
 import type { LeagueRequest } from "../types/request";
+import { toast } from "sonner";
 
 type Props = {
   leagueId: string;
@@ -31,6 +32,8 @@ export function LeagueRequests({
             leagueId
           ]
         });
+
+        toast.success("Player approved");
       }
     });
 
@@ -45,7 +48,10 @@ export function LeagueRequests({
             leagueId
           ]
         });
+        
+        toast.success("Request rejected")
       }
+
     });
 
   return (

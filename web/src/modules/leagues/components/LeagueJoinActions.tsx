@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { joinLeague, requestLeagueJoin } from "../services/leagues.service";
 import type { League } from "../types/league";
+import { toast } from "sonner";
 
 type Props = {
   league: League;
@@ -8,11 +9,15 @@ type Props = {
 
 export function LeagueJoinActions({league}: Props) {  
   const joinMutation = useMutation({
-    mutationFn: () => joinLeague(league.id)
+    mutationFn: () => joinLeague(league.id),
+    onSuccess: () => toast.success("You joined the league"),
+    onError: (error) => toast.error(error.message || "Failed to enter league")
   });
 
   const requestMutation = useMutation({
-    mutationFn: () => requestLeagueJoin(league.id)
+    mutationFn: () => requestLeagueJoin(league.id),
+    onSuccess: () => toast.success("Request sent"),
+    onError: (error) => toast.error(error.message || "Failed to send request")
   });
 
   if (league.join_policy === "open") {

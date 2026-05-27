@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { toast } from "sonner";
 export function CreateLeagueDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ export function CreateLeagueDialog() {
           ]
         });
 
+        toast.success("League created successfully");
         setOpen(false);
 
         setName("");
@@ -44,7 +46,9 @@ export function CreateLeagueDialog() {
         setVisibility("public");
         setJoinPolicy("request");
         setMaxPlayers(10);
-      }
+      },
+
+      onError: (error) => toast.error(error.message || "Failed to create league")
     });
 
   async function handleSubmit() {
