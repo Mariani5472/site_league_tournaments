@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --legacy-watch --watch src --ext ts -c/server-exec tsx sr.ts",
+    "dev": "nodemon --legacy-watch --watch src --ext ts --exec tsx src/server.ts",
     "migrate:create": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down"

@@ -17,13 +17,13 @@ export const createLeagueSchema =
       "private"
     ]),
 
-    joinPolicy: z.enum([
+    join_policy: z.enum([
       "open",
       "request",
       "invite_only"
     ]),
 
-    maxPlayers: z
+    max_players: z
       .number()
       .min(2)
       .max(500)

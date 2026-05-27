@@ -1,16 +1,10 @@
-export type CreateLeagueDTO = {
-  ownerId: string;
-
+export type CreateLeagueInput = {
   name: string;
-
-  description?: string;
-
+  description: string;
   visibility: "public" | "private";
-
   join_policy:
   | "open"
   | "request"
   | "invite_only";
-
   max_players: number;
 };

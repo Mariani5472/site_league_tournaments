@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useMyLeagues } from "../hooks/useMyLeagues";
+import { CreateLeagueDialog } from "../components/CreateLeagueDialog";
 
 export function MyLeaguesPage() {
   const {
@@ -52,17 +53,7 @@ export function MyLeaguesPage() {
           </p>
         </div>
 
-        <button
-          className="
-            rounded-md
-            bg-primary
-            px-4
-            py-2
-            text-primary-foreground
-          "
-        >
-          Create League
-        </button>
+        <CreateLeagueDialog />
       </div>
 
       {data?.length === 0 && (

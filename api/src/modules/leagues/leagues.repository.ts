@@ -30,8 +30,8 @@ export class LeaguesRepository {
       data.name,
       data.description ?? null,
       data.visibility,
-      data.joinPolicy,
-      data.maxPlayers
+      data.join_policy,
+      data.max_players
     ];
 
     const result = await db.query(

@@ -3,7 +3,6 @@ import type { LeagueMember } from "../types/member";
 type Props = { members: LeagueMember[]; };
 
 export function LeagueMembers({ members }: Props) {
-  console.log(members)
   return (
     <div
       className="

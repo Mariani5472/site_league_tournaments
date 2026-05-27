@@ -1,4 +1,5 @@
 import type { League } from "../types/league";
+import { LeagueJoinActions } from "./LeagueJoinActions";
 
 
 type Props = { league: League; };
@@ -69,6 +70,10 @@ export function LeagueHeader({league}: Props) {
             {league.join_policy}
           </span>
         </div>
+
+        <LeagueJoinActions
+          league={league}
+        />
       </div>
     </div>
   );

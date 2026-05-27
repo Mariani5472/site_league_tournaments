@@ -52,7 +52,7 @@ export class LeaguesController {
   }
 
   async join(request: Request, response: Response) {
-    const leagueId = request.params.id[0] ?? request.params.id;
+    const leagueId = request.params.id as string;
 
     await this.leaguesService.joinLeague({
       leagueId,
