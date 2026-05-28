@@ -2,6 +2,7 @@ import { Router } from "express";
 import { usersRoutes } from "../modules/users/users.routes";
 import { authRoutes } from "../modules/auth/auth.routes";
 import { leaguesRoutes } from "../modules/leagues/leagues.routes";
+import { profileRoutes } from "../modules/profile/profile.routes";
 
 export const routes = Router();
 
@@ -14,3 +15,4 @@ routes.get("/", (_, response) => {
 routes.use("/auth", authRoutes);
 routes.use("/users", usersRoutes);
 routes.use("/leagues", leaguesRoutes);
+routes.use("/profile", profileRoutes);

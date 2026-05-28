@@ -6,6 +6,7 @@ import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { MyLeaguesPage } from "@/modules/leagues/pages/MyLeaguesPage";
 import { LeaguePage } from "@/modules/leagues/pages/LeaguePage";
 import { PublicLeaguesPage } from "@/modules/leagues/pages/PublicLeaguesPage";
+import { ProfilePage } from "@/modules/profile/pages/ProfilePage";
 
 export function AppRoutes() {
   return (
@@ -34,6 +35,10 @@ export function AppRoutes() {
           <Route
             path="/leagues/public"
             element={<PublicLeaguesPage  />}
+          />
+          <Route
+            path="/profile"
+            element={<ProfilePage />}
           />
         </Route>
       </Routes>
