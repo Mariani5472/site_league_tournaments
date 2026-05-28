@@ -1,10 +1,15 @@
+import { Button } from "@/components/ui/button";
 import type { League } from "../types/league";
 import { LeagueJoinActions } from "./LeagueJoinActions";
 
 
-type Props = { league: League; };
+type Props = { 
+  league: League;
+  isAdmin: boolean;
+  isOwner: boolean;
+};
 
-export function LeagueHeader({league}: Props) {
+export function LeagueHeader({league, isAdmin, isOwner}: Props) {
   return (
     <div
       className="
@@ -70,6 +75,18 @@ export function LeagueHeader({league}: Props) {
             {league.join_policy}
           </span>
         </div>
+
+        {isAdmin && (
+          <Button>
+            Edit League
+          </Button>
+        )}
+
+        {isOwner && (
+          <Button variant="destructive">
+            Delete League
+          </Button>
+        )}
 
         <LeagueJoinActions
           league={league}

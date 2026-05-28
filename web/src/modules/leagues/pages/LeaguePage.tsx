@@ -5,6 +5,7 @@ import { useLeagueRequests } from "../hooks/useLeagueRequests";
 import { LeagueHeader } from "../components/LeagueHeader";
 import { LeagueMembers } from "../components/LeagueMembers";
 import { LeagueRequests } from "../components/LeagueRequests";
+import { useLeagueRole } from "../hooks/useLeagueRole";
 
 export function LeaguePage() {
   const { id } = useParams();
@@ -24,6 +25,8 @@ export function LeaguePage() {
     data: requests
   } = useLeagueRequests(leagueId);
 
+  const roleData = useLeagueRole(members || []);
+
   if (loadingLeague || !league) {
     return (
       <div>
@@ -40,6 +43,8 @@ export function LeaguePage() {
     >
       <LeagueHeader
         league={league}
+        isAdmin={roleData.isAdmin}
+        isOwner={roleData.isOwner}
       />
 
       <div
@@ -51,12 +56,16 @@ export function LeaguePage() {
       >
         <LeagueMembers
           members={members || []}
+          role={roleData.role}
+          isAdmin={roleData.isAdmin}
         />
 
-        <LeagueRequests
-          leagueId={leagueId}
-          requests={requests || []}
-        />
+        {roleData.isAdmin && (
+          <LeagueRequests
+            leagueId={leagueId}
+            requests={requests || []}
+          />
+        )}
       </div>
     </div>
   );
