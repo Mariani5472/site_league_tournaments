@@ -8,12 +8,12 @@ const links = [
     label: "Dashboard"
   },
   {
-    to: "/leagues",
+    to: "/leagues/my",
     label: "My Leagues"
   },
   {
     to: "/leagues/public",
-    label: "Public Leagues"
+    label: "Discover Leagues"
   },
   {
     to: "/profile",

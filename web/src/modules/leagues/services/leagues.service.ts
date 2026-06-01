@@ -49,8 +49,13 @@ export async function createLeague(input: CreateLeagueInput) {
   return data;
 }
 
-export async function getPublicLeagues() {
-  const { data } = await api.get<League[]>("/leagues/public");
+export async function getPublicLeagues(search?: string) {
+  const params = new URLSearchParams();
+  if (search) {
+    params.set("search", search);
+  }
+
+  const { data } = await api.get<League[]>(`/leagues/public?${params.toString()}`);
   return data;
 }
 
@@ -69,4 +74,14 @@ export async function leaveLeague(leagueId: string) {
 
 export async function deleteLeague(leagueId: string) {
   return await api.delete(`/leagues/${leagueId}`);
+}
+
+export async function updateLeague(leagueId: string, info: {
+  name: string,
+  description: string,
+  visibility: string,
+  join_policy: string,
+  max_players: number,
+}) {
+  return await api.patch(`/leagues/${leagueId}`, info);
 }

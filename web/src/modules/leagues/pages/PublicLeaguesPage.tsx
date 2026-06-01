@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 
 import { usePublicLeagues } from "../hooks/usePublicLeagues";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export function PublicLeaguesPage() {
-  const {
-    data,
-    isLoading
-  } = usePublicLeagues();
+  const [search, setSearch] = useState("");
+  const { data, isLoading } = usePublicLeagues(search);
 
   if (isLoading) {
     return (
@@ -39,6 +39,12 @@ export function PublicLeaguesPage() {
         >
           Find leagues to join.
         </p>
+
+        <Input
+          placeholder="Search leagues..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       <div
@@ -77,6 +83,26 @@ export function PublicLeaguesPage() {
             >
               {league.description}
             </p>
+            
+            <p
+              className="
+                mt-2
+                text-sm
+                text-muted-foreground
+              "
+            >
+              {league.visibility}
+            </p>
+
+            <p
+              className="
+                mt-2
+                text-sm
+                text-muted-foreground
+              "
+            >
+              {league.join_policy}
+            </p>            
           </Link>
         ))}
       </div>

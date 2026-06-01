@@ -12,7 +12,7 @@ export class LeaguesController {
   }
 
   async public(request: Request, response: Response) {
-    const leagues = await this.leaguesService.listPublicLeagues();
+    const leagues = await this.leaguesService.getPublicLeagues();
     return response
       .json(leagues);
   }

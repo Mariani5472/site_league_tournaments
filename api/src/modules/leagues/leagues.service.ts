@@ -32,8 +32,8 @@ export class LeaguesService {
     return await this.leaguesRepository.listLeaguePendingRequests(leagueId);
   }
 
-  async listPublicLeagues() {
-    return await this.leaguesRepository.listPublic();
+  async getPublicLeagues() {
+    return await this.leaguesRepository.getPublicLeagues();
   }
 
   async joinLeague(params: {
@@ -326,7 +326,9 @@ export class LeaguesService {
     actorId: string;
     name?: string;
     description?: string;
-    maxPlayers?: number;
+    visibility?: string;
+    join_policy?: string;
+    max_players?: number;
   }) {
     const member = await this.leaguesRepository.findMember({
       leagueId: params.leagueId,

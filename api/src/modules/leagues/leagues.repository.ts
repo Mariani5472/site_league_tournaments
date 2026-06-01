@@ -80,11 +80,16 @@ export class LeaguesRepository {
     return result.rows[0];
   }
 
-  async listPublic() {
+  async getPublicLeagues() {
     const query = `
     SELECT *
     FROM leagues
-    WHERE visibility = 'public'
+    WHERE 
+      visibility = 'public'
+      AND (
+        name ILIKE '%' || $1 || '%'
+        OR description ILIKE '%' || $1 || '%'
+      )
     ORDER BY created_at DESC
   `;
 
@@ -322,14 +327,18 @@ export class LeaguesRepository {
     leagueId: string;
     name?: string;
     description?: string;
-    maxPlayers?: number;
+    visibility?: string;
+    join_policy?: string;
+    max_players?: number;
   }) {
     const query = `
       UPDATE leagues
       SET
         name = COALESCE($2, name),
         description = COALESCE($3, description),
-        max_players = COALESCE($4, max_players)
+        visibility = COALESCE($4, visibility),
+        join_policy = COALESCE($5, join_policy),
+        max_players = COALESCE($6, max_players)
       WHERE id = $1
     `;
 
@@ -337,7 +346,9 @@ export class LeaguesRepository {
       params.leagueId,
       params.name ?? null,
       params.description ?? null,
-      params.maxPlayers ?? null
+      params.visibility ?? null,
+      params.join_policy ?? null,
+      params.max_players ?? null
     ]);
   }
 

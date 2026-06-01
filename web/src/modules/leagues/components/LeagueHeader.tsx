@@ -4,7 +4,7 @@ import { LeagueJoinActions } from "./LeagueJoinActions";
 import { useMutation } from "@tanstack/react-query";
 import { deleteLeague, leaveLeague } from "../services/leagues.service";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 type Props = { 
@@ -20,7 +20,7 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
     mutationFn: () => leaveLeague(league.id),
     onSuccess: () => {
       toast.success("You left the league");
-      navigate("/leagues");
+      navigate("/leagues/my");
     }
   })
 
@@ -28,7 +28,7 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
     mutationFn: () => deleteLeague(league.id),
     onSuccess: () => {
       toast.success("You delete the league");
-      navigate("/leagues");
+      navigate("/leagues/my");
     }
   })
 
@@ -99,9 +99,13 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
         </div>
 
         {isAdmin && (
-          <Button>
-            Edit League
-          </Button>
+          <Link
+            to={`/leagues/${league.id}/settings`}
+          >
+            <Button>
+              Settings
+            </Button>
+          </Link>
         )}
 
         {isOwner && (

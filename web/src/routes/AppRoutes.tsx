@@ -7,6 +7,7 @@ import { MyLeaguesPage } from "@/modules/leagues/pages/MyLeaguesPage";
 import { LeaguePage } from "@/modules/leagues/pages/LeaguePage";
 import { PublicLeaguesPage } from "@/modules/leagues/pages/PublicLeaguesPage";
 import { ProfilePage } from "@/modules/profile/pages/ProfilePage";
+import { LeagueSettingsPage } from "@/modules/leagues/pages/LeagueSettingsPage";
 
 export function AppRoutes() {
   return (
@@ -25,7 +26,7 @@ export function AppRoutes() {
             element={<DashboardPage />}
           />
           <Route
-            path="/leagues"
+            path="/leagues/my"
             element={<MyLeaguesPage />}
           />
           <Route
@@ -39,6 +40,10 @@ export function AppRoutes() {
           <Route
             path="/profile"
             element={<ProfilePage />}
+          />
+          <Route
+            path="/leagues/:id/settings"
+            element={<LeagueSettingsPage />}
           />
         </Route>
       </Routes>
