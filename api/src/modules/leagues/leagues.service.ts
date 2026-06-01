@@ -32,8 +32,8 @@ export class LeaguesService {
     return await this.leaguesRepository.listLeaguePendingRequests(leagueId);
   }
 
-  async getPublicLeagues() {
-    return await this.leaguesRepository.getPublicLeagues();
+  async getPublicLeagues(search?: string) {
+    return await this.leaguesRepository.getPublicLeagues(search);
   }
 
   async joinLeague(params: {

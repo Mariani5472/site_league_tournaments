@@ -12,7 +12,8 @@ export class LeaguesController {
   }
 
   async public(request: Request, response: Response) {
-    const leagues = await this.leaguesService.getPublicLeagues();
+    const search = request.query.search as string;
+    const leagues = await this.leaguesService.getPublicLeagues(search);
     return response
       .json(leagues);
   }

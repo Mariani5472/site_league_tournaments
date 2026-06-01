@@ -80,7 +80,7 @@ export class LeaguesRepository {
     return result.rows[0];
   }
 
-  async getPublicLeagues() {
+  async getPublicLeagues(search?: string) {
     const query = `
     SELECT *
     FROM leagues
@@ -93,7 +93,7 @@ export class LeaguesRepository {
     ORDER BY created_at DESC
   `;
 
-    const result = await db.query(query);
+    const result = await db.query(query, [search]);
 
     return result.rows;
   }
