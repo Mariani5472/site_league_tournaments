@@ -31,6 +31,10 @@ export const up = (pgm) => {
       type: "text"
     },
 
+    banner_url: {
+      type: "text"
+    },
+
     bio: {
       type: "text"
     },

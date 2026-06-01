@@ -42,12 +42,25 @@ export const up = (pgm) => {
       notNull: true
     },
 
+    summoner_level: {
+      type: 'integer'
+    },
+
+    profile_icon_id: {
+      type: 'integer'
+    },
+
     verified: {
       type: "boolean",
       default: false
     },
 
     created_at: {
+      type: "timestamp",
+      default: pgm.func("current_timestamp")
+    },
+
+    linked_at: {
       type: "timestamp",
       default: pgm.func("current_timestamp")
     }

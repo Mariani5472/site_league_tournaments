@@ -8,9 +8,7 @@ export class ProfileRepository {
         email,
         nickname,
         avatar_url,
-        banner_url,
-        riot_game_name,
-        riot_tag_line
+        banner_url
       FROM users
       WHERE id = $1
     `;
