@@ -30,7 +30,7 @@ export class ProfileRepository {
       UPDATE users
       SET
         nickname = COALESCE($2, nickname),
-        avatar_url = COALESCE($3, avatar_url)
+        avatar_url = COALESCE($3, avatar_url),
         banner_url = COALESCE($4, banner_url)
       WHERE id = $1
       RETURNING *

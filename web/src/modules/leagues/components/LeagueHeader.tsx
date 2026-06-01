@@ -1,6 +1,10 @@
 import { Button } from "@/components/ui/button";
 import type { League } from "../types/league";
 import { LeagueJoinActions } from "./LeagueJoinActions";
+import { useMutation } from "@tanstack/react-query";
+import { deleteLeague, leaveLeague } from "../services/leagues.service";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 
 type Props = { 
@@ -10,6 +14,24 @@ type Props = {
 };
 
 export function LeagueHeader({league, isAdmin, isOwner}: Props) {
+  const navigate = useNavigate();
+
+  const leaveMutation = useMutation({
+    mutationFn: () => leaveLeague(league.id),
+    onSuccess: () => {
+      toast.success("You left the league");
+      navigate("/leagues");
+    }
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteLeague(league.id),
+    onSuccess: () => {
+      toast.success("You delete the league");
+      navigate("/leagues");
+    }
+  })
+
   return (
     <div
       className="
@@ -83,7 +105,10 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
         )}
 
         {isOwner && (
-          <Button variant="destructive">
+          <Button 
+            variant="destructive"
+            onClick={() => deleteMutation.mutate()}
+          >
             Delete League
           </Button>
         )}
@@ -91,6 +116,14 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
         <LeagueJoinActions
           league={league}
         />
+        {!isOwner && (
+          <Button
+            variant={"outline"}
+            onClick={() => leaveMutation.mutate()}
+          >
+            Leave League
+          </Button>
+        )}
       </div>
     </div>
   );

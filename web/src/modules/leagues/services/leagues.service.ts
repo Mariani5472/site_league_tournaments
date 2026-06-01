@@ -53,3 +53,20 @@ export async function getPublicLeagues() {
   const { data } = await api.get<League[]>("/leagues/public");
   return data;
 }
+
+export async function updateMemberRole(leagueId: string, memberId: string, role: string) {
+  const { data } = await api.patch(`/leagues/${leagueId}/members/${memberId}/role`, role);
+  return data;
+}
+
+export async function kickMember(leagueId: string, memberId: string) {
+  return await api.delete(`/leagues/${leagueId}/members/${memberId}`);
+}
+
+export async function leaveLeague(leagueId: string) {
+  return await api.delete(`/leagues/${leagueId}/leave`);
+}
+
+export async function deleteLeague(leagueId: string) {
+  return await api.delete(`/leagues/${leagueId}`);
+}

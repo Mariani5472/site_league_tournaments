@@ -55,6 +55,7 @@ export function LeaguePage() {
         "
       >
         <LeagueMembers
+          leagueId={leagueId}
           members={members || []}
           role={roleData.role}
           isAdmin={roleData.isAdmin}

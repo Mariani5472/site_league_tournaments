@@ -1,13 +1,66 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { LeagueMember } from "../types/member";
 import { canManageRole } from "../utils/permissions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { kickMember, updateMemberRole } from "../services/leagues.service";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
-type Props = { 
+type Props = {
   members: LeagueMember[];
   role: | "owner" | "admin" | "player" | "spec" | null;
-  isAdmin: boolean; 
+  isAdmin: boolean;
+  leagueId: string;
 };
 
-export function LeagueMembers({ members, role, isAdmin }: Props) {
+export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
+  const queryClient = useQueryClient();
+
+  const updateRoleMutation = useMutation({
+    mutationFn: ({ memberId, role }: { memberId: string; role: string; }) =>
+      updateMemberRole(
+        leagueId,
+        memberId,
+        role
+      ),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "league-members",
+          leagueId
+        ]
+      });
+
+      toast.success(
+        "Role updated"
+      );
+    }
+  });
+
+  const kickMutation = useMutation({
+    mutationFn: (memberId: string) => kickMember(leagueId, memberId),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          "league-members",
+          leagueId
+        ]
+      });
+
+      toast.success(
+        "Member removed"
+      );
+    }
+  });
+
   return (
     <div
       className="
@@ -70,34 +123,48 @@ export function LeagueMembers({ members, role, isAdmin }: Props) {
                     gap-2
                   "
                 >
-                  <button
-                    className="
-                      rounded-md
-                      border
-                      px-2
-                      py-1
-                      text-xs
-                    "
+                  <Select
+                    value={member.role}
+                    onValueChange={(value) =>
+                      updateRoleMutation.mutate({
+                        memberId: member.id,
+                        role: value
+                      })
+                    }
                   >
-                    Change Role
-                  </button>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
 
-                  <button
-                    className="
-                      rounded-md
-                      border
-                      px-2
-                      py-1
-                      text-xs
-                      text-red-500
-                    "
+                    <SelectContent>
+                      <SelectItem value="admin">
+                        Admin
+                      </SelectItem>
+
+                      <SelectItem value="player">
+                        Player
+                      </SelectItem>
+
+                      <SelectItem value="spec">
+                        Spectator
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() =>
+                      kickMutation.mutate(member.id)
+                    }
                   >
                     Kick
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
-        )})}
+          )
+        })}
       </div>
     </div>
   );
