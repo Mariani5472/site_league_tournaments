@@ -7,7 +7,7 @@ import { updateProfile } from "../services/profile.service";
 import { toast } from "sonner";
 import { useMyRiotAccount } from "@/modules/riot/hooks/useMyRiotAccount";
 import { RiotAccountCard } from "../components/riotAccount";
-import { linkRiotAccount } from "@/modules/riot/services/riot.service";
+import { linkRiotAccount, unlinkAccount } from "@/modules/riot/services/riot.service";
 
 export function ProfilePage() {
   const queryClient = useQueryClient();
@@ -44,9 +44,26 @@ export function ProfilePage() {
         queryKey: ["my-riot-account"]
       });
 
-      toast.success(
-        "Riot account linked!"
-      );
+      toast.success("Riot account linked!");
+
+      setGameName("");
+      setTagLine("");
+    },
+
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const riotUnlinkMutation = useMutation({
+    mutationFn: unlinkAccount,
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["my-riot-account"]
+      });
+
+      toast.success("Riot account unlinked!");
 
       setGameName("");
       setTagLine("");
@@ -213,9 +230,19 @@ export function ProfilePage() {
         )}
 
         {riotAccount && (
+          <>
           <RiotAccountCard
             riotAccount={riotAccount}
           />
+          <Button
+            onClick={() => riotUnlinkMutation.mutate()}
+            disabled={riotUnlinkMutation.isPending}
+          >
+            {riotUnlinkMutation.isPending
+              ? "Unlinking..."
+              : "Unlink Riot Account"}
+          </Button>
+        </>
         )}
       </div>
     </div>

@@ -13,3 +13,7 @@ export async function getMyRiotAccount() {
   const { data } = await api.get<RiotAccount | null>("/riot/me");
   return data;
 }
+
+export async function unlinkAccount() {
+  return await api.delete("riot/me")
+}

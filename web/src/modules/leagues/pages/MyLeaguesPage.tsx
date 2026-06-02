@@ -165,6 +165,20 @@ export function MyLeaguesPage() {
               >
                 {league.join_policy}
               </span>
+
+              {league.require_riot_account && (
+                <span
+                  className="
+                    rounded-md
+                    border
+                    px-2
+                    py-1
+                    text-xs
+                  "
+                >
+                  Riot Required
+                </span>
+              )}
             </div>
           </Link>
         ))}

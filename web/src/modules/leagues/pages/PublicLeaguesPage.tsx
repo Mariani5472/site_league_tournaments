@@ -8,13 +8,13 @@ export function PublicLeaguesPage() {
   const [search, setSearch] = useState("");
   const { data, isLoading } = usePublicLeagues(search);
 
-  if (isLoading) {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div>
+  //       Loading...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div
@@ -55,7 +55,12 @@ export function PublicLeaguesPage() {
           xl:grid-cols-3
         "
       >
-        {data?.map((league) => (
+        {isLoading ? (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+              Loading...
+          </div>
+        ): (
+          data?.map((league) => (
           <Link
             key={league.id}
             to={`/leagues/${league.id}`}
@@ -102,9 +107,22 @@ export function PublicLeaguesPage() {
               "
             >
               {league.join_policy}
-            </p>            
+            </p>
+
+            {league.require_riot_account && (
+            <p
+              className="
+                mt-2
+                text-sm
+                text-muted-foreground
+              "
+            >
+              riot required
+            </p>
+          )}            
           </Link>
-        ))}
+        ))
+      )}
       </div>
     </div>
   );

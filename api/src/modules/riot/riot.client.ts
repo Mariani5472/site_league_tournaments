@@ -11,7 +11,6 @@ export class RiotClient {
   }
 
   async getAccountByRiotId(gameName: string, tagLine: string) {
-    console.log(gameName, tagLine)
     const { data } = await this.getClient()
       .get(`/riot/account/v1/accounts/by-riot-id/${gameName}/${tagLine}`);
     return data;
