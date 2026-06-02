@@ -13,4 +13,6 @@ export type CreateLeagueDTO = {
   | "invite_only";
 
   max_players: number;
+
+  require_riot_account: boolean;
 };

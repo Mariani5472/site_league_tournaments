@@ -46,6 +46,12 @@ export const up = (pgm) => {
       notNull: true
     },
 
+    require_riot_account: {
+      type: "boolean",
+      notNull: true,
+      default: false
+    },
+
     created_at: {
       type: "timestamp",
       default: pgm.func("current_timestamp")

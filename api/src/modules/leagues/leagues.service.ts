@@ -1,8 +1,10 @@
+import { RiotRepository } from "../riot/riot.repository";
 import { LeaguesRepository } from "./leagues.repository";
 import { CreateLeagueDTO } from "./leagues.types";
 
 export class LeaguesService {
   private leaguesRepository = new LeaguesRepository();
+  private riotRepository = new RiotRepository();
 
   async createLeague(data: CreateLeagueDTO) {
     const league = await this.leaguesRepository.create(data);
@@ -45,6 +47,14 @@ export class LeaguesService {
       throw new Error("League not found");
     }
 
+    if (league.require_riot_account) {
+      const riotAccount = await this.riotRepository.findByUserId(params.userId)
+
+      if (!riotAccount) {
+        throw new Error("This league requires a linked Riot account");
+      }
+    }
+
     const existingMember = await this.leaguesRepository.findMember({
       leagueId: params.leagueId,
       userId: params.userId
@@ -84,6 +94,14 @@ export class LeaguesService {
 
     if (league.join_policy !== "request") {
       throw new Error("League does not accept requests");
+    }
+
+    if (league.require_riot_account) {
+      const riotAccount = await this.riotRepository.findByUserId(params.userId)
+
+      if (!riotAccount) {
+        throw new Error("This league requires a linked Riot account");
+      }
     }
 
     const existingMember = await this.leaguesRepository.findMember({

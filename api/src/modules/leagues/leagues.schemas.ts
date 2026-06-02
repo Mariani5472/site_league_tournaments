@@ -26,5 +26,8 @@ export const createLeagueSchema =
     max_players: z
       .number()
       .min(2)
-      .max(500)
+      .max(500),
+
+    require_riot_account: z
+      .boolean()
   });

@@ -7,4 +7,5 @@ export type CreateLeagueInput = {
   | "request"
   | "invite_only";
   max_players: number;
+  require_riot_account: boolean;
 };

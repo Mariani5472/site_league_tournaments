@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 export function CreateLeagueDialog() {
   const queryClient = useQueryClient();
@@ -27,6 +28,7 @@ export function CreateLeagueDialog() {
   const [visibility, setVisibility] = useState<"public" | "private">("public");
   const [joinPolicy, setJoinPolicy] = useState<"open" | "request" | "invite_only">("request");
   const [maxPlayers, setMaxPlayers] = useState(10);
+  const [requireRiot, setRequireRiot] = useState(false);
 
   const mutation = useMutation({
       mutationFn: createLeague,
@@ -46,6 +48,7 @@ export function CreateLeagueDialog() {
         setVisibility("public");
         setJoinPolicy("request");
         setMaxPlayers(10);
+        setRequireRiot(false);
       },
 
       onError: (error) => toast.error(error.message || "Failed to create league")
@@ -57,7 +60,8 @@ export function CreateLeagueDialog() {
       description,
       visibility,
       join_policy: joinPolicy,
-      max_players: maxPlayers
+      max_players: maxPlayers,
+      require_riot_account: requireRiot
     });
   }
 
@@ -162,6 +166,17 @@ export function CreateLeagueDialog() {
               )
             }
           />
+
+          <div className="flex items-center justify-between">
+            <label>
+              Require Riot Account
+            </label>
+
+            <Switch
+              checked={requireRiot}
+              onCheckedChange={setRequireRiot}
+            />
+          </div>
 
           <Button
             className="w-full"

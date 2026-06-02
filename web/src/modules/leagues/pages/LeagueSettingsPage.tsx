@@ -38,6 +38,7 @@ import {
 } from "../hooks/useLeagueRole";
 import { leagueSettingsSchema, type LeagueSettingsForm } from "../utils/leagueSettings.schema";
 import { DangerZone } from "../components/DangerZone";
+import { Switch } from "@/components/ui/switch";
 
 export function LeagueSettingsPage() {
   const { id } = useParams();
@@ -74,6 +75,11 @@ export function LeagueSettingsPage() {
     name: "join_policy",
     defaultValue: league?.join_policy
   });
+  const linkedAccountValue = useWatch({ 
+    control, 
+    name: "require_riot_account",
+    defaultValue: league?.require_riot_account
+  });
 
   useEffect(() => {
     if (!league) {
@@ -85,7 +91,8 @@ export function LeagueSettingsPage() {
       description: league.description || "",
       visibility: league.visibility,
       join_policy: league.join_policy,
-      max_players: league.max_players
+      max_players: league.max_players,
+      require_riot_account: league.require_riot_account
     });
   }, [league, reset]);
 
@@ -261,6 +268,17 @@ export function LeagueSettingsPage() {
                 valueAsNumber: true
               }
             )}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <label>
+            Require Riot Account
+          </label>
+
+          <Switch
+            checked={linkedAccountValue}
+            onCheckedChange={(e) => setValue("require_riot_account", e)}
           />
         </div>
 

@@ -7,8 +7,7 @@ export class ProfileController {
   async me(request: Request, response: Response) {
     const userId = request.user.id;
 
-    const profile =
-      await this.profileService.getProfile(userId);
+    const profile = await this.profileService.getProfile(userId);
 
     return response.json(profile);
   }

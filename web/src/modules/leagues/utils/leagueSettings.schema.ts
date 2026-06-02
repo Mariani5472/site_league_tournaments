@@ -24,7 +24,10 @@ export const leagueSettingsSchema = z.object({
   max_players: z
     .number()
     .min(2)
-    .max(128)
+    .max(128),
+
+  require_riot_account: z
+    .boolean()
 });
 
 export type LeagueSettingsForm = z.infer<typeof leagueSettingsSchema>;
