@@ -52,11 +52,12 @@ export class LeaguesRepository {
   }) {
     const query = `
       INSERT INTO league_members (
+        id,
         league_id,
         user_id,
         role
       )
-      VALUES ($1, $2, $3)
+      VALUES (gen_random_uuid(), $1, $2, $3)
     `;
 
     const values = [
@@ -129,13 +130,17 @@ export class LeaguesRepository {
   async listLeagueMembers(leagueId: string) {
     const query = `
     SELECT 
-      u.*,
+      lm.id,
       lm.role,
-      lm.wins,
-      lm.losses
+      u.id as user_id,
+      u.nickname,
+      ra.game_name,
+      ra.tag_line
     FROM league_members lm
     INNER JOIN users u
       ON lm.user_id = u.id
+    LEFT JOIN riot_accounts ra
+      ON ra.user_id = u.id
     WHERE league_id = $1
   `;
 

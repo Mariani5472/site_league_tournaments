@@ -10,6 +10,11 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
   pgm.createTable("league_members", {
+    id: {
+      type: "uuid",
+      primaryKey: true
+    },
+
     league_id: {
       type: "uuid",
       notNull: true,

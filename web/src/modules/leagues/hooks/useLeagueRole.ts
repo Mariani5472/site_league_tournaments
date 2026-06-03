@@ -4,7 +4,7 @@ import type { LeagueMember } from "../types/member";
 export function useLeagueRole(members: LeagueMember[]) {
   const { user } = useAuth();
 
-  const currentMember = members.find((member) => member.id === user?.id);
+  const currentMember = members.find((member) => member.user_id === user?.id);
   return {
     currentMember,
     role: currentMember?.role || null,

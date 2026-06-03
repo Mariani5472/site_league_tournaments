@@ -95,13 +95,22 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
               "
             >
               <div>
-                <p
-                  className="
-                    font-medium
-                  "
-                >
+                <div>
                   {member.nickname}
-                </p>
+                </div>
+
+                {member.game_name && (
+                  <div
+                    className="
+                    text-xs
+                    text-muted-foreground
+                  "
+                  >
+                    {member.game_name}
+                    #
+                    {member.tag_line}
+                  </div>
+                )}
               </div>
 
               <span
