@@ -12,7 +12,8 @@ export const up = (pgm) => {
   pgm.createTable("leagues", {
     id: {
       type: "uuid",
-      primaryKey: true
+      primaryKey: true,
+      default: pgm.func("gen_random_uuid()"),
     },
 
     owner_id: {

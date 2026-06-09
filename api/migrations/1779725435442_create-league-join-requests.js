@@ -14,7 +14,8 @@ export const up = (pgm) => {
     {
       id: {
         type: "uuid",
-        primaryKey: true
+        primaryKey: true,
+        default: pgm.func("gen_random_uuid()"),
       },
 
       league_id: {

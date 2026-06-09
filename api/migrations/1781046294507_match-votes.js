@@ -9,41 +9,33 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("match_votes", {
     id: {
       type: "uuid",
       primaryKey: true,
       default: pgm.func("gen_random_uuid()"),
     },
 
-    email: {
-      type: "varchar(255)",
+    match_id: {
+      type: "uuid",
       notNull: true,
-      unique: true
+      references: "matches",
     },
 
-    nickname: {
-      type: "varchar(30)",
+    voter_id: {
+      type: "uuid",
       notNull: true,
-      unique: true
+      references: "users",
     },
 
-    avatar_url: {
-      type: "text"
-    },
-
-    banner_url: {
-      type: "text"
-    },
-
-    bio: {
-      type: "text"
-    },
-
-    created_at: {
-      type: "timestamp",
-      default: pgm.func("current_timestamp")
+    winner_team: {
+      type: "integer",
+      notNull: true
     }
+  })
+
+  pgm.addConstraint("match_votes", "unique_vote_per_match", {
+    unique: ["match_id", "voter_id"]
   });
 };
 
@@ -53,5 +45,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable("users");
+  pgm.dropTable("match_votes");
 };

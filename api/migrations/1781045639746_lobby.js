@@ -9,42 +9,36 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.createTable("users", {
+  pgm.createTable("lobbies", {
     id: {
       type: "uuid",
       primaryKey: true,
       default: pgm.func("gen_random_uuid()"),
     },
 
-    email: {
-      type: "varchar(255)",
+    league_id: {
+      type: "uuid",
       notNull: true,
-      unique: true
+      references: "leagues",
     },
 
-    nickname: {
-      type: "varchar(30)",
+    status: {
+      type: "varchar",
       notNull: true,
-      unique: true
+      default: "waiting",
     },
 
-    avatar_url: {
-      type: "text"
+    maxPlayers: {
+      type: "integer",
+      notNull: true
     },
 
-    banner_url: {
-      type: "text"
-    },
-
-    bio: {
-      type: "text"
-    },
-
-    created_at: {
-      type: "timestamp",
-      default: pgm.func("current_timestamp")
+    created_by: {
+      type: "uuid",
+      notNull: true,
+      references: "users"
     }
-  });
+  })
 };
 
 /**
@@ -53,5 +47,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable("users");
+  pgm.dropTable("lobbies");
 };

@@ -5,7 +5,6 @@ export class LeaguesRepository {
   async create(data: CreateLeagueDTO) {
     const query = `
       INSERT INTO leagues (
-        id,
         owner_id,
         name,
         description,
@@ -15,7 +14,6 @@ export class LeaguesRepository {
         require_riot_account
       )
       VALUES (
-        gen_random_uuid(),
         $1,
         $2,
         $3,
@@ -52,12 +50,11 @@ export class LeaguesRepository {
   }) {
     const query = `
       INSERT INTO league_members (
-        id,
         league_id,
         user_id,
         role
       )
-      VALUES (gen_random_uuid(), $1, $2, $3)
+      VALUES ($1, $2, $3)
     `;
 
     const values = [
@@ -106,9 +103,7 @@ export class LeaguesRepository {
     const query = `
       SELECT
         l.*,
-        lm.role,
-        lm.wins,
-        lm.losses
+        lm.role
       FROM league_members lm
 
       INNER JOIN leagues l
@@ -220,13 +215,11 @@ export class LeaguesRepository {
   }) {
     const query = `
       INSERT INTO league_join_requests (
-        id,
         league_id,
         user_id,
         status
       )
       VALUES (
-        gen_random_uuid(),
         $1,
         $2,
         'pending'

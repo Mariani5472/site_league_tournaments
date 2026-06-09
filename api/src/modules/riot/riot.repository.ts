@@ -39,7 +39,6 @@ export class RiotRepository {
   }) {
     const query = `
       INSERT INTO riot_accounts (
-        id,
         user_id,
         game_name,
         tag_line,
@@ -47,7 +46,6 @@ export class RiotRepository {
         region
       )
       VALUES (
-        gen_random_uuid(),
         $1,
         $2,
         $3,

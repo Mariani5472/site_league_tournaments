@@ -12,7 +12,8 @@ export const up = (pgm) => {
   pgm.createTable("league_members", {
     id: {
       type: "uuid",
-      primaryKey: true
+      primaryKey: true,
+      default: pgm.func("gen_random_uuid()"),
     },
 
     league_id: {
@@ -32,16 +33,6 @@ export const up = (pgm) => {
     role: {
       type: "varchar(20)",
       notNull: true
-    },
-
-    wins: {
-      type: "integer",
-      default: 0
-    },
-
-    losses: {
-      type: "integer",
-      default: 0
     },
 
     created_at: {
