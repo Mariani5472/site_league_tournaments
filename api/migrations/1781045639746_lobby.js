@@ -28,7 +28,7 @@ export const up = (pgm) => {
       default: "waiting",
     },
 
-    maxPlayers: {
+    max_players: {
       type: "integer",
       notNull: true
     },
@@ -37,6 +37,11 @@ export const up = (pgm) => {
       type: "uuid",
       notNull: true,
       references: "users"
+    },
+
+    created_at: {
+      type: "timestamp",
+      default: pgm.func("current_timestamp")
     }
   })
 };
