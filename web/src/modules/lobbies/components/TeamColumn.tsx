@@ -1,4 +1,4 @@
-import { LobbyPlayer } from "../types/lobby.types";
+import type { LobbyPlayer } from "../types/lobby.types";
 import { PlayerCard } from "./PlayerCard";
 
 interface Props {

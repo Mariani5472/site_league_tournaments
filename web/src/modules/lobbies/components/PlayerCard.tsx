@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { LobbyPlayer } from "../types/lobby.types";
+import type { LobbyPlayer } from "../types/lobby.types";
 
 interface Props {
   player: LobbyPlayer;
