@@ -220,4 +220,30 @@ export class LobbiesService {
       matchId: match.id
     });
   }
+
+  async getLobby(lobbyId: string) {
+    const rows = await this.lobbiesRepository.findLobbyWithPlayers(lobbyId);
+    if (rows.length === 0) {
+      throw new Error("Lobby not found");
+    }
+    const first = rows[0];
+
+    return {
+      id: first.id,
+      league_id: first.league_id,
+      status: first.status,
+      max_players: first.max_players,
+      players: rows.map(row => ({
+        user_id: row.user_id,
+        nickname: row.nickname,
+        avatar_url: row.avatar_url,
+        team_number: row.team_number,
+        is_ready: row.is_ready
+      }))
+    };
+  }
+
+  async listLeagueLobbies(leagueId: string) {
+    return this.lobbiesRepository.findByLeague(leagueId);
+  }
 }

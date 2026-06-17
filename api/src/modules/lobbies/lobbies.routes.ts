@@ -6,9 +6,9 @@ const lobbiesRoutes = Router();
 const lobbiesController = new LobbiesController();
 
 lobbiesRoutes.get(
-  ":id",
+  "/:lobbyId",
   authMiddleware,
-  lobbiesController.show.bind(lobbiesController)
+  lobbiesController.getLobby.bind(lobbiesController)
 );
 
 lobbiesRoutes.post(

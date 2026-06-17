@@ -1,9 +1,11 @@
+import { LobbiesService } from "../lobbies/lobbies.service";
 import { createLeagueSchema } from "./leagues.schemas";
 import { LeaguesService } from "./leagues.service";
 import { Request, Response } from "express";
 
 export class LeaguesController {
   private leaguesService = new LeaguesService();
+  private lobbiesService = new LobbiesService();
 
   async my(request: Request, response: Response) {
     const leagues = await this.leaguesService.listUserLeagues(request.user.id);
@@ -184,5 +186,10 @@ export class LeaguesController {
     return response
       .status(204)
       .send();
+  }
+
+  async listLobbies(request: Request, response: Response) {
+    const lobbies = await this.lobbiesService.listLeagueLobbies(request.params.id as string);
+    return response.json(lobbies);
   }
 }

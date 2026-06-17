@@ -126,4 +126,12 @@ leaguesRoutes.delete(
   )
 );
 
+leaguesRoutes.get(
+  "/:id/lobbies",
+  authMiddleware,
+  leaguesController.listLobbies.bind(
+    leaguesController
+  )
+);
+
 export { leaguesRoutes };

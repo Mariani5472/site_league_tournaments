@@ -167,6 +167,33 @@ export class LobbiesRepository {
     return result.rows;
   }
 
+  async findLobbyWithPlayers(lobbyId: string) {
+    const query = `
+      SELECT
+        l.id,
+        l.league_id,
+        l.status,
+        l.max_players,
+
+        lp.user_id,
+        lp.team_number,
+        lp.is_ready,
+
+        u.nickname,
+        u.avatar_url
+
+      FROM lobbies l
+      LEFT JOIN lobby_players lp ON lp.lobby_id = l.id
+      LEFT JOIN users u ON u.id = lp.user_id
+
+      WHERE l.id = $1
+    `;
+
+    const result = await db.query(query, [lobbyId]);
+
+    return result.rows;
+  }
+
   async updateStatus(lobbyId: string, status: string) {
     const query = `
       UPDATE lobbies
@@ -181,5 +208,28 @@ export class LobbiesRepository {
     ]);
 
     return result.rows[0];
+  }
+
+  async findByLeague(leagueId: string) {
+    const query = `
+        SELECT
+          l.id,
+          l.status,
+          l.max_players,
+          COUNT(lp.id) AS players_count
+        FROM lobbies l
+
+        LEFT JOIN lobby_players lp ON lp.lobby_id = l.id
+
+        WHERE l.league_id = $1
+        GROUP BY l.id
+
+        ORDER BY
+          l.created_at DESC
+    `;
+
+    const result = await db.query(query, [leagueId]);
+
+    return result.rows;
   }
 }

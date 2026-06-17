@@ -4,12 +4,6 @@ import { LobbiesService } from "./lobbies.service";
 export class LobbiesController {
   private lobbiesService = new LobbiesService();
 
-  async show(request: Request, response: Response) {
-
-    const leagueId = request.params.id as string;
-    return response.json(leagueId)
-  }
-
   async create(request: Request, response: Response) {
     const lobby = await this.lobbiesService.createLobby({
       leagueId: request.params.id as string,
@@ -62,5 +56,10 @@ export class LobbiesController {
 
     return response
       .json(player);
+  }
+
+  async getLobby(request: Request, response: Response) {
+    const lobby = await this.lobbiesService.getLobby(request.params.lobbyId as string);
+    return response.json(lobby);
   }
 }
