@@ -50,6 +50,11 @@ export class LobbiesService {
       leagueId: lobby.leagueId,
       userId: params.userId
     });
+
+    console.log({
+      leagueId: lobby.leagueId,
+      userId: params.userId
+    })
     if (!member) {
       throw new Error("Not a league member");
     }
@@ -105,21 +110,24 @@ export class LobbiesService {
   async changeTeam(params: {
     lobbyId: string,
     userId: string,
-    teamNumber: number;
+    teamNumber?: number;
   }) {
     const lobby = await this.lobbiesRepository.findById(params.lobbyId);
     if (!lobby) {
       throw new Error("Lobby not found");
     }
 
-    if (![1, 2].includes(params.teamNumber)) {
+    if (params.teamNumber && ![1, 2].includes(params.teamNumber)) {
       throw new Error("Invalid team");
     }
+
+    const player = await this.lobbiesRepository.findPlayerInLobby(params.lobbyId, params.userId);
+    const toggledTeam = player.team_number == 1 ? 2 : 1
 
     await this.lobbiesRepository.updatePlayerTeam({
       lobbyId: params.lobbyId,
       userId: params.userId,
-      newTeamNumber: params.teamNumber
+      newTeamNumber: params.teamNumber ?? toggledTeam
     });
 
     await this.checkLobbyCanStart(

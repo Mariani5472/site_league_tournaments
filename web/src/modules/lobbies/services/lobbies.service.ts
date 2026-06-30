@@ -12,11 +12,16 @@ export async function toggleReady(lobbyId: string) {
   return data;
 }
 
-export async function changeTeam(lobbyId: string, teamNumber: string) {
+export async function changeTeam(lobbyId: string, teamNumber?: string) {
   const { data } = await api.patch<Lobby>(`/lobbies/${lobbyId}/ready`, {
     teamNumber
   });
 
+  return data;
+}
+
+export async function joinLobby(lobbyId: string) {
+  const { data } = await api.post(`/lobbies/${lobbyId}/join`);
   return data;
 }
 

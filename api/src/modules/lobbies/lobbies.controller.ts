@@ -6,8 +6,8 @@ export class LobbiesController {
 
   async create(request: Request, response: Response) {
     const lobby = await this.lobbiesService.createLobby({
-      leagueId: request.params.id as string,
       creatorId: request.user.id,
+      leagueId: request.body.leagueId,
       maxPlayers: request.body.maxPlayers
     });
 

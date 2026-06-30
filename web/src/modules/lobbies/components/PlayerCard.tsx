@@ -1,36 +1,63 @@
 import { CheckCircle2 } from "lucide-react";
 import type { LobbyPlayer } from "../types/lobby.types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Props {
   player: LobbyPlayer;
 }
 
 export function PlayerCard({
-  player
+  player,
 }: Props) {
   return (
-  <div
-    className="
-      border
-      rounded-lg
-      p-3
-      flex
-      items-center
-      justify-between
-    "
-  >
-    <div>
-      {player.nickname}
-    </div>
-
-    {player.is_ready && (
-      <CheckCircle2
+    <div
+      className="
+        flex
+        items-center
+        justify-between
+        rounded-lg
+        border
+        p-3
+      "
+    >
+      <div
         className="
-          h-5
-          w-5
+          flex
+          items-center
+          gap-3
         "
-      />
-    )}
-  </div>
-  )
+      >
+        <Avatar>
+
+          <AvatarImage
+            src={
+              player.avatar_url ??
+              undefined
+            }
+          />
+
+          <AvatarFallback>
+            {player.nickname[0]}
+          </AvatarFallback>
+
+        </Avatar>
+
+        <div>
+
+          <p className="font-medium">
+            {player.nickname}
+          </p>
+
+        </div>
+      </div>
+
+      {player.is_ready && (
+        <CheckCircle2
+          className="
+            text-green-500
+          "
+        />
+      )}
+    </div>
+  );
 }

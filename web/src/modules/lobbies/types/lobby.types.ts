@@ -11,5 +11,6 @@ export interface Lobby {
   league_id: string;
   status: string;
   max_players: number;
+  created_by: string;
   players: LobbyPlayer[];
 }

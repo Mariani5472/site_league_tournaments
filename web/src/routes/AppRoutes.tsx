@@ -8,6 +8,7 @@ import { LeaguePage } from "@/modules/leagues/pages/LeaguePage";
 import { PublicLeaguesPage } from "@/modules/leagues/pages/PublicLeaguesPage";
 import { ProfilePage } from "@/modules/profile/pages/ProfilePage";
 import { LeagueSettingsPage } from "@/modules/leagues/pages/LeagueSettingsPage";
+import { LobbyPage } from "@/modules/lobbies/pages/LobbyPage";
 
 export function AppRoutes() {
   return (
@@ -44,6 +45,10 @@ export function AppRoutes() {
           <Route
             path="/leagues/:id/settings"
             element={<LeagueSettingsPage />}
+          />
+          <Route
+              path="/leagues/:leagueId/lobbies/:lobbyId"
+              element={<LobbyPage />}
           />
         </Route>
       </Routes>

@@ -6,28 +6,38 @@ interface Props {
 }
 
 export function LobbyTeams({
-  lobby
-}: Props
-) {
-  const teamA = lobby.players.filter(player => player.team_number === 1);
-  const teamB = lobby.players.filter(player => player.team_number === 2);
+  lobby,
+}: Props) {
+
+  const blueTeam =
+    lobby.players.filter(
+      player =>
+        player.team_number === 1
+    );
+
+  const redTeam =
+    lobby.players.filter(
+      player =>
+        player.team_number === 2
+    );
 
   return (
-  <div
-    className="
-      grid
-      md:grid-cols-2
-      gap-6
-    "
-  >
-    <TeamColumn
-      title="Blue Team"
-      players={teamA}
-    />
-    <TeamColumn
-      title="Red Team"
-      players={teamB}
-    />
-  </div>
-  )
+    <div
+      className="
+        grid
+        gap-6
+        lg:grid-cols-2
+      "
+    >
+      <TeamColumn
+        title="Blue Team"
+        players={blueTeam}
+      />
+
+      <TeamColumn
+        title="Red Team"
+        players={redTeam}
+      />
+    </div>
+  );
 }

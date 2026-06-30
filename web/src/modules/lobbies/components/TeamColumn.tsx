@@ -8,32 +8,59 @@ interface Props {
 
 export function TeamColumn({
   title,
-  players
+  players,
 }: Props) {
-
   return (
-  <div
-    className="
-      border
-      rounded-xl
-      p-4
-      space-y-3
-    "
-  >
-    <h2
+    <div
       className="
-        text-xl
-        font-bold
+        rounded-xl
+        border
+        p-5
+        space-y-4
       "
     >
-      {title}
-    </h2>
-    {players.map(player => (
-      <PlayerCard
-        key={player.user_id}
-        player={player}
-      />
-    ))}
-  </div>
-  )
+      <div
+        className="
+          flex
+          justify-between
+        "
+      >
+        <h2
+          className="
+            font-semibold
+            text-lg
+          "
+        >
+          {title}
+        </h2>
+
+        <span>
+          {players.length}
+        </span>
+      </div>
+
+      {
+        players.length === 0 &&
+        (
+          <p
+            className="
+              text-muted-foreground
+              text-sm
+            "
+          >
+            Empty
+          </p>
+        )
+      }
+
+      {
+        players.map(player => (
+          <PlayerCard
+            key={player.user_id}
+            player={player}
+          />
+        ))
+      }
+    </div>
+  );
 }

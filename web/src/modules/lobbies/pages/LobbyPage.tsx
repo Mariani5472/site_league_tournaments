@@ -1,49 +1,56 @@
 import { useParams } from "react-router-dom";
+
 import { useLobby } from "../hooks/useLobby";
 import { useLobbySocket } from "../hooks/useLobbySocket";
-import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyTeams } from "../components/LobbyTeams";
+import { LobbyActions } from "../components/LobbyActions";
+import { LobbyHeader } from "../components/LobbyHeader";
+import { LobbyStatus } from "../components/LobbyStatus";
+import { useLobbyActions } from "../hooks/useLobbyActions";
 
 export function LobbyPage() {
-  const { lobbyId } = useParams();
-  const { 
-    data: lobby, 
-    isLoading,
-  } = useLobby(lobbyId!);
-  useLobbySocket(lobbyId!);
+    const { lobbyId } = useParams();
+    const {
+      data: lobby,
+      isLoading
+    } = useLobby(lobbyId!);
 
-  if (isLoading) {
-    return (
-      <div>
-        Loading...
-      </div>
-    );
-  }
+    useLobbySocket(lobbyId!);
+    const actions = useLobbyActions(lobbyId!);
 
-  if (!lobby) {
-    return (
-      <div>
-        Lobby not found
-      </div>
-    );
-  }
+    if (isLoading) {
+        return <>Loading...</>
+    }
 
-  return (
-    <div
-      className="
-        max-w-7xl
-        mx-auto
-        p-6
-        space-y-6
-      "
-    >
-      <LobbyHeader
-        lobby={lobby}
-      />
+    if (!lobby) {
+        return <>Lobby not found</>
+    }
 
-      <LobbyTeams
-        lobby={lobby}
-      />
-    </div>
-  );
+    return(
+        <div
+            className="
+                container
+                mx-auto
+                py-8
+                space-y-6
+            "
+        >
+
+            <LobbyHeader
+                lobby={lobby}
+            />
+            <LobbyStatus
+                lobby={lobby}
+            />
+
+            <LobbyActions
+                {...actions}
+            />
+
+            <LobbyTeams
+                lobby={lobby}
+                {...actions}
+            />
+        </div>
+    )
 }

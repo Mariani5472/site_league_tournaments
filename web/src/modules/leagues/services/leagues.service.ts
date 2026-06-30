@@ -3,6 +3,7 @@ import type { League } from "../types/league";
 import type { LeagueMember } from "../types/member";
 import type { LeagueRequest } from "../types/request";
 import type { CreateLeagueInput } from "../types/createInput";
+import type { LeagueLobby } from "../types/LeagueLobby";
 
 export async function getMyLeagues() {
   const { data } = await api.get<League[]>("/leagues/my");
@@ -84,4 +85,15 @@ export async function updateLeague(leagueId: string, info: {
   max_players: number,
 }) {
   return await api.patch(`/leagues/${leagueId}`, info);
+}
+
+export async function getLeagueLobbies(leagueId: string) {
+  const { data } = await api.get<LeagueLobby[]>(`/leagues/${leagueId}/lobbies`);
+  return data;
+}
+
+export async function createLobby(leagueId: string, data: { maxPlayers: number; }) {
+  const response = await api.post(`/lobbies`, { ...data, leagueId });
+
+  return response.data;
 }

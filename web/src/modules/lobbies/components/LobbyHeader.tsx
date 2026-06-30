@@ -1,46 +1,61 @@
 import type { Lobby } from "../types/lobby.types";
-
 interface Props {
   lobby: Lobby;
 }
 
 export function LobbyHeader({
-  lobby
+  lobby,
 }: Props) {
-  const playersCount = lobby.players.length;
   return (
     <div
       className="
         rounded-xl
         border
         p-6
-        space-y-3
+        flex
+        justify-between
+        items-center
       "
     >
-      <h1
+      <div>
+        <h1
+          className="
+            text-3xl
+            font-bold
+          "
+        >
+          Lobby
+        </h1>
+
+        <p
+          className="
+            text-muted-foreground
+          "
+        >
+          Waiting for players...
+        </p>
+      </div>
+
+      <div
         className="
-          text-3xl
-          font-bold
+          text-right
         "
       >
-        Lobby
-      </h1>
+        <p className="font-semibold">
+          {lobby.players.length}
+          /
+          {lobby.max_players}
+        </p>
 
-      <p>
-        Status:
-        {" "}
-        <strong>
-          {lobby.status}
-        </strong>
-      </p>
-
-      <p>
-        Players:
-        {" "}
-        {playersCount}
-        /
-        {lobby.max_players}
-      </p>
+        <span
+          className="
+            text-sm
+            text-muted-foreground
+          "
+        >
+          Players
+        </span>
+      </div>
     </div>
-  )
+  );
 }

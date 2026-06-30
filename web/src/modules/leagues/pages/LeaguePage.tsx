@@ -6,6 +6,8 @@ import { LeagueHeader } from "../components/LeagueHeader";
 import { LeagueMembers } from "../components/LeagueMembers";
 import { LeagueRequests } from "../components/LeagueRequests";
 import { useLeagueRole } from "../hooks/useLeagueRole";
+import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
+import { LeagueLobbySection } from "../components/LeagueLobbySelection";
 
 export function LeaguePage() {
   const { id } = useParams();
@@ -26,6 +28,10 @@ export function LeaguePage() {
   } = useLeagueRequests(leagueId);
 
   const roleData = useLeagueRole(members || []);
+
+  const {
+    data: lobbies
+  } = useLeagueLobbies(leagueId)
 
   if (loadingLeague || !league) {
     return (
@@ -54,6 +60,12 @@ export function LeaguePage() {
           xl:grid-cols-2
         "
       >
+        <LeagueLobbySection
+          leagueId={leagueId}
+          lobbies={lobbies ?? []}
+          isAdmin={roleData.isAdmin}
+        />
+
         <LeagueMembers
           leagueId={leagueId}
           members={members || []}

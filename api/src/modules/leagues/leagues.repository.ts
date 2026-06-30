@@ -182,11 +182,10 @@ export class LeaguesRepository {
       AND user_id = $2
   `;
 
-    const result =
-      await db.query(query, [
-        params.leagueId,
-        params.userId
-      ]);
+    const result = await db.query(query, [
+      params.leagueId,
+      params.userId
+    ]);
 
     return result.rows[0];
   }
