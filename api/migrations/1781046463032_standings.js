@@ -20,12 +20,14 @@ export const up = (pgm) => {
       type: "uuid",
       notNull: true,
       references: "leagues",
+      onDelete: "cascade"
     },
 
     user_id: {
       type: "uuid",
       notNull: true,
       references: "users",
+      onDelete: "cascade"
     },
 
     wins: {

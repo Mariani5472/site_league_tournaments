@@ -20,6 +20,7 @@ export const up = (pgm) => {
       type: "uuid",
       notNull: true,
       references: "leagues",
+      onDelete: "cascade"
     },
 
     status: {
