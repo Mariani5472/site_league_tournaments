@@ -1,56 +1,41 @@
 import { LobbiesService } from "../lobbies/lobbies.service";
+import { parseStringArray } from "../../utils/parseStringArray";
 import { createLeagueSchema } from "./leagues.schemas";
 import { LeaguesService } from "./leagues.service";
 import { Request, Response } from "express";
 
 export class LeaguesController {
-  private leaguesService = new LeaguesService();
-  private lobbiesService = new LobbiesService();
+  private readonly leaguesService = new LeaguesService();
 
-  async my(request: Request, response: Response) {
-    const leagues = await this.leaguesService.listUserLeagues(request.user.id);
-    return response
-      .json(leagues);
-  }
+  async list(request: Request, response: Response) {
+    const membership = parseStringArray(request.query.membership);
+    const visibility = request.query.visibility as string | undefined;
+    const search = request.query.search as string | undefined;
 
-  async public(request: Request, response: Response) {
-    const search = request.query.search as string;
-    const leagues = await this.leaguesService.getPublicLeagues(search);
-    return response
-      .json(leagues);
-  }
-
-  async show(request: Request, response: Response) {
-    const leagueId = request.params.id as string;
-    const league = await this.leaguesService.show(leagueId);
-    return response
-      .json(league);
-  }
-
-  async members(request: Request, response: Response) {
-    const leagueId = request.params.id as string;
-    const members = await this.leaguesService.members(leagueId);
-    return response
-      .json(members);
-  }
-
-  async requests(request: Request, response: Response) {
-    const leagueId = request.params.id as string;
-    const leagues = await this.leaguesService.listPendingRequests(leagueId);
-    return response
-      .json(leagues);
+    const leagues = await this.leaguesService.list({
+      user_id: request.user.id,
+      membership,
+      visibility,
+      search,
+    });
+    return response.json(leagues);
   }
 
   async create(request: Request, response: Response) {
     const body = createLeagueSchema.parse(request.body);
 
-    const league = await this.leaguesService.createLeague({
-      ownerId: request.user.id,
+    const league = await this.leaguesService.create(request.user.id, {
+      owner_id: request.user.id,
       ...body
     });
 
+    return response.status(201).json(league);
+  }
+
+  async show(request: Request, response: Response) {
+    const leagueId = request.params.id as string | undefined;
+    const league = await this.leaguesService.show(leagueId);
     return response
-      .status(201)
       .json(league);
   }
 
@@ -174,7 +159,7 @@ export class LeaguesController {
       .send();
   }
 
-  async delete(request: Request, response: Response) {
+  async remove(request: Request, response: Response) {
     const leagueId = request.params.id as string;
     const actorId = request.user.id;
 
@@ -186,10 +171,5 @@ export class LeaguesController {
     return response
       .status(204)
       .send();
-  }
-
-  async listLobbies(request: Request, response: Response) {
-    const lobbies = await this.lobbiesService.listLeagueLobbies(request.params.id as string);
-    return response.json(lobbies);
   }
 }

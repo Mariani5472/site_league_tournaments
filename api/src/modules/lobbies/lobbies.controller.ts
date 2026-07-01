@@ -4,6 +4,22 @@ import { LobbiesService } from "./lobbies.service";
 export class LobbiesController {
   private lobbiesService = new LobbiesService();
 
+  async getLobby(request: Request, response: Response) {
+    const lobbyId = request.params.lobbyId as string;
+    const leagueId = request.params.leagueId as string;
+
+    const lobby = await this.lobbiesService.getLobby(lobbyId, leagueId);
+    return response.json(lobby);
+  }
+
+  async findLobby(request: Request, response: Response) {
+    const lobbyId = request.params.lobbyId as string;
+    const leagueId = request.params.leagueId as string;
+
+    const lobby = await this.lobbiesService.findLobby(lobbyId, leagueId);
+    return response.json(lobby);
+  }
+
   async create(request: Request, response: Response) {
     const lobby = await this.lobbiesService.createLobby({
       creatorId: request.user.id,
@@ -56,10 +72,5 @@ export class LobbiesController {
 
     return response
       .json(player);
-  }
-
-  async getLobby(request: Request, response: Response) {
-    const lobby = await this.lobbiesService.getLobby(request.params.lobbyId as string);
-    return response.json(lobby);
   }
 }

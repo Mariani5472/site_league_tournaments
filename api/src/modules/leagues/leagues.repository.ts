@@ -1,8 +1,65 @@
 import { db } from "../../database/connection";
-import { CreateLeagueDTO } from "./leagues.types";
+import { CreateLeagueDTO, League, ListLeaguesParams } from "./leagues.types";
 
 export class LeaguesRepository {
-  async create(data: CreateLeagueDTO) {
+  async list(params: ListLeaguesParams) {
+    const values: unknown[] = [];
+    const where: string[] = [];
+
+    let query = `
+      SELECT
+        l.*,
+        lm.role
+      FROM league_members lm
+      INNER JOIN leagues l
+        ON l.id = lm.league_id
+    `;
+
+    if (params.membership?.length) {
+      values.push(params.user_id);
+      where.push(`lm.user_id = $${values.length}`);
+    }
+
+    if (params.visibility?.length) {
+      values.push(params.visibility);
+      where.push(`l.visibility = ANY($${values.length})`);
+    }
+
+    if (params.search?.length) {
+      values.push(`%${params.search}%`);
+      where.push(`l.name ILIKE $${values.length}`);
+    }
+
+    if (where.length) {
+      query += ` WHERE ${where.join(" AND ")}`;
+    }
+
+    query += `ORDER BY l.created_at DESC`;
+
+    const result = await db.query<League>(
+      query,
+      values
+    );
+
+    return result.rows;
+  }
+
+  async findById(id: string): Promise<League | null> {
+    const query = `
+      SELECT *
+      FROM leagues
+      WHERE id = $1
+    `;
+
+    const result = await db.query<League>(
+      query,
+      [id]
+    );
+
+    return result.rows[0] ?? null;
+  }
+
+  async create(data: CreateLeagueDTO): Promise<League> {
     const query = `
       INSERT INTO leagues (
         owner_id,
@@ -26,7 +83,7 @@ export class LeaguesRepository {
     `;
 
     const values = [
-      data.ownerId,
+      data.owner_id,
       data.name,
       data.description ?? null,
       data.visibility,
@@ -35,7 +92,7 @@ export class LeaguesRepository {
       data.require_riot_account
     ];
 
-    const result = await db.query(
+    const result = await db.query<League>(
       query,
       values
     );
@@ -44,8 +101,8 @@ export class LeaguesRepository {
   }
 
   async addMember(params: {
-    leagueId: string;
-    userId: string;
+    league_id: string;
+    user_id: string;
     role: string;
   }) {
     const query = `
@@ -58,27 +115,12 @@ export class LeaguesRepository {
     `;
 
     const values = [
-      params.leagueId,
-      params.userId,
+      params.league_id,
+      params.user_id,
       params.role
     ];
 
     await db.query(query, values);
-  }
-
-  async findById(id: string) {
-    const query = `
-      SELECT *
-      FROM leagues
-      WHERE id = $1
-    `;
-
-    const result = await db.query(
-      query,
-      [id]
-    );
-
-    return result.rows[0];
   }
 
   async getPublicLeagues(search?: string) {
@@ -99,29 +141,6 @@ export class LeaguesRepository {
     return result.rows;
   }
 
-  async listUserLeagues(userId: string) {
-    const query = `
-      SELECT
-        l.*,
-        lm.role
-      FROM league_members lm
-
-      INNER JOIN leagues l
-        ON l.id = lm.league_id
-
-      WHERE lm.user_id = $1
-
-      ORDER BY l.created_at DESC
-    `;
-
-    const result = await db.query(
-      query,
-      [userId]
-    );
-
-    return result.rows;
-  }
-
   async listLeagueMembers(leagueId: string) {
     const query = `
     SELECT 
@@ -138,33 +157,6 @@ export class LeaguesRepository {
       ON ra.user_id = u.id
     WHERE league_id = $1
   `;
-
-    const result = await db.query(query, [leagueId]);
-
-    return result.rows;
-  }
-
-  async listLeaguePendingRequests(leagueId: string) {
-    const query = `
-      SELECT
-        ljr.id,
-        ljr.status,
-        ljr.created_at,
-
-        u.id AS user_id,
-        u.nickname,
-        u.avatar_url
-
-      FROM league_join_requests ljr
-
-      INNER JOIN users u
-        ON u.id = ljr.user_id
-
-      WHERE ljr.league_id = $1
-        AND ljr.status = 'pending'
-
-      ORDER BY ljr.created_at ASC
-    `;
 
     const result = await db.query(query, [leagueId]);
 
@@ -208,28 +200,7 @@ export class LeaguesRepository {
     return result.rows[0].total;
   }
 
-  async createJoinRequest(params: {
-    leagueId: string;
-    userId: string;
-  }) {
-    const query = `
-      INSERT INTO league_join_requests (
-        league_id,
-        user_id,
-        status
-      )
-      VALUES (
-        $1,
-        $2,
-        'pending'
-      )
-    `;
 
-    await db.query(query, [
-      params.leagueId,
-      params.userId
-    ]);
-  }
 
   async findJoinRequest(params: {
     leagueId: string;
@@ -247,43 +218,6 @@ export class LeaguesRepository {
       params.leagueId,
       params.userId
     ]);
-
-    return result.rows[0];
-  }
-
-  async findRequestById(requestId: string) {
-    const query = `
-    SELECT *
-    FROM league_join_requests
-    WHERE id = $1
-  `;
-
-    const result = await db.query(query, [requestId]);
-
-    return result.rows[0];
-  }
-
-  async approveRequest(requestId: string) {
-    const query = `
-      UPDATE league_join_requests
-      SET status = 'approved'
-      WHERE id = $1
-    `;
-
-    await db.query(query, [
-      requestId
-    ]);
-  }
-
-  async rejectRequest(requestId: string) {
-    const query = `
-      UPDATE league_join_requests
-      SET status = 'rejected'
-      WHERE id = $1
-      RETURNING *
-    `;
-
-    const result = await db.query(query, [requestId]);
 
     return result.rows[0];
   }

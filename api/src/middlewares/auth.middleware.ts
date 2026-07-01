@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 import { supabase } from "../lib/supabase";
+import { AppError } from "../utils/AppError";
 
 export async function authMiddleware(
   request: Request,
@@ -10,9 +11,7 @@ export async function authMiddleware(
   const authHeader = request.headers.authorization;
 
   if (!authHeader) {
-    return response.status(401).json({
-      error: "Token missing"
-    });
+    throw new AppError("Token missing", 401);
   }
 
   const token = authHeader.replace("Bearer ", "");
@@ -20,9 +19,7 @@ export async function authMiddleware(
   const { data, error } = await supabase.auth.getUser(token);
 
   if (error || !data.user) {
-    return response.status(401).json({
-      error: "Invalid token"
-    });
+    throw new AppError("Invalid token", 401);
   }
 
   request.user = {

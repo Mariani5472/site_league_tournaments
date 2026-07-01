@@ -10,6 +10,32 @@ export class LobbiesService {
   private leaguesRepository = new LeaguesRepository();
   private matchesRepository = new MatchesRepository();
 
+  async findLobby(lobbyId: string) {
+    const rows = await this.lobbiesRepository.findLobbyWithPlayers(lobbyId);
+    if (rows.length === 0) {
+      throw new Error("Lobby not found");
+    }
+    const first = rows[0];
+
+    return {
+      id: first.id,
+      league_id: first.league_id,
+      status: first.status,
+      max_players: first.max_players,
+      players: rows.map(row => ({
+        user_id: row.user_id,
+        nickname: row.nickname,
+        avatar_url: row.avatar_url,
+        team_number: row.team_number,
+        is_ready: row.is_ready
+      }))
+    };
+  }
+
+  async listLeagueLobbies(leagueId: string) {
+    return this.lobbiesRepository.findByLeague(leagueId);
+  }
+
   async createLobby(params: CreateLobbyDTO) {
     const league = await this.leaguesRepository.findById(params.leagueId);
     if (!league) {
@@ -227,31 +253,5 @@ export class LobbiesService {
     SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
       matchId: match.id
     });
-  }
-
-  async getLobby(lobbyId: string) {
-    const rows = await this.lobbiesRepository.findLobbyWithPlayers(lobbyId);
-    if (rows.length === 0) {
-      throw new Error("Lobby not found");
-    }
-    const first = rows[0];
-
-    return {
-      id: first.id,
-      league_id: first.league_id,
-      status: first.status,
-      max_players: first.max_players,
-      players: rows.map(row => ({
-        user_id: row.user_id,
-        nickname: row.nickname,
-        avatar_url: row.avatar_url,
-        team_number: row.team_number,
-        is_ready: row.is_ready
-      }))
-    };
-  }
-
-  async listLeagueLobbies(leagueId: string) {
-    return this.lobbiesRepository.findByLeague(leagueId);
   }
 }

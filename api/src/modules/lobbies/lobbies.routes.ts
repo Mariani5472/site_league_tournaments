@@ -2,13 +2,19 @@ import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { LobbiesController } from "./lobbies.controller";
 
-const lobbiesRoutes = Router();
+const lobbiesRoutes = Router({ mergeParams: true });
 const lobbiesController = new LobbiesController();
+
+lobbiesRoutes.get(
+  "/",
+  authMiddleware,
+  lobbiesController.getLobby.bind(lobbiesController)
+);
 
 lobbiesRoutes.get(
   "/:lobbyId",
   authMiddleware,
-  lobbiesController.getLobby.bind(lobbiesController)
+  lobbiesController.findLobby.bind(lobbiesController)
 );
 
 lobbiesRoutes.post(

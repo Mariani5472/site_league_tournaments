@@ -1,37 +1,47 @@
+import { AppError } from "../../utils/AppError";
 import { RiotRepository } from "../riot/riot.repository";
 import { LeaguesRepository } from "./leagues.repository";
-import { CreateLeagueDTO } from "./leagues.types";
+import { CreateLeagueDTO, ListLeaguesParams } from "./leagues.types";
 
 export class LeaguesService {
   private leaguesRepository = new LeaguesRepository();
   private riotRepository = new RiotRepository();
 
-  async createLeague(data: CreateLeagueDTO) {
+  async list(params: ListLeaguesParams) {
+    if (!params.user_id) {
+      throw new AppError("User not found", 401)
+    }
+
+    return await this.leaguesRepository.list(params);
+  }
+
+  async show(leagueId?: string) {
+    if (!leagueId) {
+      throw new AppError("League not found", 404);
+    }
+
+    return await this.leaguesRepository.findById(leagueId);
+  }
+
+
+  async create(userId: string, data: CreateLeagueDTO) {
+    if (!userId) {
+      throw new AppError("User not found", 401)
+    }
+
     const league = await this.leaguesRepository.create(data);
 
     await this.leaguesRepository.addMember({
-      leagueId: league.id,
-      userId: data.ownerId,
+      league_id: league.id,
+      user_id: data.owner_id,
       role: "owner"
     });
 
     return league;
   }
 
-  async listUserLeagues(userId: string) {
-    return await this.leaguesRepository.listUserLeagues(userId);
-  }
-
-  async show(leagueId: string) {
-    return await this.leaguesRepository.findById(leagueId);
-  }
-
   async members(leagueId: string) {
     return await this.leaguesRepository.listLeagueMembers(leagueId);
-  }
-
-  async listPendingRequests(leagueId: string) {
-    return await this.leaguesRepository.listLeaguePendingRequests(leagueId);
   }
 
   async getPublicLeagues(search?: string) {
@@ -72,8 +82,8 @@ export class LeaguesService {
 
     if (league.join_policy === "open") {
       await this.leaguesRepository.addMember({
-        leagueId: params.leagueId,
-        userId: params.userId,
+        league_id: params.leagueId,
+        user_id: params.userId,
         role: "player"
       });
 
@@ -177,8 +187,8 @@ export class LeaguesService {
     }
 
     await this.leaguesRepository.addMember({
-      leagueId: params.leagueId,
-      userId: joinRequest.user_id,
+      league_id: params.leagueId,
+      user_id: joinRequest.user_id,
       role: "player"
     });
 
