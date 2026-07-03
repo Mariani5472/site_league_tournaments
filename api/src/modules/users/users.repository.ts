@@ -28,14 +28,14 @@ export class UsersRepository {
     return result.rows[0];
   }
 
-  async findById(id: string) {
+  async findById(user_id: string) {
     const query = `
       SELECT *
       FROM users
       WHERE id = $1
     `;
 
-    const result = await db.query(query, [id]);
+    const result = await db.query(query, [user_id]);
 
     return result.rows[0];
   }

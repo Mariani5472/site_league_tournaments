@@ -31,3 +31,13 @@ export const createLeagueSchema =
     require_riot_account: z
       .boolean()
   });
+
+export const createLeagueMemberSchema =
+  z.object({
+    role: z.enum([
+      "admin",
+      "player",
+      "spec",
+      "owner"
+    ]),
+  });

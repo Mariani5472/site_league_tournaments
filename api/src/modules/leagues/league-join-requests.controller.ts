@@ -7,7 +7,7 @@ export class LeagueJoinRequestsController {
     = new LeagueJoinRequestsService();
 
   async list(request: Request, response: Response) {
-    const leagueId = request.params.leagueId as string;
+    const league_id = request.params.leagueId as string;
     const status = parseStringArray(request.query.status);
     const search = request.query.search as string | undefined;
 

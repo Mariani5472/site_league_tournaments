@@ -40,10 +40,6 @@ export class LeaguesService {
     return league;
   }
 
-  async members(leagueId: string) {
-    return await this.leaguesRepository.listLeagueMembers(leagueId);
-  }
-
   async getPublicLeagues(search?: string) {
     return await this.leaguesRepository.getPublicLeagues(search);
   }

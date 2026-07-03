@@ -1,8 +1,8 @@
 import { db } from "../../database/connection";
-import { LeagueJoinRequestsParams } from "./leagues.types";
+import { LeagueJoinRequest, LeagueJoinRequestsDTO, ListLeagueJoinRequestsParams } from "./leagues.types";
 
 export class LeagueJoinRequestsRepository {
-  async list(params: LeagueJoinRequestsParams) {
+  async list(league_id: string, params: ListLeagueJoinRequestsParams) {
     const values: unknown[] = [];
     const where: string[] = [];
 
@@ -22,7 +22,7 @@ export class LeagueJoinRequestsRepository {
         ON u.id = ljr.user_id
     `;
 
-    values.push(params.league_id);
+    values.push(league_id);
     where.push(`ljr.league_id = $${values.length}`);
 
     if (params.status?.length) {
@@ -42,12 +42,12 @@ export class LeagueJoinRequestsRepository {
 
     query += ` ORDER BY ljr.created_at ASC`;
 
-    const result = await db.query(query, values);
+    const result = await db.query<LeagueJoinRequest[]>(query, values);
 
     return result.rows;
   }
 
-  async create(params: { league_id: string; user_id: string; }) {
+  async create(params: LeagueJoinRequestsDTO) {
     const query = `
         INSERT INTO league_join_requests (
           league_id,
@@ -59,61 +59,32 @@ export class LeagueJoinRequestsRepository {
           $2,
           'pending'
         )
+          RETURNING *
       `;
 
-    await db.query(query, [
-      params.leagueId,
-      params.userId
+    const result = await db.query<LeagueJoinRequest>(query, [
+      params.league_id,
+      params.user_id
     ]);
+
+    return result.rows[0]
   }
 
-  async approve(requestId: string) {
+  async update(requestId: string, params: {
+    status: | "rejected" | "approved"
+  }) {
     const query = `
       UPDATE league_join_requests
-      SET status = 'approved'
-      WHERE id = $1
-    `;
-
-    await db.query(query, [
-      requestId
-    ]);
-  }
-
-  async update(requestId: string) {
-    const query = `
-      UPDATE league_join_requests
-      SET status = 'rejected'
-      WHERE id = $1
+      SET status = $1
+      WHERE id = $2
       RETURNING *
     `;
 
-    const result = await db.query(query, [requestId]);
+    const result = await db.query<LeagueJoinRequest>(query, [
+      params.status,
+      requestId
+    ]);
 
     return result.rows[0];
   }
-
-  // async approve(requestId: string) {
-  //   const query = `
-  //     UPDATE league_join_requests
-  //     SET status = 'approved'
-  //     WHERE id = $1
-  //   `;
-
-  //   await db.query(query, [
-  //     requestId
-  //   ]);
-  // }
-
-  // async reject(requestId: string) {
-  //   const query = `
-  //     UPDATE league_join_requests
-  //     SET status = 'rejected'
-  //     WHERE id = $1
-  //     RETURNING *
-  //   `;
-
-  //   const result = await db.query(query, [requestId]);
-
-  //   return result.rows[0];
-  // }
 }
