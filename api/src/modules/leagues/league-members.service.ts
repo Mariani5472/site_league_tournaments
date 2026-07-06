@@ -108,7 +108,7 @@ export class LeagueMembersService {
     const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
 
     if (member) {
-      throw new AppError("User is already a league member", 409);
+      return member;
     }
 
     return this.leagueMembersRepository.create(
@@ -134,7 +134,7 @@ export class LeagueMembersService {
 
     await this.ensureLeagueExists(league_id);
 
-    const requester = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+    const requester = await this.leagueMembersRepository.findByLeagueAndUser(league_id, requester_id);
     if (!requester) {
       throw new AppError("League requester not found", 404);
     }
@@ -167,17 +167,14 @@ export class LeagueMembersService {
 
     await this.ensureLeagueExists(league_id);
 
-    const requester = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+    const requester = await this.leagueMembersRepository.findByLeagueAndUser(league_id, requester_id);
     if (!requester) {
       throw new AppError("League requester not found", 404);
     }
 
     await this.ensureUserExists(user_id);
 
-    const member = await this.leagueMembersRepository.findByLeagueAndUser(
-      league_id,
-      user_id
-    );
+    const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
 
     if (!member) {
       throw new AppError("League member not found", 404);

@@ -1,6 +1,6 @@
 import { db } from "../../database/connection";
 
-import { CreateUserDTO } from "./users.types";
+import { CreateUserDTO, User } from "./users.types";
 
 export class UsersRepository {
   async create(data: CreateUserDTO) {
@@ -20,7 +20,7 @@ export class UsersRepository {
       data.nickname
     ];
 
-    const result = await db.query(
+    const result = await db.query<User>(
       query,
       values
     );
@@ -35,7 +35,7 @@ export class UsersRepository {
       WHERE id = $1
     `;
 
-    const result = await db.query(query, [user_id]);
+    const result = await db.query<User>(query, [user_id]);
 
     return result.rows[0];
   }
