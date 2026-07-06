@@ -1,5 +1,5 @@
 import { db } from "../../database/connection";
-import { CreateLeagueMemberDTO, LeagueMember, ListLeagueMembersParams } from "./leagues.types";
+import { CreateLeagueMemberDTO, LeagueMember, ListLeagueMembersParams } from "../leagues/leagues.types";
 
 export class LeagueMembersRepository {
   async list(league_id: string, params: ListLeagueMembersParams): Promise<LeagueMember[]> {

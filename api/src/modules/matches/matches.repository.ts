@@ -1,10 +1,10 @@
 import { db } from "../../database/connection";
 
 export class MatchesRepository {
-  async create(params: {
-    lobbyId: string;
-    leagueId: string;
-  }) {
+  async create(
+    lobby_id: string,
+    league_id: string,
+  ) {
     const query = `
       INSERT INTO matches (
         lobby_id,
@@ -15,18 +15,18 @@ export class MatchesRepository {
     `;
 
     const result = await db.query(query, [
-      params.lobbyId,
-      params.leagueId
+      lobby_id,
+      league_id
     ]);
 
     return result.rows[0];
   }
 
-  async addPlayer(params: {
-    matchId: string;
-    userId: string;
-    teamNumber: number;
-  }) {
+  async addPlayer(
+    match_id: string,
+    user_id: string,
+    team_number: number,
+  ) {
     const query = `
       INSERT INTO match_players (
         match_id,
@@ -37,9 +37,9 @@ export class MatchesRepository {
     `;
 
     await db.query(query, [
-      params.matchId,
-      params.userId,
-      params.teamNumber
+      match_id,
+      user_id,
+      team_number
     ]);
   }
 }

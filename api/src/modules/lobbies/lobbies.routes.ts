@@ -8,13 +8,13 @@ const lobbiesController = new LobbiesController();
 lobbiesRoutes.get(
   "/",
   authMiddleware,
-  lobbiesController.getLobby.bind(lobbiesController)
+  lobbiesController.list.bind(lobbiesController)
 );
 
 lobbiesRoutes.get(
-  "/:lobbyId",
+  "/:lobby_id",
   authMiddleware,
-  lobbiesController.findLobby.bind(lobbiesController)
+  lobbiesController.show.bind(lobbiesController)
 );
 
 lobbiesRoutes.post(
@@ -24,25 +24,25 @@ lobbiesRoutes.post(
 );
 
 lobbiesRoutes.post(
-  "/:lobbyId/join",
+  "/:lobby_id/join",
   authMiddleware,
   lobbiesController.join.bind(lobbiesController)
 );
 
 lobbiesRoutes.patch(
-  "/:lobbyId/ready",
+  "/:lobby_id/ready",
   authMiddleware,
   lobbiesController.ready.bind(lobbiesController)
 );
 
 lobbiesRoutes.patch(
-  "/:lobbyId/team",
+  "/:lobby_id/team",
   authMiddleware,
   lobbiesController.changeTeam.bind(lobbiesController)
 );
 
 lobbiesRoutes.delete(
-  "/:lobbyId/leave",
+  "/:lobby_id/leave",
   authMiddleware,
   lobbiesController.leave.bind(lobbiesController)
 );

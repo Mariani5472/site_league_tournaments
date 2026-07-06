@@ -4,28 +4,36 @@ import { LobbiesService } from "./lobbies.service";
 export class LobbiesController {
   private lobbiesService = new LobbiesService();
 
-  async getLobby(request: Request, response: Response) {
-    const lobbyId = request.params.lobbyId as string;
-    const leagueId = request.params.leagueId as string;
+  async list(request: Request, response: Response) {
+    const league_id = request.params.league_id as string | undefined;
+    const user_id = request.user.id;
 
-    const lobby = await this.lobbiesService.getLobby(lobbyId, leagueId);
+    const lobby = await this.lobbiesService.list(league_id, user_id);
     return response.json(lobby);
   }
 
-  async findLobby(request: Request, response: Response) {
-    const lobbyId = request.params.lobbyId as string;
-    const leagueId = request.params.leagueId as string;
+  async show(request: Request, response: Response) {
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const league_id = request.params.league_id as string | undefined;
+    const user_id = request.user.id;
 
-    const lobby = await this.lobbiesService.findLobby(lobbyId, leagueId);
+    const lobby = await this.lobbiesService.show(
+      user_id,
+      lobby_id,
+      league_id,
+    );
     return response.json(lobby);
   }
 
   async create(request: Request, response: Response) {
-    const lobby = await this.lobbiesService.createLobby({
-      creatorId: request.user.id,
-      leagueId: request.body.leagueId,
-      maxPlayers: request.body.maxPlayers
-    });
+    const league_id = request.params.league_id as string | undefined;
+    const user_id = request.user.id;
+
+    const lobby = await this.lobbiesService.create(
+      league_id,
+      user_id,
+      { max_players: request.body.maxPlayers }
+    );
 
     return response
       .status(201)
@@ -33,20 +41,26 @@ export class LobbiesController {
   }
 
   async join(request: Request, response: Response) {
-    const player = await this.lobbiesService.joinLobby({
-      lobbyId: request.params.lobbyId as string,
-      userId: request.user.id
-    });
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const user_id = request.user.id;
+
+    const player = await this.lobbiesService.joinLobby(
+      lobby_id,
+      user_id
+    );
 
     return response
       .json(player);
   }
 
   async leave(request: Request, response: Response) {
-    await this.lobbiesService.leaveLobby({
-      lobbyId: request.params.lobbyId as string,
-      userId: request.user.id
-    });
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const user_id = request.user.id;
+
+    await this.lobbiesService.leaveLobby(
+      lobby_id,
+      user_id
+    );
 
     return response
       .status(204)
@@ -54,21 +68,28 @@ export class LobbiesController {
   }
 
   async changeTeam(request: Request, response: Response) {
-    const player = await this.lobbiesService.changeTeam({
-      lobbyId: request.params.lobbyId as string,
-      userId: request.user.id,
-      teamNumber: request.body.teamNumber
-    });
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const user_id = request.user.id;
+    const { team_number } = request.body
+
+    const player = await this.lobbiesService.changeTeam(
+      lobby_id,
+      user_id,
+      team_number
+    );
 
     return response
       .json(player);
   }
 
   async ready(request: Request, response: Response) {
-    const player = await this.lobbiesService.toggleReady({
-      lobbyId: request.params.lobbyId as string,
-      userId: request.user.id
-    });
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const user_id = request.user.id;
+
+    const player = await this.lobbiesService.toggleReady(
+      lobby_id,
+      user_id,
+    );
 
     return response
       .json(player);

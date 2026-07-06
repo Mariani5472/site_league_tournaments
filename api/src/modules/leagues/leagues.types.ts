@@ -31,8 +31,8 @@ export type CreateLeagueDTO = Pick<
 
 export type LeagueJoinRequest = {
   id: string;
-  nickname: string;
-  avatar_url: string;
+  league_id: string;
+  user_id: string;
   status: | "pending" | "rejected" | "approved";
   created_at: Date;
 };

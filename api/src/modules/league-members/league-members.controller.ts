@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { LeagueMembersService } from "./league-members.service";
 import { parseStringArray } from "../../utils/parseStringArray";
-import { createLeagueMemberSchema } from "./leagues.schemas";
+import { createLeagueMemberSchema } from "../leagues/leagues.schemas";
 
 export class LeagueMembersController {
   private readonly leagueMembersService
@@ -9,10 +9,11 @@ export class LeagueMembersController {
 
   async list(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
+    const user_id = request.user.id;
     const nickname = parseStringArray(request.query.nickname);
     const role = parseStringArray(request.query.role);
 
-    const members = await this.leagueMembersService.list(league_id, {
+    const members = await this.leagueMembersService.list(user_id, league_id, {
       nickname,
       role
     });
@@ -39,13 +40,13 @@ export class LeagueMembersController {
   async update(request: Request, response: Response) {
     const requester_id = request.user.id
     const league_id = request.params.league_id as string | undefined;
-    const user_id = request.params.user_id as string | undefined;
+    const member_id = request.params.member_id as string | undefined;
     const body = createLeagueMemberSchema.parse(request.body);
 
     const member = await this.leagueMembersService.update(
       requester_id,
       league_id,
-      user_id,
+      member_id,
       body
     );
 
@@ -55,9 +56,9 @@ export class LeagueMembersController {
   async remove(request: Request, response: Response) {
     const requester_id = request.user.id
     const league_id = request.params.league_id as string | undefined;
-    const user_id = request.params.user_id as string | undefined;
+    const member_id = request.params.member_id as string | undefined;
 
-    await this.leagueMembersService.remove(requester_id, league_id, user_id);
+    await this.leagueMembersService.remove(requester_id, league_id, member_id);
 
     return response.status(204).send();
   }

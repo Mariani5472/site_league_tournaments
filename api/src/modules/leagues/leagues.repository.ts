@@ -44,7 +44,7 @@ export class LeaguesRepository {
     return result.rows;
   }
 
-  async findById(id: string): Promise<League | null> {
+  async findById(league_id: string): Promise<League | null> {
     const query = `
       SELECT *
       FROM leagues
@@ -53,13 +53,13 @@ export class LeaguesRepository {
 
     const result = await db.query<League>(
       query,
-      [id]
+      [league_id]
     );
 
     return result.rows[0] ?? null;
   }
 
-  async create(data: CreateLeagueDTO): Promise<League> {
+  async create(params: CreateLeagueDTO): Promise<League> {
     const query = `
       INSERT INTO leagues (
         owner_id,
@@ -83,13 +83,13 @@ export class LeaguesRepository {
     `;
 
     const values = [
-      data.owner_id,
-      data.name,
-      data.description ?? null,
-      data.visibility,
-      data.join_policy,
-      data.max_players,
-      data.require_riot_account
+      params.owner_id,
+      params.name,
+      params.description ?? null,
+      params.visibility,
+      params.join_policy,
+      params.max_players,
+      params.require_riot_account
     ];
 
     const result = await db.query<League>(
@@ -100,8 +100,7 @@ export class LeaguesRepository {
     return result.rows[0];
   }
 
-  async update(params: {
-    leagueId: string;
+  async update(league_id: string, params: {
     name?: string;
     description?: string;
     visibility?: string;
@@ -121,8 +120,8 @@ export class LeaguesRepository {
       WHERE id = $1
     `;
 
-    await db.query(query, [
-      params.leagueId,
+    await db.query<League>(query, [
+      league_id,
       params.name ?? null,
       params.description ?? null,
       params.visibility ?? null,
@@ -132,12 +131,12 @@ export class LeaguesRepository {
     ]);
   }
 
-  async remove(leagueId: string) {
+  async remove(league_id: string) {
     const query = `
       DELETE FROM leagues
       WHERE id = $1
     `;
 
-    await db.query(query, [leagueId]);
+    await db.query(query, [league_id]);
   }
 }

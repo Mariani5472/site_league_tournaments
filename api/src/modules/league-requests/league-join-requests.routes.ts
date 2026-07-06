@@ -1,0 +1,32 @@
+import { Router } from "express";
+import { LeagueJoinRequestsController } from "./league-join-requests.controller";
+import { authMiddleware } from "../../middlewares/auth.middleware";
+
+const leagueJoinRequestsRoutes = Router({ mergeParams: true });
+const leagueJoinRequestsController = new LeagueJoinRequestsController();
+
+leagueJoinRequestsRoutes.get(
+  "/",
+  authMiddleware,
+  leagueJoinRequestsController.list.bind(leagueJoinRequestsController)
+)
+
+leagueJoinRequestsRoutes.post(
+  "/",
+  authMiddleware,
+  leagueJoinRequestsController.create.bind(leagueJoinRequestsController)
+)
+
+leagueJoinRequestsRoutes.patch(
+  "/:request_id",
+  authMiddleware,
+  leagueJoinRequestsController.update.bind(leagueJoinRequestsController)
+)
+
+leagueJoinRequestsRoutes.delete(
+  "/:request_id",
+  authMiddleware,
+  leagueJoinRequestsController.remove.bind(leagueJoinRequestsController)
+)
+
+export { leagueJoinRequestsRoutes }

@@ -1,5 +1,5 @@
 import { db } from "../../database/connection";
-import { LeagueJoinRequest, LeagueJoinRequestsDTO, ListLeagueJoinRequestsParams } from "./leagues.types";
+import { LeagueJoinRequest, LeagueJoinRequestsDTO, ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
 
 export class LeagueJoinRequestsRepository {
   async list(league_id: string, params: ListLeagueJoinRequestsParams) {
@@ -47,6 +47,34 @@ export class LeagueJoinRequestsRepository {
     return result.rows;
   }
 
+  async findById(request_id: string) {
+    const query = `
+      SELECT * 
+      FROM league_join_requests 
+      WHERE id = $1
+    `;
+
+    const result = await db.query<LeagueJoinRequest>(query, [request_id]);
+
+    return result.rows[0]
+  }
+
+  async findByLeagueAndUser(league_id: string, user_id: string) {
+    const query = `
+      SELECT * 
+      FROM league_join_requests 
+      WHERE user_id = $1
+      AND league_id = $2
+    `;
+
+    const result = await db.query<LeagueJoinRequest>(query, [
+      user_id,
+      league_id
+    ]);
+
+    return result.rows[0]
+  }
+
   async create(params: LeagueJoinRequestsDTO) {
     const query = `
         INSERT INTO league_join_requests (
@@ -70,7 +98,7 @@ export class LeagueJoinRequestsRepository {
     return result.rows[0]
   }
 
-  async update(requestId: string, params: {
+  async update(request_id: string, params: {
     status: | "rejected" | "approved"
   }) {
     const query = `
@@ -82,9 +110,17 @@ export class LeagueJoinRequestsRepository {
 
     const result = await db.query<LeagueJoinRequest>(query, [
       params.status,
-      requestId
+      request_id
     ]);
 
     return result.rows[0];
+  }
+
+  async delete(request_id: string) {
+    const query = `
+    DELETE FROM league_join_requests WHERE id = $1
+    `;
+
+    await db.query(query, [request_id]);
   }
 }
