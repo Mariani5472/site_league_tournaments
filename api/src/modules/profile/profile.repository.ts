@@ -18,8 +18,7 @@ export class ProfileRepository {
     return result.rows[0];
   }
 
-  async update(params: {
-    userId: string;
+  async update(user_id: string, params: {
     nickname: string;
     avatar_url: string | null;
     banner_url: string | null;
@@ -35,7 +34,7 @@ export class ProfileRepository {
     `;
 
     const result = await db.query(query, [
-      params.userId,
+      user_id,
       params.nickname,
       params.avatar_url,
       params.banner_url
