@@ -64,13 +64,12 @@ export class LeagueJoinRequestsService {
       throw new AppError("User is already a member", 409);
     }
 
-    const existingRequest =
-      await this.leagueJoinRequestsRepository.findByLeagueAndUser(
-        league_id,
-        user_id
-      );
+    const existingRequests = await this.leagueJoinRequestsRepository.findByLeagueAndUser(
+      league_id,
+      user_id
+    );
 
-    if (existingRequest) {
+    if (existingRequests.some(req => req.status == 'pending')) {
       throw new AppError("Join request already exists", 409);
     }
 

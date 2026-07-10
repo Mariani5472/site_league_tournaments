@@ -72,7 +72,7 @@ export class LeagueJoinRequestsRepository {
       league_id
     ]);
 
-    return result.rows[0]
+    return result.rows
   }
 
   async create(params: LeagueJoinRequestsDTO) {
