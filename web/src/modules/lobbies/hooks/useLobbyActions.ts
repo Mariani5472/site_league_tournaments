@@ -10,13 +10,14 @@ import {
 } from "../services/lobbies.service";
 
 export function useLobbyActions(
+  leagueId: string,
   lobbyId: string
 ) {
   const queryClient = useQueryClient();
 
   function invalidateLobby() {
     queryClient.invalidateQueries({
-      queryKey: ["lobby", lobbyId]
+      queryKey: ["lobby", leagueId, lobbyId]
     });
 
     queryClient.invalidateQueries({
@@ -25,7 +26,7 @@ export function useLobbyActions(
   }
 
   const joinMutation = useMutation({
-    mutationFn: () => joinLobby(lobbyId),
+    mutationFn: () => joinLobby(leagueId, lobbyId),
 
     onSuccess: () => {
       invalidateLobby();
@@ -41,7 +42,7 @@ export function useLobbyActions(
 
   const leaveMutation = useMutation({
 
-    mutationFn: () => leaveLobby(lobbyId),
+    mutationFn: () => leaveLobby(leagueId, lobbyId),
 
     onSuccess: () => {
       invalidateLobby();
@@ -55,7 +56,7 @@ export function useLobbyActions(
   });
 
   const readyMutation = useMutation({
-    mutationFn: () => toggleReady(lobbyId),
+    mutationFn: () => toggleReady(leagueId, lobbyId),
     onSuccess: () => {
       invalidateLobby();
     },
@@ -67,7 +68,7 @@ export function useLobbyActions(
   });
 
   const changeTeamMutation = useMutation({
-    mutationFn: () => changeTeam(lobbyId,),
+    mutationFn: () => changeTeam(leagueId, lobbyId,),
 
     onSuccess: () => {
       invalidateLobby();
@@ -79,23 +80,14 @@ export function useLobbyActions(
   });
 
   return {
-
     join: joinMutation.mutate,
-
     leave: leaveMutation.mutate,
-
     ready: readyMutation.mutate,
-
     switchTeam: changeTeamMutation.mutate,
-
     isJoining: joinMutation.isPending,
-
     isLeaving: leaveMutation.isPending,
-
     isReadyLoading: readyMutation.isPending,
-
     isChangingTeam: changeTeamMutation.isPending,
-
     isLoading:
       joinMutation.isPending ||
       leaveMutation.isPending ||

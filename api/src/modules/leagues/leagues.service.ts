@@ -13,7 +13,10 @@ export class LeaguesService {
       throw new AppError("User not found", 401)
     }
 
-    return await this.leaguesRepository.list(params);
+    return await this.leaguesRepository.list({
+      ...params,
+      user_id: params.user_id ?? user_id
+    });
   }
 
   async show(league_id?: string) {

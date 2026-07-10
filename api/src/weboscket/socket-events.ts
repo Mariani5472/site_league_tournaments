@@ -1,4 +1,8 @@
 export const SOCKET_EVENTS = {
+  LEAGUE_JOIN: "league:join",
+  LEAGUE_LEAVE: "league:leave",
+  LEAGUE_UPDATE: "league:update",
+
   LOBBY_JOIN: "lobby:join",
   LOBBY_LEAVE: "lobby:leave",
   LOBBY_READY: "lobby:ready",

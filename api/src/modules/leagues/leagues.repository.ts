@@ -7,11 +7,10 @@ export class LeaguesRepository {
     const where: string[] = [];
 
     let query = `
-      SELECT
-        l.*,
-        lm.role
-      FROM league_members lm
-      INNER JOIN leagues l
+      SELECT DISTINCT
+        l.*
+      FROM leagues l
+      INNER JOIN league_members lm
         ON l.id = lm.league_id
     `;
 

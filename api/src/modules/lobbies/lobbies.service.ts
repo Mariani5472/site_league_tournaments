@@ -105,7 +105,7 @@ export class LobbiesService {
       { max_players: params.max_players }
     );
 
-    SocketEmitter.emitToLeague(league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       lobby_id: lobby.id
     })
 
@@ -130,7 +130,7 @@ export class LobbiesService {
     }
 
     const member = await this.leagueMembersRepository.findByLeagueAndUser(
-      lobby_id,
+      lobby.league_id,
       user_id
     );
 
@@ -152,7 +152,7 @@ export class LobbiesService {
       team_number
     );
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       lobby_id: lobby.id
     })
 
@@ -189,7 +189,7 @@ export class LobbiesService {
       lobby.id
     );
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       lobby_id: lobby.id
     })
   }
@@ -229,7 +229,7 @@ export class LobbiesService {
 
     await this.checkLobbyCanStart(lobby.id);
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       lobby_id: lobby.id
     })
   }
@@ -267,7 +267,7 @@ export class LobbiesService {
 
     await this.checkLobbyCanStart(lobby.id);
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       lobby_id: lobby.id
     })
 
@@ -315,15 +315,15 @@ export class LobbiesService {
       );
     }
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.MATCH_CREATED, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.MATCH_CREATED, {
       match_id: match.id
     });
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.MATCH_STARTED, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.MATCH_STARTED, {
       match_id: match.id
     });
 
-    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       match_id: match.id
     });
   }

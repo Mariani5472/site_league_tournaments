@@ -191,19 +191,19 @@ export class LeagueMembersService {
       throw new AppError("League requester not found", 404);
     }
 
-    const user = await this.usersRepository.findById(user_id);
-    if (!user) {
-      throw new AppError("User not found", 404);
-    }
-
-    const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+    const member = await this.leagueMembersRepository.findById(user_id);
 
     if (!member) {
       throw new AppError("League member not found", 404);
     }
 
+    const user = await this.usersRepository.findById(member.user_id);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
     this.ensureCanChangeRole(requester, member, 'spec');
 
-    await this.leagueMembersRepository.remove(league_id, user_id);
+    return await this.leagueMembersRepository.remove(league_id, user.id);
   }
 }

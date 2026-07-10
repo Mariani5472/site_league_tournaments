@@ -34,17 +34,24 @@ export async function joinLeague(leagueId: string) {
 }
 
 export async function requestLeagueJoin(leagueId: string) {
-  const { data } = await api.post(`/leagues/${leagueId}/request`);
+  const { data } = await api.post(`/leagues/${leagueId}/requests`);
   return data;
 }
 
-export async function approveRequest(leagueId: string, requestId: string) {
-  const { data } = await api.post(`/leagues/${leagueId}/requests/${requestId}/approve`);
+export async function approveRequest(
+  leagueId: string,
+  requestId: string,
+) {
+  const { data } = await api.patch(`/leagues/${leagueId}/requests/${requestId}`, {
+    status: "approved"
+  });
   return data;
 }
 
 export async function rejectRequest(leagueId: string, requestId: string) {
-  const { data } = await api.post(`/leagues/${leagueId}/requests/${requestId}/reject`);
+  const { data } = await api.patch(`/leagues/${leagueId}/requests/${requestId}`, {
+    status: "rejected"
+  });
   return data;
 }
 
@@ -96,7 +103,7 @@ export async function getLeagueLobbies(leagueId: string) {
 }
 
 export async function createLobby(leagueId: string, data: { maxPlayers: number; }) {
-  const response = await api.post(`/lobbies`, { ...data, leagueId });
+  const response = await api.post(`/leagues/${leagueId}/lobbies`, { ...data });
 
   return response.data;
 }

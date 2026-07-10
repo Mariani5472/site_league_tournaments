@@ -3,29 +3,29 @@ import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/services/socket";
 import { SOCKET_EVENTS } from "@/services/socket-events";
 
-export function useLobbySocket(leagueId: string, lobbyId: string) {
+export function useLobbySocket(leagueId: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId);
+    socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId);
 
     const handleLobbyUpdate = (payload: {
-      lobby_id: string;
+      league_id: string;
     }) => {
-      if (payload.lobby_id !== lobbyId) {
+      if (payload.league_id !== leagueId) {
         return;
       }
 
       queryClient.invalidateQueries({
-        queryKey: ["lobby", leagueId, lobbyId]
+        queryKey: ["league", leagueId]
       });
     };
 
     socket.on(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
 
     return () => {
-      socket.emit(SOCKET_EVENTS.LOBBY_LEAVE, lobbyId);
-      socket.off(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+      socket.emit(SOCKET_EVENTS.LEAGUE_LEAVE, leagueId);
+      socket.off(SOCKET_EVENTS.LEAGUE_UPDATE, handleLobbyUpdate);
     };
-  }, [leagueId, lobbyId, queryClient]);
+  }, [leagueId, queryClient]);
 }

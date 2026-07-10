@@ -54,6 +54,8 @@ export function LeagueRequests({
 
     });
 
+  const pendingRequests = requests.filter(r => r.status == 'pending');
+
   return (
     <div
       className="
@@ -73,7 +75,7 @@ export function LeagueRequests({
       </h2>
 
       <div className="space-y-3">
-        {requests.map((request) => (
+        {pendingRequests.map((request) => (
           <div
             key={request.id}
             className="

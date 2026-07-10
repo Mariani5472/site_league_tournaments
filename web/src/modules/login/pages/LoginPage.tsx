@@ -7,8 +7,17 @@ type FormData = {
 };
 
 export function LoginPage() {
-  const { signIn, signOut, user } = useAuth();
-  const { register, handleSubmit } = useForm<FormData>();
+  const {
+    signIn,
+    signUp,
+    signOut,
+    user,
+  } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+  } = useForm<FormData>();
 
   async function handleLogin(data: FormData) {
     try {
@@ -18,33 +27,62 @@ export function LoginPage() {
     }
   }
 
+  async function handleRegister(data: FormData) {
+    try {
+      await signUp(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   if (user) {
     return (
-      <>
-        <button type="button" onClick={signOut}>
-          logout
+      <div className="flex flex-col gap-4">
+        <h1>User: {user.email}</h1>
+
+        <button
+          type="button"
+          onClick={signOut}
+        >
+          Logout
         </button>
-          <h1>User : {user.email}</h1>
-      </>
+      </div>
     );
   }
 
   return (
-    
     <form
-      onSubmit={handleSubmit(handleLogin)}
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-4 max-w-sm"
     >
-      <input style={{color: "black" }} {...register("email")} />
-
       <input
-        type="password"
-        {...register("password")}
+        {...register("email")}
+        type="email"
+        placeholder="Email"
+        className="border rounded p-2 text-black"
       />
 
-      <button type="submit">
-        Login
-      </button>
+      <input
+        {...register("password")}
+        type="password"
+        placeholder="Password"
+        className="border rounded p-2 text-black"
+      />
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleSubmit(handleLogin)}
+        >
+          Login
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSubmit(handleRegister)}
+        >
+          Registrar
+        </button>
+      </div>
     </form>
   );
 }

@@ -64,6 +64,21 @@ export class LeagueMembersRepository {
     return result.rows[0].total;
   }
 
+  async findById(member_id: string): Promise<LeagueMember | null> {
+    const query = `
+      SELECT *
+      FROM league_members
+      WHERE id = $1
+    `;
+
+    const result = await db.query<LeagueMember>(
+      query,
+      [member_id]
+    );
+
+    return result.rows[0] ?? null;
+  }
+
   async findByLeagueAndUser(league_id: string, user_id: string): Promise<LeagueMember | null> {
     const query = `
       SELECT *

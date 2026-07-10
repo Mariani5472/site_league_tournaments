@@ -9,6 +9,7 @@ export type LoginDto = {
 export type AuthContextData = { 
   user: User | null
   signIn(data: LoginDto): Promise<void>;
+  signUp(data: LoginDto): Promise<void>;
   signOut(): Promise<void>;
   loading: boolean;
 };

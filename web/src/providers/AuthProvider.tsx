@@ -36,6 +36,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(userData.user);
   }
 
+  async function signUp(data: LoginDto) {
+    const { error } = await mySupabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    await api.post("/auth/sync");
+
+    const { data: userData } = await mySupabase.auth.getUser();
+
+    setUser(userData.user);
+  }
+
   async function signOut() {
     await mySupabase.auth.signOut();
     setUser(null);
@@ -50,6 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       value={{
         user,
         signIn,
+        signUp,
         signOut,
         loading,
       }}

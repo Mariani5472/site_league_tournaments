@@ -1,5 +1,6 @@
 import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
+import { registerSocketHandlers } from "./socket-handlers";
 
 let io: Server;
 
@@ -10,9 +11,7 @@ export function initializeSocket(server: HTTPServer) {
     }
   });
 
-  io.on("connection", (socket) => {
-    console.log("client connected", socket.id)
-  });
+  registerSocketHandlers(io)
 
   return io;
 }

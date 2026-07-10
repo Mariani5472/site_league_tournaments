@@ -9,14 +9,14 @@ import { LobbyStatus } from "../components/LobbyStatus";
 import { useLobbyActions } from "../hooks/useLobbyActions";
 
 export function LobbyPage() {
-    const { lobbyId } = useParams();
+    const { leagueId, lobbyId } = useParams();
     const {
       data: lobby,
       isLoading
-    } = useLobby(lobbyId!);
+    } = useLobby(leagueId!, lobbyId!);
 
-    useLobbySocket(lobbyId!);
-    const actions = useLobbyActions(lobbyId!);
+    useLobbySocket(leagueId!, lobbyId!);
+    const actions = useLobbyActions(leagueId!, lobbyId!);
 
     if (isLoading) {
         return <>Loading...</>

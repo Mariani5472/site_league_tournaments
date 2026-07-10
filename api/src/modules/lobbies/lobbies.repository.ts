@@ -49,7 +49,7 @@ export class LobbiesRepository {
     const query = `
       INSERT INTO lobby_players (
         lobby_id,
-        user_Id
+        user_Id,
         team_number
       )
       VALUES ($1, $2, $3)
@@ -140,7 +140,7 @@ export class LobbiesRepository {
 
     const result = await db.query(query, [lobby_id]);
 
-    return result.rows[0]
+    return result.rows
   }
 
   async findPlayerInLobby(
