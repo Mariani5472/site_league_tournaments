@@ -43,7 +43,7 @@ export class LeagueMembersRepository {
       query += ` WHERE ${where.join(" AND ")}`;
     }
 
-    query += `ORDER BY u.nickname DESC`;
+    query += ` ORDER BY u.nickname DESC`;
 
     const result = await db.query<LeagueMember>(query, values);
 

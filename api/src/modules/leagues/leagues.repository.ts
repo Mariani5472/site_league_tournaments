@@ -34,7 +34,7 @@ export class LeaguesRepository {
       query += ` WHERE ${where.join(" AND ")}`;
     }
 
-    query += `ORDER BY l.created_at DESC`;
+    query += ` ORDER BY l.created_at DESC`;
 
     const result = await db.query<League>(
       query,

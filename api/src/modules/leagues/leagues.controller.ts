@@ -20,7 +20,7 @@ export class LeaguesController {
   }
 
   async show(request: Request, response: Response) {
-    const league_id = request.params.id as string | undefined;
+    const league_id = request.params.league_id as string | undefined;
 
     const league = await this.leaguesService.show(league_id);
 
@@ -40,7 +40,7 @@ export class LeaguesController {
   }
 
   async update(request: Request, response: Response) {
-    const league_id = request.params.id as string | undefined;
+    const league_id = request.params.league_id as string | undefined;
     const user_id = request.user.id;
 
     const league = await this.leaguesService.update(league_id, user_id, {
@@ -53,7 +53,7 @@ export class LeaguesController {
   }
 
   async remove(request: Request, response: Response) {
-    const league_id = request.params.id as string | undefined;
+    const league_id = request.params.league_id as string | undefined;
     const user_id = request.user.id;
 
     await this.leaguesService.remove(

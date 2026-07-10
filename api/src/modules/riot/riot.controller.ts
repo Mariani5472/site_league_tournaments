@@ -4,14 +4,14 @@ import { RiotService } from "./riot.service";
 export class RiotController {
   private riotService = new RiotService();
 
-  async me(request: Request, response: Response) {
+  async show(request: Request, response: Response) {
     const userId = request.user.id;
     const account = await this.riotService.getMyAccount(userId);
 
     return response.json(account);
   }
 
-  async linkAccount(request: Request, response: Response) {
+  async create(request: Request, response: Response) {
     const { gameName, tagLine } = request.body;
     const userId = request.user.id;
 
@@ -26,7 +26,7 @@ export class RiotController {
       .json(riotAccount);
   }
 
-  async unlink(request: Request, response: Response) {
+  async remove(request: Request, response: Response) {
     await this.riotService.unlinkAccount(request.user.id);
 
     return response

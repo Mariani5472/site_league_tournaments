@@ -6,12 +6,15 @@ import type { CreateLeagueInput } from "../types/createInput";
 import type { LeagueLobby } from "../types/LeagueLobby";
 
 export async function getMyLeagues() {
-  const { data } = await api.get<League[]>("/leagues/my");
+  const params = new URLSearchParams();
+  params.set("membership", "member");
+
+  const { data } = await api.get<League[]>(`/leagues?${params}`);
   return data;
 }
 
 export async function getLeague(leagueId: string) {
-  const { data } = await api.get<League>(`/leagues/${leagueId}`);
+  const { data } = await api.get<League>(`/leagues/${leagueId}`,);
   return data;
 }
 
@@ -56,7 +59,7 @@ export async function getPublicLeagues(search?: string) {
     params.set("search", search);
   }
 
-  const { data } = await api.get<League[]>(`/leagues/public?${params.toString()}`);
+  const { data } = await api.get<League[]>(`/leagues?${params.toString()}`);
   return data;
 }
 

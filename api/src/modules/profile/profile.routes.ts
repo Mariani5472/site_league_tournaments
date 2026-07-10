@@ -6,13 +6,19 @@ const profileRoutes = Router();
 const profileController = new ProfileController();
 
 profileRoutes.get(
+  "/",
+  authMiddleware,
+  profileController.show.bind(profileController)
+);
+
+profileRoutes.get(
   "/:user_id",
   authMiddleware,
   profileController.show.bind(profileController)
 );
 
 profileRoutes.patch(
-  "/:user_id",
+  "/",
   authMiddleware,
   profileController.update.bind(profileController)
 );

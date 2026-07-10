@@ -5,15 +5,15 @@ export async function linkRiotAccount(info: {
   gameName: string;
   tagLine: string;
 }) {
-  const { data } = await api.post("/riot/link", info);
+  const { data } = await api.post("/riot", info);
   return data;
 }
 
 export async function getMyRiotAccount() {
-  const { data } = await api.get<RiotAccount | null>("/riot/me");
+  const { data } = await api.get<RiotAccount | null>("/riot");
   return data;
 }
 
 export async function unlinkAccount() {
-  return await api.delete("riot/me")
+  return await api.delete("/riot")
 }
