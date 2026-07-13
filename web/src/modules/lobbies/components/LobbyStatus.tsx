@@ -1,18 +1,14 @@
 import { Badge } from "@/components/ui/badge";
-import type { Lobby } from "../types/lobby.types";
+import type { LobbyDetails } from "../types/lobby.types";
 
 
 interface Props {
-  lobby: Lobby;
+  lobby: LobbyDetails;
 }
 
 export function LobbyStatus({
   lobby,
 }: Props) {
-  const readyPlayers =
-    lobby.players.filter(
-      player => player.is_ready
-    ).length;
 
   return (
     <div
@@ -43,11 +39,11 @@ export function LobbyStatus({
 
           {" "}
 
-          {readyPlayers}
+          {lobby.ready_count}
 
           /
 
-          {lobby.players.length}
+          {lobby.players_count}
         </p>
       </div>
 

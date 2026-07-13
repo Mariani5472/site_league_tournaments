@@ -1,6 +1,6 @@
-import type { Lobby } from "../types/lobby.types";
+import type { LobbyDetails } from "../types/lobby.types";
 interface Props {
-  lobby: Lobby;
+  lobby: LobbyDetails;
 }
 
 export function LobbyHeader({
@@ -41,12 +41,6 @@ export function LobbyHeader({
           text-right
         "
       >
-        <p className="font-semibold">
-          {lobby.players.length}
-          /
-          {lobby.max_players}
-        </p>
-
         <span
           className="
             text-sm
@@ -55,6 +49,11 @@ export function LobbyHeader({
         >
           Players
         </span>
+        <p className="font-semibold">
+          {lobby.players_count}
+          /
+          {lobby.max_players}
+        </p>
       </div>
     </div>
   );

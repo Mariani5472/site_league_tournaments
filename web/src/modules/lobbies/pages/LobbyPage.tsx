@@ -7,9 +7,11 @@ import { LobbyActions } from "../components/LobbyActions";
 import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyStatus } from "../components/LobbyStatus";
 import { useLobbyActions } from "../hooks/useLobbyActions";
+import { useAuth } from "@/hooks/useAuth";
 
 export function LobbyPage() {
     const { leagueId, lobbyId } = useParams();
+    const { user } = useAuth();
     const {
       data: lobby,
       isLoading
@@ -18,6 +20,7 @@ export function LobbyPage() {
     useLobbySocket(leagueId!, lobbyId!);
     const actions = useLobbyActions(leagueId!, lobbyId!);
 
+
     if (isLoading) {
         return <>Loading...</>
     }
@@ -25,6 +28,10 @@ export function LobbyPage() {
     if (!lobby) {
         return <>Lobby not found</>
     }
+
+    console.log(lobby)
+
+    const me = lobby.players.find(player => player.user_id === user?.id);
 
     return(
         <div
@@ -44,6 +51,7 @@ export function LobbyPage() {
             />
 
             <LobbyActions
+                currentPlayer={me}
                 {...actions}
             />
 

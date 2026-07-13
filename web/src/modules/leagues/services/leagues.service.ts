@@ -3,7 +3,7 @@ import type { League } from "../types/league";
 import type { LeagueMember } from "../types/member";
 import type { LeagueRequest } from "../types/request";
 import type { CreateLeagueInput } from "../types/createInput";
-import type { LeagueLobby } from "../types/LeagueLobby";
+import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 
 export async function getMyLeagues() {
   const params = new URLSearchParams();
@@ -98,7 +98,7 @@ export async function updateLeague(leagueId: string, info: {
 }
 
 export async function getLeagueLobbies(leagueId: string) {
-  const { data } = await api.get<LeagueLobby[]>(`/leagues/${leagueId}/lobbies`);
+  const { data } = await api.get<Lobby[]>(`/leagues/${leagueId}/lobbies`);
   return data;
 }
 

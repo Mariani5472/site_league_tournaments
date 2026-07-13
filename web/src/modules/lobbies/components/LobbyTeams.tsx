@@ -1,25 +1,13 @@
-import type { Lobby } from "../types/lobby.types";
+import type { LobbyDetails } from "../types/lobby.types";
 import { TeamColumn } from "./TeamColumn";
 
 interface Props {
-  lobby: Lobby;
+  lobby: LobbyDetails;
 }
 
 export function LobbyTeams({
   lobby,
 }: Props) {
-
-  const blueTeam =
-    lobby.players.filter(
-      player =>
-        player.team_number === 1
-    );
-
-  const redTeam =
-    lobby.players.filter(
-      player =>
-        player.team_number === 2
-    );
 
   return (
     <div
@@ -31,12 +19,12 @@ export function LobbyTeams({
     >
       <TeamColumn
         title="Blue Team"
-        players={blueTeam}
+        players={lobby.teams.team_1.players}
       />
 
       <TeamColumn
         title="Red Team"
-        players={redTeam}
+        players={lobby.teams.team_2.players}
       />
     </div>
   );

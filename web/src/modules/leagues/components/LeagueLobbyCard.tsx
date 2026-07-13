@@ -1,11 +1,11 @@
 import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import type { LeagueLobby } from "../types/LeagueLobby";
+import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 
 interface Props {
   leagueId: string;
-  lobby: LeagueLobby;
+  lobby: Lobby;
 }
 
 export function LeagueLobbyCard({

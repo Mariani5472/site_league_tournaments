@@ -53,6 +53,22 @@ export class LobbiesController {
       .json(player);
   }
 
+  async remove(request: Request, response: Response) {
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const league_id = request.params.league_id as string | undefined;
+    const user_id = request.user.id;
+
+    await this.lobbiesService.remove(
+      lobby_id,
+      league_id,
+      user_id
+    );
+
+    return response
+      .status(204)
+      .send();
+  }
+
   async leave(request: Request, response: Response) {
     const lobby_id = request.params.lobby_id as string | undefined;
     const user_id = request.user.id;
@@ -86,7 +102,20 @@ export class LobbiesController {
     const lobby_id = request.params.lobby_id as string | undefined;
     const user_id = request.user.id;
 
-    const player = await this.lobbiesService.toggleReady(
+    const player = await this.lobbiesService.setReady(
+      lobby_id,
+      user_id,
+    );
+
+    return response
+      .json(player);
+  }
+
+  async unready(request: Request, response: Response) {
+    const lobby_id = request.params.lobby_id as string | undefined;
+    const user_id = request.user.id;
+
+    const player = await this.lobbiesService.setUnready(
       lobby_id,
       user_id,
     );

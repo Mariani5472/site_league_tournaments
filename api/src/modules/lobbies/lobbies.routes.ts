@@ -36,9 +36,21 @@ lobbiesRoutes.patch(
 );
 
 lobbiesRoutes.patch(
+  "/:lobby_id/unready",
+  authMiddleware,
+  lobbiesController.unready.bind(lobbiesController)
+);
+
+lobbiesRoutes.patch(
   "/:lobby_id/team",
   authMiddleware,
   lobbiesController.changeTeam.bind(lobbiesController)
+);
+
+lobbiesRoutes.delete(
+  "/:lobby_id",
+  authMiddleware,
+  lobbiesController.remove.bind(lobbiesController)
 );
 
 lobbiesRoutes.delete(

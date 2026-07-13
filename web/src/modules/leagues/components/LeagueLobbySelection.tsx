@@ -1,13 +1,13 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { LeagueLobby } from "../types/LeagueLobby";
 import { LeagueLobbyCard } from "./LeagueLobbyCard";
 import { CreateLobbyDialog } from "./CreateLobbyDialog";
+import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 
 
 interface Props {
   leagueId: string;
-  lobbies: LeagueLobby[];
+  lobbies: Lobby[];
   isAdmin: boolean;
 }
 

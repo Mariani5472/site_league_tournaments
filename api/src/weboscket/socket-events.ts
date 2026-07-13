@@ -7,6 +7,7 @@ export const SOCKET_EVENTS = {
   LOBBY_LEAVE: "lobby:leave",
   LOBBY_READY: "lobby:ready",
   LOBBY_UPDATE: "lobby:update",
+  LOBBY_DELETE: "lobby:delete",
   LOBBY_TEAM_CHANGE: "lobby:team-change",
 
   MATCH_CREATED: "match:created",

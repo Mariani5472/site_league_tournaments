@@ -6,7 +6,9 @@ import {
   joinLobby,
   leaveLobby,
   toggleReady,
-  changeTeam
+  changeTeam,
+  toggleUnready,
+  deleteLobby
 } from "../services/lobbies.service";
 
 export function useLobbyActions(
@@ -67,8 +69,32 @@ export function useLobbyActions(
 
   });
 
+  const unreadyMutation = useMutation({
+    mutationFn: () => toggleUnready(leagueId, lobbyId),
+    onSuccess: () => {
+      invalidateLobby();
+    },
+
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+
+  });
+
   const changeTeamMutation = useMutation({
     mutationFn: () => changeTeam(leagueId, lobbyId,),
+
+    onSuccess: () => {
+      invalidateLobby();
+    },
+
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const deleteLobbyMutation = useMutation({
+    mutationFn: () => deleteLobby(leagueId, lobbyId),
 
     onSuccess: () => {
       invalidateLobby();
@@ -83,15 +109,21 @@ export function useLobbyActions(
     join: joinMutation.mutate,
     leave: leaveMutation.mutate,
     ready: readyMutation.mutate,
+    unready: unreadyMutation.mutate,
     switchTeam: changeTeamMutation.mutate,
+    deleteLobby: deleteLobbyMutation.mutate,
     isJoining: joinMutation.isPending,
     isLeaving: leaveMutation.isPending,
     isReadyLoading: readyMutation.isPending,
+    isUnreadyLoading: unreadyMutation.isPending,
     isChangingTeam: changeTeamMutation.isPending,
+    isDeleting: deleteLobbyMutation.isPending,
     isLoading:
       joinMutation.isPending ||
       leaveMutation.isPending ||
       readyMutation.isPending ||
-      changeTeamMutation.isPending
+      unreadyMutation.isPending ||
+      changeTeamMutation.isPending ||
+      deleteLobbyMutation.isPending
   };
 }
