@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/services/socket";
 import { SOCKET_EVENTS } from "@/services/socket-events";
 
-export function useLobbySocket(leagueId: string) {
+export function useLeagueSocket(leagueId: string) {
   const queryClient = useQueryClient();
 
   useEffect(() => {

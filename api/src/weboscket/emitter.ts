@@ -8,10 +8,7 @@ export class SocketEmitter {
   static emitToLobby(lobbyId: string, event: string, payload: any) {
     const room = `lobby:${lobbyId}`;
 
-    console.log(
-      room,
-      getIO().sockets.adapter.rooms.get(room)
-    );
+    console.log(room, getIO().sockets.adapter.rooms.get(room));
 
     getIO().to(room).emit(event, payload);
   }

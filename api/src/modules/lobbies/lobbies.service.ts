@@ -364,13 +364,13 @@ export class LobbiesService {
     }
 
     const allowedRoles = ["owner", "admin"];
-    if (allowedRoles.includes(member.role)) {
+    if (!allowedRoles.includes(member.role)) {
       throw new AppError("Insufficient permissions");
     }
 
     await this.lobbiesRepository.remove(lobby.id);
     await this.lobbiesRepository.resetReady(lobby.id)
-    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
     })

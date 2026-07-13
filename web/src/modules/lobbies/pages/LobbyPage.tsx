@@ -29,8 +29,6 @@ export function LobbyPage() {
         return <>Lobby not found</>
     }
 
-    console.log(lobby)
-
     const me = lobby.players.find(player => player.user_id === user?.id);
 
     return(

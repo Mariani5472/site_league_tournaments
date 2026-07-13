@@ -13,7 +13,7 @@ export function useLobbySocket(
   const navigate = useNavigate();
 
   useEffect(() => {
-    socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId);
+    socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId);
 
     const handleLobbyUpdate = (payload: {
       lobby_id: string;
@@ -50,14 +50,15 @@ export function useLobbySocket(
     };
 
     socket.on(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
-
     socket.on(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
 
     return () => {
       socket.emit(
-        SOCKET_EVENTS.LEAGUE_LEAVE,
+        SOCKET_EVENTS.LOBBY_LEAVE,
         leagueId
       );
+
+      socket.offAny();
 
       socket.off(
         SOCKET_EVENTS.LOBBY_UPDATE,
