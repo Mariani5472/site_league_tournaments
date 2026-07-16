@@ -20,7 +20,7 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
     mutationFn: () => leaveLeague(league.id),
     onSuccess: () => {
       toast.success("You left the league");
-      navigate("/leagues/my");
+      navigate("/leagues");
     }
   })
 
@@ -28,7 +28,7 @@ export function LeagueHeader({league, isAdmin, isOwner}: Props) {
     mutationFn: () => deleteLeague(league.id),
     onSuccess: () => {
       toast.success("You delete the league");
-      navigate("/leagues/my");
+      navigate("/leagues");
     }
   })
 

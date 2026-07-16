@@ -2,6 +2,8 @@ export const SOCKET_EVENTS = {
   LEAGUE_JOIN: "league:join",
   LEAGUE_LEAVE: "league:leave",
   LEAGUE_UPDATE: "league:update",
+  LEAGUE_MEMBERS_UPDATE: "league_members:update",
+  LEAGUE_REQUESTS_UPDATED: "league_members:update",
 
   LOBBY_JOIN: "lobby:join",
   LOBBY_LEAVE: "lobby:leave",
@@ -13,5 +15,8 @@ export const SOCKET_EVENTS = {
   MATCH_CREATED: "match:created",
   MATCH_STARTED: "match:started",
   MATCH_VOTE: "match:vote",
-  MATCH_FINISHED: "match:finished"
+  MATCH_FINISHED: "match:finished",
+
+  CHAT_MESSAGE: "chat:message",
+  CHAT_TYPING: "chat:typing"
 };

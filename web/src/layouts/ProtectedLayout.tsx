@@ -1,66 +1,68 @@
+import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Outlet, Navigate }
-  from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 
 export function ProtectedLayout() {
   const { user, loading } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   if (loading) {
     return (
-      <div
-        className="
-          flex
-          min-h-screen
-          items-center
-          justify-center
-        "
-      >
+      <div className="flex min-h-screen items-center justify-center">
         Loading...
       </div>
     );
   }
 
   if (!user) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    );
+    return <Navigate to="/login" replace />;
   }
 
   return (
-    <div
-      className="
-        flex
-        min-h-screen
-        bg-background
-      "
-    >
-      <aside
-        className="
-          w-64
-          border-r
-          bg-card
-          p-4
-        "
-      >
-        <Sidebar />
-      </aside>
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
-      <div className="flex-1">
-        <header
-          className="
-            border-b
-            p-4
-          "
-        >
-          Header
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 items-center justify-between border-b bg-card px-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="rounded-md p-2 hover:bg-muted lg:hidden"
+              aria-label="Abrir menu"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+          </div>
         </header>
 
-        <main className="p-6">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="mx-auto max-w-7xl">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

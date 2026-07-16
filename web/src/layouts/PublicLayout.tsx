@@ -1,11 +1,30 @@
-import { Outlet } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate, Outlet } from "react-router-dom";
 
 export function PublicLayout() {
-  return (
-    <div className="min-h-screen bg-background">
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  );
+  const {
+    user,
+    loading,
+  } = useAuth();
+
+  if (loading) {
+    return (
+      <div>
+        Loading...
+      </div>
+    );
+  }
+
+  console.log(user)
+
+  if (user) {
+    return (
+      <Navigate
+        to="/main"
+        replace
+      />
+    );
+  }
+
+  return <Outlet />;
 }
