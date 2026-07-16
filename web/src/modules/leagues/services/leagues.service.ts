@@ -5,11 +5,18 @@ import type { LeagueRequest } from "../types/request";
 import type { CreateLeagueInput } from "../types/createInput";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 
-export async function getMyLeagues() {
-  const params = new URLSearchParams();
-  params.set("membership", "member");
+export async function getMineLeagues() {
+  const { data } = await api.get<League[]>(`/leagues/mine`);
+  return data;
+}
 
-  const { data } = await api.get<League[]>(`/leagues?${params}`);
+export async function getDiscoverLeagues(search?: string) {
+  const params = new URLSearchParams();
+  if (search) {
+    params.set("search", search);
+  }
+
+  const { data } = await api.get<League[]>(`/leagues/discover?${params.toString()}`);
   return data;
 }
 
@@ -57,16 +64,6 @@ export async function rejectRequest(leagueId: string, requestId: string) {
 
 export async function createLeague(input: CreateLeagueInput) {
   const { data } = await api.post(`/leagues`, input)
-  return data;
-}
-
-export async function getPublicLeagues(search?: string) {
-  const params = new URLSearchParams();
-  if (search) {
-    params.set("search", search);
-  }
-
-  const { data } = await api.get<League[]>(`/leagues?${params.toString()}`);
   return data;
 }
 

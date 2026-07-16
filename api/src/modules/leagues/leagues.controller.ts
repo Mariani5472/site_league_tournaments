@@ -19,11 +19,20 @@ export class LeaguesController {
     return response.json(leagues);
   }
 
+  async mine(request: Request, response: Response) {
+    const leagues = await this.leaguesService.mine(request.user.id);
+    return response.json(leagues);
+  }
+
+  async discover(request: Request, response: Response) {
+    const search = request.query.search as string | undefined;
+    const leagues = await this.leaguesService.discover(request.user.id, search);
+    return response.json(leagues);
+  }
+
   async show(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
-
     const league = await this.leaguesService.show(league_id);
-
     return response.json(league);
   }
 

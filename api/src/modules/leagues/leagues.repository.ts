@@ -10,7 +10,7 @@ export class LeaguesRepository {
       SELECT DISTINCT
         l.*
       FROM leagues l
-      INNER JOIN league_members lm
+      LEFT JOIN league_members lm
         ON l.id = lm.league_id
     `;
 
@@ -39,6 +39,74 @@ export class LeaguesRepository {
       query,
       values
     );
+
+    return result.rows;
+  }
+
+  async discover(
+    user_id: string,
+    search?: string
+  ) {
+    const query = `
+    SELECT
+      l.*,
+      COUNT(lm.id)::int AS player_count
+
+    FROM leagues l
+
+    LEFT JOIN league_members lm
+      ON lm.league_id = l.id
+
+    WHERE l.visibility = 'public'
+
+      AND NOT EXISTS (
+        SELECT 1
+        FROM league_members user_members
+        WHERE user_members.league_id = l.id
+          AND user_members.user_id = $1
+      )
+
+      AND (
+        $2::text IS NULL
+        OR l.name ILIKE '%' || $2 || '%'
+        OR l.description ILIKE '%' || $2 || '%'
+      )
+
+    GROUP BY l.id
+
+    ORDER BY l.created_at DESC
+  `;
+
+    const result = await db.query<League>(
+      query,
+      [
+        user_id,
+        search || null,
+      ]
+    );
+
+    return result.rows;
+  }
+
+  async listMine(user_id: string) {
+    const query = `
+    SELECT
+      l.*,
+      COUNT(all_members.id)::int AS player_count
+    FROM leagues l
+
+    INNER JOIN league_members user_members
+      ON user_members.league_id = l.id
+      AND user_members.user_id = $1
+
+    LEFT JOIN league_members all_members
+      ON all_members.league_id = l.id
+
+    GROUP BY l.id
+    ORDER BY l.created_at DESC
+  `;
+
+    const result = await db.query<League>(query, [user_id]);
 
     return result.rows;
   }

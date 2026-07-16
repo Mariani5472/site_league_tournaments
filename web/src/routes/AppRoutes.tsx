@@ -4,7 +4,7 @@ import { DashboardPage } from "@/modules/dashboard/pages/DashboardPage";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { LeaguePage } from "@/modules/leagues/pages/LeaguePage";
-import { PublicLeaguesPage } from "@/modules/leagues/pages/PublicLeaguesPage";
+import { LeaguesPage } from "@/modules/leagues/pages/LeaguesPage";
 import { ProfilePage } from "@/modules/profile/pages/ProfilePage";
 import { LeagueSettingsPage } from "@/modules/leagues/pages/LeagueSettingsPage";
 import { LobbyPage } from "@/modules/lobbies/pages/LobbyPage";
@@ -41,7 +41,7 @@ export function AppRoutes() {
           />
           <Route
             path="/leagues"
-            element={<PublicLeaguesPage  />}
+            element={<LeaguesPage  />}
           />
           <Route
             path="/profile"

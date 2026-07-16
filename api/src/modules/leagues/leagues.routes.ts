@@ -16,6 +16,18 @@ leaguesRoutes.get(
 );
 
 leaguesRoutes.get(
+  "/mine",
+  authMiddleware,
+  leaguesController.mine.bind(leaguesController)
+);
+
+leaguesRoutes.get(
+  "/discover",
+  authMiddleware,
+  leaguesController.discover.bind(leaguesController)
+);
+
+leaguesRoutes.get(
   "/:league_id",
   authMiddleware,
   leaguesController.show.bind(leaguesController)

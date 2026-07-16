@@ -5,6 +5,7 @@ import { LeaguesRepository } from "./leagues.repository";
 import { CreateLeagueDTO, ListLeaguesParams } from "./leagues.types";
 
 export class LeaguesService {
+  private usersRepository = new UsersRepository();
   private leaguesRepository = new LeaguesRepository();
   private leagueMembersRepository = new LeagueMembersRepository();
 
@@ -17,6 +18,34 @@ export class LeaguesService {
       ...params,
       user_id: params.user_id ?? user_id
     });
+  }
+
+  async mine(user_id: string) {
+    if (!user_id) {
+      throw new AppError("User not found", 401)
+    }
+
+    const user = await this.usersRepository.findById(user_id);
+
+    if (!user) {
+      throw new AppError("User not found", 401)
+    }
+
+    return this.leaguesRepository.listMine(user.id);
+  }
+
+  async discover(user_id: string, search?: string) {
+    if (!user_id) {
+      throw new AppError("User not found", 401)
+    }
+
+    const user = await this.usersRepository.findById(user_id);
+
+    if (!user) {
+      throw new AppError("User not found", 401)
+    }
+
+    return this.leaguesRepository.discover(user.id, search);
   }
 
   async show(league_id?: string) {

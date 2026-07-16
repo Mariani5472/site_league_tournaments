@@ -5,6 +5,7 @@ export type League = {
   description?: string;
   visibility: "public" | "private";
   join_policy: "open" | "request" | "invite_only";
+  player_count?: number;
   max_players: number;
   require_riot_account: boolean;
   created_at: Date;
