@@ -8,6 +8,7 @@ import { LeagueRequests } from "../components/LeagueRequests";
 import { useLeagueRole } from "../hooks/useLeagueRole";
 import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { LeagueLobbySection } from "../components/LeagueLobbySelection";
+import { useLeagueSocket } from "../hooks/useLeagueSocket";
 
 export function LeaguePage() {
   const { id } = useParams();
@@ -18,6 +19,8 @@ export function LeaguePage() {
     data: league,
     isLoading: loadingLeague
   } = useLeague(leagueId);
+
+  useLeagueSocket(leagueId);
 
   const {
     data: members

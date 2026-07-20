@@ -1,4 +1,6 @@
 import { AppError } from "../../utils/AppError";
+import { SocketEmitter } from "../../weboscket/emitter";
+import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { UsersRepository } from "../users/users.repository";
 import { LeaguesRepository } from "./leagues.repository";
@@ -113,7 +115,13 @@ export class LeaguesService {
       throw new AppError("Insufficient permissions");
     }
 
-    return await this.leaguesRepository.update(league_id, params);
+    const updatedLeague = await this.leaguesRepository.update(league_id, params);
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_UPDATE, {
+      league_id
+    })
+
+    return updatedLeague;
   }
 
   async remove(league_id: string | undefined, user_id: string) {
@@ -139,5 +147,9 @@ export class LeaguesService {
     }
 
     await this.leaguesRepository.remove(league_id);
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_DELETE, {
+      league_id
+    })
   }
 }

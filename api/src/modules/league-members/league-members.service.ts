@@ -8,6 +8,8 @@ import {
   ListLeagueMembersParams
 } from "../leagues/leagues.types";
 import { LeaguesRepository } from "../leagues/leagues.repository";
+import { SocketEmitter } from "../../weboscket/emitter";
+import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 
 export class LeagueMembersService {
   private readonly leagueMembersRepository = new LeagueMembersRepository();
@@ -113,6 +115,10 @@ export class LeagueMembersService {
       return member;
     }
 
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, {
+      league_id
+    });
+
     return this.leagueMembersRepository.create(
       league_id,
       user_id,
@@ -161,7 +167,13 @@ export class LeagueMembersService {
 
     this.ensureCanChangeRole(requester, member, params.role)
 
-    return this.leagueMembersRepository.update(league_id, user_id, params);
+    const updatedRole = await this.leagueMembersRepository.update(league_id, user_id, params);
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, {
+      league_id
+    });
+
+    return updatedRole;
   }
 
   async remove(
@@ -204,6 +216,10 @@ export class LeagueMembersService {
 
     this.ensureCanChangeRole(requester, member, 'spec');
 
-    return await this.leagueMembersRepository.remove(league_id, user.id);
+    await this.leagueMembersRepository.remove(league_id, user.id);
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, {
+      league_id
+    });
   }
 }

@@ -4,6 +4,8 @@ import { LeagueJoinRequestsRepository } from "./league-join-requests.repository"
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
 import { LeaguesRepository } from "../leagues/leagues.repository";
+import { SocketEmitter } from "../../weboscket/emitter";
+import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 
 export class LeagueJoinRequestsService {
   private readonly leagueJoinRequestsRepository
@@ -85,10 +87,16 @@ export class LeagueJoinRequestsService {
       throw new AppError(`This action is only allowed for request leagues`, 409);
     }
 
-    return await this.leagueJoinRequestsRepository.create({
+    const request = await this.leagueJoinRequestsRepository.create({
       league_id: league_id,
       user_id: user_id
     });
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
+      league_id
+    });
+
+    return request;
   }
 
   async update(
@@ -131,8 +139,13 @@ export class LeagueJoinRequestsService {
         role: "player"
       })
     }
+    const updatedRequest = await this.leagueJoinRequestsRepository.update(request_id, { status })
 
-    return this.leagueJoinRequestsRepository.update(request_id, { status })
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
+      league_id
+    });
+
+    return updatedRequest;
   }
 
   async remove(
@@ -168,5 +181,9 @@ export class LeagueJoinRequestsService {
     }
 
     this.leagueJoinRequestsRepository.delete(request_id);
+
+    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
+      league_id
+    });
   }
 }

@@ -13,15 +13,13 @@ export function useLobbySocket(
   const navigate = useNavigate();
 
   useEffect(() => {
-    socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId);
+    const joinLobby = () => socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId);
 
     const handleLobbyUpdate = (payload: {
       lobby_id: string;
       league_id: string;
     }) => {
-      if (payload.lobby_id !== lobbyId) {
-        return;
-      }
+      if (payload.lobby_id !== lobbyId) return;
 
       queryClient.invalidateQueries({
         queryKey: ["league", leagueId],
@@ -36,9 +34,8 @@ export function useLobbySocket(
       lobby_id: string;
       league_id: string;
     }) => {
-      if (payload.lobby_id !== lobbyId) {
-        return;
-      }
+      if (payload.lobby_id !== lobbyId) return;
+
 
       queryClient.removeQueries({
         queryKey: ["lobby", leagueId, lobbyId],
@@ -49,31 +46,18 @@ export function useLobbySocket(
       });
     };
 
+    joinLobby();
+    socket.on("connect", joinLobby);
     socket.on(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+
     socket.on(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
 
     return () => {
-      socket.emit(
-        SOCKET_EVENTS.LOBBY_LEAVE,
-        leagueId
-      );
+      socket.off("connect", joinLobby);
+      socket.off(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+      socket.off(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
 
-      socket.offAny();
-
-      socket.off(
-        SOCKET_EVENTS.LOBBY_UPDATE,
-        handleLobbyUpdate
-      );
-
-      socket.off(
-        SOCKET_EVENTS.LOBBY_DELETE,
-        handleLobbyDelete
-      );
+      socket.emit(SOCKET_EVENTS.LOBBY_LEAVE, lobbyId);
     };
-  }, [
-    leagueId,
-    lobbyId,
-    navigate,
-    queryClient,
-  ]);
+  }, [leagueId, lobbyId, navigate, queryClient,]);
 }

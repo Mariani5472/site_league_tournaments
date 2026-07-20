@@ -205,6 +205,10 @@ export class LobbiesService {
       lobby_id: lobby.id,
     })
 
+    SocketEmitter.emitToLeague(league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id
+    });
+
     return lobby;
   }
 
@@ -271,6 +275,10 @@ export class LobbiesService {
       lobby_id: lobby.id,
     })
 
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
+    });
+
     return player;
   }
 
@@ -317,6 +325,10 @@ export class LobbiesService {
         lobby_id: lobby.id,
       })
 
+      SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+        league_id: lobby.league_id,
+      })
+
       return;
     }
 
@@ -324,6 +336,10 @@ export class LobbiesService {
     SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
+    })
+
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
     })
 
   }
@@ -373,6 +389,10 @@ export class LobbiesService {
     SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
+    })
+
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
     })
   }
 
@@ -450,6 +470,10 @@ export class LobbiesService {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
     })
+
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
+    })
   }
 
   async setReady(
@@ -506,6 +530,10 @@ export class LobbiesService {
       lobby_id: lobby.id,
     });
 
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
+    })
+
     return updated;
   }
 
@@ -554,6 +582,10 @@ export class LobbiesService {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
     });
+
+    SocketEmitter.emitToLeague(lobby.league_id, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
+      league_id: lobby.league_id,
+    })
 
     return updated;
   }
