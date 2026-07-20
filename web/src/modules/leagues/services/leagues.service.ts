@@ -76,8 +76,8 @@ export async function kickMember(leagueId: string, memberId: string) {
   return await api.delete(`/leagues/${leagueId}/members/${memberId}`);
 }
 
-export async function leaveLeague(leagueId: string) {
-  return await api.delete(`/leagues/${leagueId}/leave`);
+export async function leaveLeague(leagueId: string, memberId?: string) {
+  return await api.delete(`/leagues/${leagueId}/members/${memberId}`);
 }
 
 export async function deleteLeague(leagueId: string) {

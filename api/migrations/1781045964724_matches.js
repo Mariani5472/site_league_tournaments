@@ -36,10 +36,36 @@ export const up = (pgm) => {
       default: "in_game",
     },
 
+    tournament_code: {
+      type: "varchar(100)",
+      unique: true,
+    },
+
+    riot_match_id: {
+      type: "varchar(100)",
+      unique: true,
+    },
+
+    riot_game_id: {
+      type: "bigint",
+    },
+
+    started_at: {
+      type: "timestamp",
+    },
+
+    finished_at: {
+      type: "timestamp",
+    },
+
+    riot_data: {
+      type: "jsonb",
+    },
+
     created_at: {
       type: "timestamp",
-      default: pgm.func("current_timestamp")
-    }
+      default: pgm.func("current_timestamp"),
+    },
   })
 };
 

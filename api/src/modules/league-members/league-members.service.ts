@@ -179,13 +179,13 @@ export class LeagueMembersService {
   async remove(
     requester_id: string | undefined,
     league_id: string | undefined,
-    user_id: string | undefined
+    member_id: string | undefined
   ) {
     if (!league_id) {
       throw new AppError("League id is required", 400);
     }
 
-    if (!user_id) {
+    if (!member_id) {
       throw new AppError("User id is required", 400);
     }
 
@@ -203,8 +203,7 @@ export class LeagueMembersService {
       throw new AppError("League requester not found", 404);
     }
 
-    const member = await this.leagueMembersRepository.findById(user_id);
-
+    const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, member_id);
     if (!member) {
       throw new AppError("League member not found", 404);
     }
@@ -214,7 +213,9 @@ export class LeagueMembersService {
       throw new AppError("User not found", 404);
     }
 
-    this.ensureCanChangeRole(requester, member, 'spec');
+    if (requester.id !== member.id) {
+      this.ensureCanChangeRole(requester, member, 'spec');
+    }
 
     await this.leagueMembersRepository.remove(league_id, user.id);
 

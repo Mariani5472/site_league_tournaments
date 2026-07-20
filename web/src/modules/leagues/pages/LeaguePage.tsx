@@ -26,15 +26,17 @@ export function LeaguePage() {
     data: members
   } = useLeagueMembers(leagueId);
 
-  const {
-    data: requests
-  } = useLeagueRequests(leagueId);
+  
 
   const roleData = useLeagueRole(members || []);
 
   const {
     data: lobbies
   } = useLeagueLobbies(leagueId)
+
+  const {
+    data: requests
+  } = useLeagueRequests(leagueId, (roleData.isAdmin || roleData.isOwner));
 
   if (loadingLeague || !league) {
     return (
