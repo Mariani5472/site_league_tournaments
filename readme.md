@@ -34,6 +34,10 @@ Os módulos da API seguem controller → service → repository. As regras e aut
 
 Owners e admins criam e iniciam lobbies. A lobby precisa estar cheia, com times equilibrados e todos prontos. O início e o snapshot de `match_players` ocorrem na mesma transação. Depois da partida, apenas os participantes podem votar nos times 1 ou 2; um voto pode ser alterado até o encerramento.
 
+Cada liga possui exatamente um owner canônico. A promoção de outro membro para owner transfere a propriedade em uma transação, atualiza `leagues.owner_id` e transforma o owner anterior em admin. O owner não pode ser removido antes dessa transferência.
+
+Lobbies seguem `waiting → in_game → finished` ou `waiting → cancelled`. Cancelamento é lógico e preserva a lobby para consulta; exclusão física acontece apenas por cascata ao excluir a liga. IDs aninhados são validados e o banco impede associar uma partida a uma lobby de outra liga.
+
 A maioria absoluta é `floor(participantes / 2) + 1`. Sem maioria, a votação permanece aberta. Owner ou admin pode resolver uma disputa antes da finalização, obrigatoriamente com justificativa. A finalização bloqueia a partida, grava vencedor/forma/data e marca vitória ou derrota no snapshot em uma única transação. O `UPDATE ... WHERE status = 'in_game'` impede aplicação duplicada.
 
 A classificação é calculada a partir dos snapshots de partidas finalizadas, ordenada por vitórias, derrotas, aproveitamento e nickname. Assim, o histórico é a fonte da verdade e não há contadores independentes para reconciliar.

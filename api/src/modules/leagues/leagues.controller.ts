@@ -1,5 +1,5 @@
 import { parseStringArray } from "../../utils/parseStringArray";
-import { createLeagueSchema } from "./leagues.schemas";
+import { createLeagueSchema, updateLeagueSchema } from "./leagues.schemas";
 import { LeaguesService } from "./leagues.service";
 import { Request, Response } from "express";
 
@@ -57,9 +57,11 @@ export class LeaguesController {
     const league_id = request.params.league_id as string | undefined;
     const user_id = request.user.id;
 
-    const league = await this.leaguesService.update(league_id, user_id, {
-      ...request.body
-    });
+    const league = await this.leaguesService.update(
+      league_id,
+      user_id,
+      updateLeagueSchema.parse(request.body)
+    );
 
     return response
       .status(201)

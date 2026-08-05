@@ -56,7 +56,13 @@ lobbiesRoutes.patch(
 lobbiesRoutes.delete(
   "/:lobby_id",
   authMiddleware,
-  lobbiesController.remove.bind(lobbiesController)
+  lobbiesController.cancel.bind(lobbiesController)
+);
+
+lobbiesRoutes.post(
+  "/:lobby_id/cancel",
+  authMiddleware,
+  lobbiesController.cancel.bind(lobbiesController)
 );
 
 lobbiesRoutes.delete(

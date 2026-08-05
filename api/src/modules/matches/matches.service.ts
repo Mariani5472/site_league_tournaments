@@ -44,7 +44,9 @@ export class MatchesService {
 
     try {
       await client.query("BEGIN");
-      const locked = await client.query("SELECT * FROM matches WHERE id = $1 FOR UPDATE", [matchId]);
+      const locked = await client.query(`SELECT m.* FROM matches m
+        JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
+        WHERE m.id = $1 FOR UPDATE OF m`, [matchId]);
       const match = locked.rows[0];
 
       if (!match) {
@@ -91,7 +93,9 @@ export class MatchesService {
     let leagueId = "";
     try {
       await client.query("BEGIN");
-      const locked = await client.query("SELECT * FROM matches WHERE id = $1 FOR UPDATE", [matchId]);
+      const locked = await client.query(`SELECT m.* FROM matches m
+        JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
+        WHERE m.id = $1 FOR UPDATE OF m`, [matchId]);
       const match = locked.rows[0];
       if (!match) throw new AppError("Match not found", 404);
       leagueId = match.league_id;

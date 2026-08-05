@@ -30,7 +30,8 @@ export class MatchesRepository {
           'team_2', COUNT(*) FILTER (WHERE winner_team = 2),
           'total', COUNT(*)
         ) FROM match_votes mv WHERE mv.match_id = m.id) AS votes
-      FROM matches m LEFT JOIN match_players mp ON mp.match_id = m.id
+      FROM matches m JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
+      LEFT JOIN match_players mp ON mp.match_id = m.id
       LEFT JOIN users u ON u.id = mp.user_id WHERE m.id = $1 GROUP BY m.id`, [matchId]);
     return result.rows[0] ?? null;
   }
@@ -64,6 +65,8 @@ export class MatchesRepository {
       [matchId, winner, type, actorId ?? null, reason ?? null]);
     if (!updated.rowCount) return null;
     await client.query(`UPDATE match_players SET result = CASE WHEN team_number = $2 THEN 'win' ELSE 'loss' END WHERE match_id = $1`, [matchId, winner]);
+    await client.query(`UPDATE lobbies SET status = 'finished'
+      WHERE id = (SELECT lobby_id FROM matches WHERE id = $1) AND status = 'in_game'`, [matchId]);
     return updated.rows[0];
   }
 }

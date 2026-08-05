@@ -30,6 +30,9 @@ export class LobbiesService {
       throw new AppError("League not found", 404);
     }
 
+    const access = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+    if (!access) throw new AppError("Not a league member", 403);
+
     const lobbies = await this.lobbiesRepository.findByLeague(
       league_id
     );
@@ -191,6 +194,10 @@ export class LobbiesService {
       throw new AppError("Not a league member");
     }
 
+    if (!["owner", "admin"].includes(member.role)) {
+      throw new AppError("Only owners and admins can create lobbies", 403);
+    }
+
     const currentLobby
       = await this.lobbiesRepository.findActiveLobbyByPlayer(user_id);
     if (currentLobby) {
@@ -255,16 +262,17 @@ export class LobbiesService {
 
   async joinLobby(
     lobby_id: string | undefined,
-    user_id: string | undefined
+    user_id: string | undefined,
+    league_id?: string
   ) {
-    if (!user_id || !lobby_id) throw new AppError("Invalid request", 400);
+    if (!user_id || !lobby_id || !league_id) throw new AppError("Invalid request", 400);
     const client = await db.connect();
     let lobby;
     let player;
     try {
       await client.query("BEGIN");
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [user_id]);
-      const lobbyResult = await client.query("SELECT * FROM lobbies WHERE id = $1 FOR UPDATE", [lobby_id]);
+      const lobbyResult = await client.query("SELECT * FROM lobbies WHERE id = $1 AND league_id = $2 FOR UPDATE", [lobby_id, league_id]);
       lobby = lobbyResult.rows[0];
       if (!lobby) throw new AppError("Lobby not found", 404);
       if (lobby.status !== "waiting") throw new AppError("Lobby is not accepting players", 409);
@@ -295,7 +303,8 @@ export class LobbiesService {
 
   async leaveLobby(
     lobby_id: string | undefined,
-    user_id: string | undefined
+    user_id: string | undefined,
+    league_id?: string
   ) {
     if (!user_id) {
       throw new AppError("User not found", 401)
@@ -309,6 +318,7 @@ export class LobbiesService {
     if (!lobby) {
       throw new AppError("Lobby not found");
     }
+    if (lobby.league_id !== league_id) throw new AppError("Lobby not found", 404);
 
     if (lobby.status !== "waiting") {
       throw new AppError("Lobby is not accepting changes", 409);
@@ -330,8 +340,8 @@ export class LobbiesService {
 
     const players = await this.lobbiesRepository.getLobbyPlayers(lobby.id);
     if (players.length === 0) {
-      await this.lobbiesRepository.remove(lobby.id);
-      SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
+      await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
+      SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
         league_id: lobby.league_id,
         lobby_id: lobby.id,
       })
@@ -355,7 +365,7 @@ export class LobbiesService {
 
   }
 
-  async remove(
+  async cancel(
     lobby_id: string | undefined,
     league_id: string | undefined,
     user_id: string | undefined
@@ -376,6 +386,7 @@ export class LobbiesService {
     if (!lobby) {
       throw new AppError("Lobby not found");
     }
+    if (lobby.league_id !== league_id) throw new AppError("Lobby not found", 404);
 
     if (lobby.status !== "waiting") {
       throw new AppError("Lobby is not accepting changes", 409);
@@ -396,7 +407,7 @@ export class LobbiesService {
     }
 
     await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
-    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
+    SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       league_id: lobby.league_id,
       lobby_id: lobby.id,
     })
@@ -409,6 +420,7 @@ export class LobbiesService {
   async changeTeam(
     lobby_id: string | undefined,
     user_id: string | undefined,
+    league_id: string | undefined,
     team_number?: number
   ) {
     if (!user_id) {
@@ -423,6 +435,7 @@ export class LobbiesService {
     if (!lobby) {
       throw new AppError("Lobby not found");
     }
+    if (lobby.league_id !== league_id) throw new AppError("Lobby not found", 404);
 
     if (lobby.status !== "waiting") {
       throw new AppError("Lobby is not accepting changes", 409);
@@ -488,7 +501,8 @@ export class LobbiesService {
 
   async setReady(
     lobby_id: string | undefined,
-    user_id: string | undefined
+    user_id: string | undefined,
+    league_id?: string
   ) {
     if (!user_id) {
       throw new AppError("User not found", 401);
@@ -503,6 +517,7 @@ export class LobbiesService {
     if (!lobby) {
       throw new AppError("Lobby not found");
     }
+    if (lobby.league_id !== league_id) throw new AppError("Lobby not found", 404);
 
     if (lobby.status !== "waiting") {
       throw new AppError("Lobby is not accepting changes", 409);
@@ -549,7 +564,8 @@ export class LobbiesService {
 
   async setUnready(
     lobby_id: string | undefined,
-    user_id: string | undefined
+    user_id: string | undefined,
+    league_id?: string
   ) {
     if (!user_id) {
       throw new AppError("User not found", 401);
@@ -564,6 +580,7 @@ export class LobbiesService {
     if (!lobby) {
       throw new AppError("Lobby not found");
     }
+    if (lobby.league_id !== league_id) throw new AppError("Lobby not found", 404);
 
     if (lobby.status !== "waiting") {
       throw new AppError("Lobby is not accepting changes", 409);

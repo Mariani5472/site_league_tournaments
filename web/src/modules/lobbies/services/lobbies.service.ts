@@ -35,7 +35,7 @@ export async function leaveLobby(leagueId: string, lobbyId: string) {
 }
 
 export async function deleteLobby(leagueId: string, lobbyId: string) {
-  await api.delete(`/leagues/${leagueId}/lobbies/${lobbyId}`);
+  await api.post(`/leagues/${leagueId}/lobbies/${lobbyId}/cancel`);
 }
 
 export async function startLobby(leagueId: string, lobbyId: string) {

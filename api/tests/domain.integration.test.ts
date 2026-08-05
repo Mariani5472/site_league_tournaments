@@ -11,6 +11,7 @@ import { MatchesService } from "../src/modules/matches/matches.service";
 import { registerLeagueSocket } from "../src/modules/leagues/leagues.socket";
 import { registerLobbySocket } from "../src/modules/lobbies/lobbies.socket";
 import { AuthService } from "../src/modules/auth/auth.service";
+import { updateLeagueSchema } from "../src/modules/leagues/leagues.schemas";
 
 const ids = Array.from({ length: 10 }, (_, index) => `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`);
 const leagues = new LeaguesService();
@@ -68,12 +69,41 @@ describe("critical domain flows", { concurrency: false }, () => {
     assert.equal((await db.query("SELECT role FROM league_members WHERE id=$1", [player.id])).rows[0].role, "admin");
   });
 
+  test("league and initial owner are created atomically", async () => {
+    await db.query(`CREATE OR REPLACE FUNCTION reject_test_owner() RETURNS trigger AS $$
+      BEGIN IF NEW.role = 'owner' THEN RAISE EXCEPTION 'forced owner failure'; END IF; RETURN NEW; END; $$ LANGUAGE plpgsql`);
+    await db.query("CREATE TRIGGER reject_test_owner BEFORE INSERT ON league_members FOR EACH ROW EXECUTE FUNCTION reject_test_owner()");
+    await assert.rejects(() => createLeague());
+    assert.equal(Number((await db.query("SELECT COUNT(*) total FROM leagues")).rows[0].total), 0);
+    await db.query("DROP TRIGGER reject_test_owner ON league_members");
+    await db.query("DROP FUNCTION reject_test_owner()");
+  });
+
+  test("ownership transfer updates the canonical owner atomically", async () => {
+    const league = await createLeague();
+    const target = await leagues.join(league.id, ids[1]);
+    await members.update(ids[0], league.id, target.id, { role: "owner" });
+    const roles = await db.query("SELECT user_id, role FROM league_members WHERE league_id=$1 ORDER BY user_id", [league.id]);
+    assert.deepEqual(roles.rows.map(row => row.role), ["admin", "owner"]);
+    assert.equal((await db.query("SELECT owner_id FROM leagues WHERE id=$1", [league.id])).rows[0].owner_id, ids[1]);
+    await assert.rejects(() => members.remove(ids[0], league.id, target.id));
+  });
+
+  test("league update rejects unknown fields and invalid capacity reductions", async () => {
+    assert.throws(() => updateLeagueSchema.parse({ name: "Valid name", owner_id: ids[2] }));
+    const league = await createLeague();
+    await leagues.join(league.id, ids[1]);
+    await assert.rejects(() => leagues.update(league.id, ids[0], { max_players: 1 }));
+    const updated = await leagues.update(league.id, ids[0], { description: null });
+    assert.equal(updated.description, null);
+  });
+
   test("last lobby slot and active-lobby membership are concurrency safe", async () => {
     const league = await createLeague(6);
     for (const id of ids.slice(1, 5)) await leagues.join(league.id, id);
     const lobby = await lobbies.create(league.id, ids[0], { max_players: 2 });
-    await lobbies.joinLobby(lobby.id, ids[1]);
-    const results = await Promise.allSettled([lobbies.joinLobby(lobby.id, ids[2]), lobbies.joinLobby(lobby.id, ids[3])]);
+    await lobbies.joinLobby(lobby.id, ids[1], league.id);
+    const results = await Promise.allSettled([lobbies.joinLobby(lobby.id, ids[2], league.id), lobbies.joinLobby(lobby.id, ids[3], league.id)]);
     assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
     assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total), 2);
   });
@@ -82,20 +112,29 @@ describe("critical domain flows", { concurrency: false }, () => {
     const league = await createLeague(4);
     await leagues.join(league.id, ids[1]);
     const lobby = await lobbies.create(league.id, ids[0], { max_players: 2 });
-    await lobbies.joinLobby(lobby.id, ids[0]); await lobbies.joinLobby(lobby.id, ids[1]);
-    await assert.rejects(() => lobbies.changeTeam(lobby.id, ids[0], 2));
-    await lobbies.setReady(lobby.id, ids[0]); await lobbies.setReady(lobby.id, ids[1]);
-    await lobbies.setUnready(lobby.id, ids[0]);
-    await lobbies.leaveLobby(lobby.id, ids[1]);
-    await lobbies.remove(lobby.id, league.id, ids[0]);
+    await lobbies.joinLobby(lobby.id, ids[0], league.id); await lobbies.joinLobby(lobby.id, ids[1], league.id);
+    await assert.rejects(() => lobbies.changeTeam(lobby.id, ids[0], league.id, 2));
+    await lobbies.setReady(lobby.id, ids[0], league.id); await lobbies.setReady(lobby.id, ids[1], league.id);
+    await lobbies.setUnready(lobby.id, ids[0], league.id);
+    await lobbies.leaveLobby(lobby.id, ids[1], league.id);
+    await lobbies.cancel(lobby.id, league.id, ids[0]);
     assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
+  });
+
+  test("nested lobby ids cannot be used through another league", async () => {
+    const first = await createLeague(4);
+    const second = await leagues.create(ids[1], { owner_id: ids[1], name: "Second league", visibility: "public", join_policy: "open", max_players: 4 });
+    const lobby = await lobbies.create(first.id, ids[0], { max_players: 2 });
+    await assert.rejects(() => lobbies.show(ids[1], lobby.id, second.id));
+    await assert.rejects(() => lobbies.joinLobby(lobby.id, ids[1], second.id));
+    await assert.rejects(() => db.query("INSERT INTO matches (lobby_id, league_id, status) VALUES ($1, $2, 'in_game')", [lobby.id, second.id]));
   });
 
   test("start snapshots once; voting changes until absolute majority and finalizes once", async () => {
     const league = await createLeague(6);
     for (const id of ids.slice(1, 4)) await leagues.join(league.id, id);
     const lobby = await lobbies.create(league.id, ids[0], { max_players: 4 });
-    for (const id of ids.slice(0, 4)) await lobbies.joinLobby(lobby.id, id);
+    for (const id of ids.slice(0, 4)) await lobbies.joinLobby(lobby.id, id, league.id);
     await db.query("UPDATE lobby_players SET is_ready=true WHERE lobby_id=$1", [lobby.id]);
     const starts = await Promise.allSettled([lobbies.start(lobby.id, league.id, ids[0]), lobbies.start(lobby.id, league.id, ids[0])]);
     assert.equal(starts.filter(result => result.status === "fulfilled").length, 1);
@@ -106,6 +145,7 @@ describe("critical domain flows", { concurrency: false }, () => {
     assert.equal(finals.filter(result => result.status === "fulfilled").length, 1);
     const stored = (await db.query("SELECT * FROM matches WHERE id=$1", [match.id])).rows[0];
     assert.equal(stored.status, "finished"); assert.equal(stored.winner_team_number, 2);
+    assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "finished");
     assert.equal(Number((await db.query("SELECT COUNT(*) total FROM match_votes WHERE match_id=$1", [match.id])).rows[0].total), 3);
   });
 
@@ -113,7 +153,7 @@ describe("critical domain flows", { concurrency: false }, () => {
     const league = await createLeague(4);
     await leagues.join(league.id, ids[1]);
     const lobby = await lobbies.create(league.id, ids[0], { max_players: 2 });
-    await lobbies.joinLobby(lobby.id, ids[0]); await lobbies.joinLobby(lobby.id, ids[1]);
+    await lobbies.joinLobby(lobby.id, ids[0], league.id); await lobbies.joinLobby(lobby.id, ids[1], league.id);
     await db.query("UPDATE lobby_players SET is_ready=true WHERE lobby_id=$1", [lobby.id]);
     const match = await lobbies.start(lobby.id, league.id, ids[0]);
     await assert.rejects(() => matches.resolve(match.id, ids[1], 1, "Not authorized"));
