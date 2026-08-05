@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 import { useDiscoverLeagues } from "../hooks/useDiscoverLeagues";
@@ -7,11 +7,17 @@ import { LeagueListItem } from "../components/LeagueListItem";
 
 export function LeaguesPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   const {
     data: discoverLeagues = [],
     isLoading: discoverLeaguesLoading,
-  } = useDiscoverLeagues(search);
+  } = useDiscoverLeagues(debouncedSearch);
 
   const {
     data: myLeagues = [],

@@ -20,6 +20,7 @@ export interface Lobby {
 export interface LobbyDetails {
   id: string;
   league_id: string;
+  match_id: string | null;
 
   status: LobbyStatus;
 

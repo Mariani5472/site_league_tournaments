@@ -78,11 +78,6 @@ export function LeagueListItem({
             : "Entrada livre"}
         </span>
 
-        {league.require_riot_account && (
-          <Badge variant="secondary">
-            Riot Account
-          </Badge>
-        )}
       </div>
     </Link>
   );

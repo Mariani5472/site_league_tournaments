@@ -17,9 +17,9 @@ export async function toggleUnready(leagueId: string, lobbyId: string) {
   return data;
 }
 
-export async function changeTeam(leagueId: string, lobbyId: string, teamNumber?: string) {
+export async function changeTeam(leagueId: string, lobbyId: string, teamNumber?: number) {
   const { data } = await api.patch<Lobby>(`/leagues/${leagueId}/lobbies/${lobbyId}/team`, {
-    teamNumber
+    team_number: teamNumber
   });
 
   return data;
@@ -36,4 +36,8 @@ export async function leaveLobby(leagueId: string, lobbyId: string) {
 
 export async function deleteLobby(leagueId: string, lobbyId: string) {
   await api.delete(`/leagues/${leagueId}/lobbies/${lobbyId}`);
+}
+
+export async function startLobby(leagueId: string, lobbyId: string) {
+  return (await api.post<{ id: string }>(`/leagues/${leagueId}/lobbies/${lobbyId}/start`)).data;
 }

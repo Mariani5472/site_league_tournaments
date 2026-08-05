@@ -50,12 +50,18 @@ export class LeaguesService {
     return this.leaguesRepository.discover(user.id, search);
   }
 
-  async show(league_id?: string) {
+  async show(league_id: string | undefined, user_id: string) {
     if (!league_id) {
       throw new AppError("League not found", 404);
     }
 
-    return await this.leaguesRepository.findById(league_id);
+    const league = await this.leaguesRepository.findById(league_id);
+    if (!league) throw new AppError("League not found", 404);
+    if (league.visibility === "private") {
+      const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+      if (!member) throw new AppError("League not found", 404);
+    }
+    return league;
   }
 
 

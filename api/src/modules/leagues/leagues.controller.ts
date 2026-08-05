@@ -32,7 +32,7 @@ export class LeaguesController {
 
   async show(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
-    const league = await this.leaguesService.show(league_id);
+    const league = await this.leaguesService.show(league_id, request.user.id);
     return response.json(league);
   }
 

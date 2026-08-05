@@ -29,6 +29,12 @@ lobbiesRoutes.post(
   lobbiesController.join.bind(lobbiesController)
 );
 
+lobbiesRoutes.post(
+  "/:lobby_id/start",
+  authMiddleware,
+  lobbiesController.start.bind(lobbiesController)
+);
+
 lobbiesRoutes.patch(
   "/:lobby_id/ready",
   authMiddleware,

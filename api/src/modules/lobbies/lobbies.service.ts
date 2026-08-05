@@ -5,6 +5,7 @@ import { LeagueMembersRepository } from "../league-members/league-members.repost
 import { LeaguesRepository } from "../leagues/leagues.repository";
 import { LobbiesRepository } from "./lobbies.repository";
 import { CreateLobbyDTO } from "./lobbies.types";
+import { db } from "../../database/connection";
 
 export class LobbiesService {
   private lobbiesRepository = new LobbiesRepository();
@@ -79,6 +80,13 @@ export class LobbiesService {
       throw new AppError("Lobby not found", 404);
     }
 
+    if (lobby.league_id !== league_id) {
+      throw new AppError("Lobby not found", 404);
+    }
+
+    const access = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
+    if (!access) throw new AppError("Not a league member", 403);
+
     const players = await this.lobbiesRepository.getLobbyPlayers(
       lobby_id
     );
@@ -87,6 +95,7 @@ export class LobbiesService {
     const teamB = players.filter(player => player.team_number === 2);
     const readyCount = players.filter(player => player.is_ready).length;
     const currentPlayer = players.find(player => player.user_id === user_id);
+    const matchResult = await db.query("SELECT id FROM matches WHERE lobby_id = $1 ORDER BY created_at DESC LIMIT 1", [lobby_id]);
     const isFull = players.length === lobby.max_players;
     const isBalanced = teamA.length === teamB.length;
     const everyoneReady = readyCount === players.length && players.length > 0;
@@ -111,6 +120,7 @@ export class LobbiesService {
       is_balanced: isBalanced,
       everyone_ready: everyoneReady,
       can_start: canStart,
+      match_id: matchResult.rows[0]?.id ?? null,
 
       current_player: currentPlayer
         ? {
@@ -165,7 +175,7 @@ export class LobbiesService {
       throw new AppError("League not found", 401)
     }
 
-    const league = this.leaguesRepository.findById(league_id);
+    const league = await this.leaguesRepository.findById(league_id);
     if (!league) {
       throw new AppError("League not found", 401)
     }
@@ -210,6 +220,37 @@ export class LobbiesService {
     });
 
     return lobby;
+  }
+
+  async start(lobby_id: string | undefined, league_id: string | undefined, user_id: string | undefined) {
+    if (!lobby_id || !league_id || !user_id) throw new AppError("Invalid request", 400);
+    const client = await db.connect();
+    let match;
+    try {
+      await client.query("BEGIN");
+      const lobbyResult = await client.query("SELECT * FROM lobbies WHERE id = $1 AND league_id = $2 FOR UPDATE", [lobby_id, league_id]);
+      const lobby = lobbyResult.rows[0];
+      if (!lobby) throw new AppError("Lobby not found", 404);
+      if (lobby.status !== "waiting") throw new AppError("Lobby has already started", 409);
+      const member = await client.query("SELECT role FROM league_members WHERE league_id = $1 AND user_id = $2", [league_id, user_id]);
+      if (!member.rowCount || !["owner", "admin"].includes(member.rows[0].role)) throw new AppError("Insufficient permissions", 403);
+      const players = await client.query(`SELECT lp.*, u.nickname FROM lobby_players lp JOIN users u ON u.id = lp.user_id WHERE lp.lobby_id = $1 ORDER BY lp.user_id FOR UPDATE OF lp`, [lobby_id]);
+      if (players.rowCount !== lobby.max_players) throw new AppError("Lobby must be full", 409);
+      if (players.rows.some(player => !player.is_ready)) throw new AppError("Every player must be ready", 409);
+      const team1 = players.rows.filter(player => player.team_number === 1).length;
+      const team2 = players.rows.filter(player => player.team_number === 2).length;
+      if (team1 !== team2) throw new AppError("Teams must be balanced", 409);
+      const created = await client.query(`INSERT INTO matches (lobby_id, league_id, status, started_at) VALUES ($1, $2, 'in_game', current_timestamp) RETURNING *`, [lobby_id, league_id]);
+      match = created.rows[0];
+      for (const player of players.rows) {
+        await client.query(`INSERT INTO match_players (match_id, user_id, team_number, nickname_snapshot) VALUES ($1, $2, $3, $4)`, [match.id, player.user_id, player.team_number, player.nickname]);
+      }
+      await client.query("UPDATE lobbies SET status = 'in_game' WHERE id = $1", [lobby_id]);
+      await client.query("COMMIT");
+    } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+    SocketEmitter.emitToLobby(lobby_id, SOCKET_EVENTS.MATCH_STARTED, { league_id, lobby_id, match_id: match.id });
+    SocketEmitter.emitToLeague(league_id, SOCKET_EVENTS.MATCH_STARTED, { league_id, lobby_id, match_id: match.id });
+    return match;
   }
 
   async joinLobby(

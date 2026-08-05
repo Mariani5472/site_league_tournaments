@@ -28,8 +28,6 @@ export const createLeagueSchema =
       .min(2)
       .max(500),
 
-    require_riot_account: z
-      .boolean()
   });
 
 export const createLeagueMemberSchema =

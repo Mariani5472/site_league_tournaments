@@ -123,4 +123,13 @@ export class LobbiesController {
     return response
       .json(player);
   }
+
+  async start(request: Request, response: Response) {
+    const match = await this.lobbiesService.start(
+      request.params.lobby_id as string,
+      request.params.league_id as string,
+      request.user.id
+    );
+    return response.status(201).json(match);
+  }
 }

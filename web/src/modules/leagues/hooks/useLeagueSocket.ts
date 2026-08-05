@@ -45,6 +45,12 @@ export function useLeagueSocket(leagueId: string) {
       });
     };
 
+    const handleMatchUpdate = ({ league_id }: LeagueEventPayload) => {
+      if (league_id !== leagueId) return;
+      queryClient.invalidateQueries({ queryKey: ["league-matches", leagueId] });
+      queryClient.invalidateQueries({ queryKey: ["league-standings", leagueId] });
+    };
+
     joinLeague();
     socket.on("connect", joinLeague);
 
@@ -52,6 +58,9 @@ export function useLeagueSocket(leagueId: string) {
     socket.on(SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, handleLeagueLobbiesUpdate);
     socket.on(SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, handleLeagueMembersUpdate);
     socket.on(SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, handleLeagueRequestsUpdate);
+    socket.on(SOCKET_EVENTS.MATCH_STARTED, handleMatchUpdate);
+    socket.on(SOCKET_EVENTS.MATCH_VOTE, handleMatchUpdate);
+    socket.on(SOCKET_EVENTS.MATCH_FINISHED, handleMatchUpdate);
 
     return () => {
       socket.off("connect", joinLeague);
@@ -59,6 +68,9 @@ export function useLeagueSocket(leagueId: string) {
       socket.off(SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, handleLeagueLobbiesUpdate);
       socket.off(SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, handleLeagueMembersUpdate);
       socket.off(SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, handleLeagueRequestsUpdate);
+      socket.off(SOCKET_EVENTS.MATCH_STARTED, handleMatchUpdate);
+      socket.off(SOCKET_EVENTS.MATCH_VOTE, handleMatchUpdate);
+      socket.off(SOCKET_EVENTS.MATCH_FINISHED, handleMatchUpdate);
       socket.emit(SOCKET_EVENTS.LEAGUE_LEAVE, leagueId);
     };
   }, [leagueId, queryClient]);

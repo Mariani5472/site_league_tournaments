@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/AppError";
+import { ZodError } from "zod";
 
 export function errorMiddleware(
   error: unknown,
@@ -11,6 +12,14 @@ export function errorMiddleware(
     return response.status(error.statusCode).json({
       status: "error",
       message: error.message,
+    });
+  }
+
+  if (error instanceof ZodError) {
+    return response.status(400).json({
+      status: "error",
+      message: "Invalid request data",
+      issues: error.issues.map(issue => ({ path: issue.path.join("."), message: issue.message }))
     });
   }
 

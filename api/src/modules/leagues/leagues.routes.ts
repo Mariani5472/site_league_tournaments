@@ -5,6 +5,7 @@ import { LeaguesController } from "./leagues.controller";
 import { lobbiesRoutes } from "../lobbies/lobbies.routes";
 import { leagueMembersRoutes } from "../league-members/league-members.routes";
 import { leagueJoinRequestsRoutes } from "../league-requests/league-join-requests.routes";
+import { leagueMatchesRoutes } from "../matches/matches.routes";
 
 const leaguesRoutes = Router();
 const leaguesController = new LeaguesController();
@@ -54,5 +55,6 @@ leaguesRoutes.delete(
 leaguesRoutes.use("/:league_id/lobbies", lobbiesRoutes);
 leaguesRoutes.use("/:league_id/members", leagueMembersRoutes);
 leaguesRoutes.use("/:league_id/requests", leagueJoinRequestsRoutes);
+leaguesRoutes.use("/:league_id/matches", leagueMatchesRoutes);
 
 export { leaguesRoutes };

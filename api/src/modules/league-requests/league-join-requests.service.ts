@@ -1,5 +1,4 @@
 import { AppError } from "../../utils/AppError";
-import { RiotRepository } from "../riot/riot.repository";
 import { LeagueJoinRequestsRepository } from "./league-join-requests.repository";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
@@ -13,7 +12,6 @@ export class LeagueJoinRequestsService {
   private readonly leagueMembersRepository
     = new LeagueMembersRepository();
   private readonly leaguesRepository = new LeaguesRepository()
-  private riotRepository = new RiotRepository();
 
   async list(
     requester_id: string,
@@ -73,14 +71,6 @@ export class LeagueJoinRequestsService {
 
     if (existingRequests.some(req => req.status == 'pending')) {
       throw new AppError("Join request already exists", 409);
-    }
-
-    if (league.require_riot_account) {
-      const riotAccount = await this.riotRepository.findByUserId(user_id);
-
-      if (!riotAccount) {
-        throw new AppError("This league requires a linked Riot ccount", 409);
-      }
     }
 
     if (league.join_policy !== "request") {

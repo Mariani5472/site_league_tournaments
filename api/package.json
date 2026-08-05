@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --legacy-watch --watch src --ext ts --exec tsx src/server.ts",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "build": "tsc --skipLibCheck",
     "migrate:create": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down",

@@ -8,6 +8,13 @@ import { LobbyHeader } from "../components/LobbyHeader";
 import { LobbyStatus } from "../components/LobbyStatus";
 import { useLobbyActions } from "../hooks/useLobbyActions";
 import { useAuth } from "@/hooks/useAuth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { startLobby } from "../services/lobbies.service";
+import { Button } from "@/components/ui/button";
+import { MatchVoting } from "@/modules/matches/MatchVoting";
+import { useLeagueMembers } from "@/modules/leagues/hooks/useLeagueMembers";
+import { useLeagueRole } from "@/modules/leagues/hooks/useLeagueRole";
+import { toast } from "sonner";
 
 export function LobbyPage() {
     const { leagueId, lobbyId } = useParams();
@@ -19,6 +26,14 @@ export function LobbyPage() {
 
     useLobbySocket(leagueId!, lobbyId!);
     const actions = useLobbyActions(leagueId!, lobbyId!);
+    const queryClient = useQueryClient();
+    const members = useLeagueMembers(leagueId!);
+    const role = useLeagueRole(members.data ?? []);
+    const start = useMutation({ mutationFn: () => startLobby(leagueId!, lobbyId!), onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lobby", leagueId, lobbyId] });
+      queryClient.invalidateQueries({ queryKey: ["league-matches", leagueId] });
+      toast.success("Match started");
+    }, onError: (error: Error) => toast.error(error.message) });
 
 
     if (isLoading) {
@@ -53,10 +68,17 @@ export function LobbyPage() {
                 {...actions}
             />
 
+            {role.isAdmin && lobby.status === "waiting" && (
+              <Button disabled={!lobby.can_start || start.isPending} onClick={() => start.mutate()}>
+                {start.isPending ? "Starting..." : "Start match"}
+              </Button>
+            )}
+
             <LobbyTeams
                 lobby={lobby}
                 {...actions}
             />
+            {lobby.match_id && <MatchVoting matchId={lobby.match_id} canResolve={role.isAdmin} />}
         </div>
     )
 }

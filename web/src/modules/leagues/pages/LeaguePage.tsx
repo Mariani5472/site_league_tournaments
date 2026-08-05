@@ -9,6 +9,7 @@ import { useLeagueRole } from "../hooks/useLeagueRole";
 import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { LeagueLobbySection } from "../components/LeagueLobbySelection";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
+import { LeagueResults } from "@/modules/matches/LeagueResults";
 
 export function LeaguePage() {
   const { id } = useParams();
@@ -85,6 +86,7 @@ export function LeaguePage() {
           />
         )}
       </div>
+      <LeagueResults leagueId={leagueId} />
     </div>
   );
 }
