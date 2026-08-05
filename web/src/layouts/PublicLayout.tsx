@@ -15,8 +15,6 @@ export function PublicLayout() {
     );
   }
 
-  console.log(user)
-
   if (user) {
     return (
       <Navigate

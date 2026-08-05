@@ -39,6 +39,7 @@ leaguesRoutes.post(
   authMiddleware,
   leaguesController.create.bind(leaguesController)
 );
+leaguesRoutes.post("/:league_id/join", authMiddleware, leaguesController.join.bind(leaguesController));
 
 leaguesRoutes.patch(
   "/:league_id",

@@ -5,6 +5,7 @@ import { LeagueMembersRepository } from "../league-members/league-members.repost
 import { UsersRepository } from "../users/users.repository";
 import { LeaguesRepository } from "./leagues.repository";
 import { CreateLeagueDTO, ListLeaguesParams } from "./leagues.types";
+import { db } from "../../database/connection";
 
 export class LeaguesService {
   private usersRepository = new UsersRepository();
@@ -79,6 +80,26 @@ export class LeaguesService {
     );
 
     return league;
+  }
+
+  async join(league_id: string | undefined, user_id: string) {
+    if (!league_id) throw new AppError("League not found", 404);
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query("SELECT * FROM leagues WHERE id = $1 FOR UPDATE", [league_id]);
+      const league = result.rows[0];
+      if (!league) throw new AppError("League not found", 404);
+      if (league.visibility !== "public" || league.join_policy !== "open") throw new AppError("This league does not allow direct entry", 409);
+      const existing = await client.query("SELECT * FROM league_members WHERE league_id = $1 AND user_id = $2", [league_id, user_id]);
+      if (existing.rowCount) { await client.query("COMMIT"); return existing.rows[0]; }
+      const count = await client.query("SELECT COUNT(*)::int total FROM league_members WHERE league_id = $1", [league_id]);
+      if (Number(count.rows[0].total) >= league.max_players) throw new AppError("League is full", 409);
+      const member = await client.query("INSERT INTO league_members (league_id, user_id, role) VALUES ($1, $2, 'player') RETURNING *", [league_id, user_id]);
+      await client.query("COMMIT");
+      SocketEmitter.emitToLeague(league_id, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, { league_id });
+      return member.rows[0];
+    } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
   }
 
   async update(

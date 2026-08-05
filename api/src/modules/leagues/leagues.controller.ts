@@ -48,6 +48,11 @@ export class LeaguesController {
     return response.status(201).json(league);
   }
 
+  async join(request: Request, response: Response) {
+    const member = await this.leaguesService.join(request.params.league_id as string, request.user.id);
+    return response.status(201).json(member);
+  }
+
   async update(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
     const user_id = request.user.id;

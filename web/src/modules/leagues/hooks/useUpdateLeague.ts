@@ -11,7 +11,7 @@ export function useUpdateLeague() {
       data
     }: {
       leagueId: string;
-      data: any;
+      data: Parameters<typeof updateLeague>[1];
     }) =>
       updateLeague(leagueId, data),
 

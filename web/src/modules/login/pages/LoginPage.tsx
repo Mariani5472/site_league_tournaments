@@ -10,8 +10,8 @@ export function LoginPage() {
   const {
     signIn,
     signUp,
-    signOut,
-    user,
+    loading,
+    error,
   } = useAuth();
 
   const {
@@ -33,21 +33,6 @@ export function LoginPage() {
     } catch (error) {
       console.error(error);
     }
-  }
-
-  if (user) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1>User: {user.email}</h1>
-
-        <button
-          type="button"
-          onClick={signOut}
-        >
-          Logout
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -72,6 +57,7 @@ export function LoginPage() {
         <button
           type="button"
           onClick={handleSubmit(handleLogin)}
+          disabled={loading}
         >
           Login
         </button>
@@ -79,10 +65,12 @@ export function LoginPage() {
         <button
           type="button"
           onClick={handleSubmit(handleRegister)}
+          disabled={loading}
         >
           Registrar
         </button>
       </div>
+      {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
     </form>
   );
 }

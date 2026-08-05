@@ -38,7 +38,13 @@ export const up = (pgm) => {
 };
 
 export const down = (pgm) => {
-  pgm.addColumn("leagues", "require_riot_account", { type: "boolean", notNull: true, default: false });
+  pgm.dropConstraint("match_votes", "match_votes_team_check");
+  pgm.dropIndex("matches", ["league_id", "created_at"]);
+  pgm.dropIndex("match_players", ["user_id"]);
+  pgm.dropIndex("match_votes", ["match_id"]);
+  pgm.addColumn("leagues", {
+    require_riot_account: { type: "boolean", notNull: true, default: false }
+  });
   pgm.addColumns("matches", {
     tournament_code: { type: "varchar(100)", unique: true }, riot_match_id: { type: "varchar(100)", unique: true },
     riot_game_id: { type: "bigint" }, riot_data: { type: "jsonb" },

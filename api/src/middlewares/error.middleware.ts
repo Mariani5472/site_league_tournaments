@@ -23,6 +23,10 @@ export function errorMiddleware(
     });
   }
 
+  if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+    return response.status(409).json({ status: "error", message: "Resource already exists or capacity changed" });
+  }
+
   request.log.error(error);
 
   return response.status(500).json({

@@ -9,7 +9,12 @@ export const app = express();
 
 app.use(cors());
 app.use(helmet());
-app.use(pinoHttp());
+app.use(pinoHttp({
+  redact: {
+    paths: ["req.headers.authorization", "req.headers.cookie"],
+    censor: "[REDACTED]"
+  }
+}));
 app.use(express.json());
 app.use(routes);
 

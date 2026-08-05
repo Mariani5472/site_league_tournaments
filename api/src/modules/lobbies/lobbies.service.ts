@@ -257,59 +257,29 @@ export class LobbiesService {
     lobby_id: string | undefined,
     user_id: string | undefined
   ) {
-    if (!user_id) {
-      throw new AppError("User not found", 401)
-    }
-
-    if (!lobby_id) {
-      throw new AppError("Lobby no found", 401)
-    }
-
-    const lobby = await this.lobbiesRepository.findById(lobby_id);
-    if (!lobby) {
-      throw new AppError("Lobby not found", 401);
-    }
-
-    if (lobby.status !== "waiting") {
-      throw new AppError("Lobby is not accepting players", 409);
-    }
-
-    const member = await this.leagueMembersRepository.findByLeagueAndUser(
-      lobby.league_id,
-      user_id
-    );
-
-    if (!member) {
-      throw new AppError("Not a league member", 409);
-    }
-
-    const existingPlayer = await this.lobbiesRepository.findPlayerInLobby(
-      lobby_id, user_id
-    )
-
-    if (existingPlayer) {
-      throw new AppError("Player is already in this lobby", 409);
-    }
-
-    const currentLobby
-      = await this.lobbiesRepository.findActiveLobbyByPlayer(user_id);
-    if (currentLobby) {
-      throw new AppError("You are already in another active lobby", 409);
-    }
-
-    const teamStats = await this.lobbiesRepository.countPlayersByTeam(lobby.id);
-    const teamA = Number(teamStats.find((x: any) => x.team_number === 1)?.total ?? 0);
-    const teamB = Number(teamStats.find((x: any) => x.team_number === 2)?.total ?? 0);
-    if ((teamA + teamB) == lobby.max_players) {
-      throw new AppError("Lobby is full", 409);
-    }
-    const team_number = teamA <= teamB ? 1 : 2;
-
-    const player = await this.lobbiesRepository.addPlayer(
-      lobby_id,
-      user_id,
-      team_number
-    );
+    if (!user_id || !lobby_id) throw new AppError("Invalid request", 400);
+    const client = await db.connect();
+    let lobby;
+    let player;
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [user_id]);
+      const lobbyResult = await client.query("SELECT * FROM lobbies WHERE id = $1 FOR UPDATE", [lobby_id]);
+      lobby = lobbyResult.rows[0];
+      if (!lobby) throw new AppError("Lobby not found", 404);
+      if (lobby.status !== "waiting") throw new AppError("Lobby is not accepting players", 409);
+      const member = await client.query("SELECT 1 FROM league_members WHERE league_id = $1 AND user_id = $2", [lobby.league_id, user_id]);
+      if (!member.rowCount) throw new AppError("Not a league member", 403);
+      const active = await client.query(`SELECT 1 FROM lobby_players lp JOIN lobbies l ON l.id = lp.lobby_id WHERE lp.user_id = $1 AND l.status IN ('waiting', 'in_game')`, [user_id]);
+      if (active.rowCount) throw new AppError("You are already in another active lobby", 409);
+      const stats = await client.query(`SELECT team_number, COUNT(*)::int total FROM lobby_players WHERE lobby_id = $1 GROUP BY team_number`, [lobby_id]);
+      const teamA = Number(stats.rows.find(row => row.team_number === 1)?.total ?? 0);
+      const teamB = Number(stats.rows.find(row => row.team_number === 2)?.total ?? 0);
+      if (teamA + teamB >= lobby.max_players) throw new AppError("Lobby is full", 409);
+      const inserted = await client.query("INSERT INTO lobby_players (lobby_id, user_id, team_number) VALUES ($1, $2, $3) RETURNING *", [lobby_id, user_id, teamA <= teamB ? 1 : 2]);
+      player = inserted.rows[0];
+      await client.query("COMMIT");
+    } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 
     SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
       league_id: lobby.league_id,
@@ -425,8 +395,7 @@ export class LobbiesService {
       throw new AppError("Insufficient permissions");
     }
 
-    await this.lobbiesRepository.remove(lobby.id);
-    await this.lobbiesRepository.resetReady(lobby.id)
+    await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
     SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
       league_id: lobby.league_id,
       lobby_id: lobby.id,

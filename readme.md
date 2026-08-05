@@ -24,6 +24,8 @@ O banco local usa `admin/admin`, database `lol_tournament`, host `postgres` dent
 
 Na pasta `api`: `npm run typecheck`, `npm run build` e `npm run migrate:up`.
 
+Os testes críticos usam um PostgreSQL isolado. Crie um banco de teste, configure `DATABASE_URL` para ele, aplique as migrations e execute `npm run test:integration`. Nunca aponte esse comando para o banco de produção, pois a suíte limpa suas tabelas entre cenários.
+
 Na pasta `web`: `npm run lint` e `npm run build`.
 
 ## Arquitetura e fluxo
@@ -40,4 +42,4 @@ A classificação é calculada a partir dos snapshots de partidas finalizadas, o
 
 A tabela de conta Riot foi preservada apenas como metadado opcional de perfil para ambientes que já a utilizavam. Nenhuma liga, lobby, partida, voto ou classificação exige conta ou credencial Riot. Campos antigos de sincronização de partidas são removidos pela migration nova.
 
-Não há correção administrativa de uma partida já finalizada; a resolução administrativa é permitida somente enquanto a votação está aberta. O repositório ainda não possui uma suíte automatizada de integração com Supabase/PostgreSQL; valide migrations em um banco descartável antes de produção.
+Não há correção administrativa de uma partida já finalizada; a resolução administrativa é permitida somente enquanto a votação está aberta. A autenticação HTTP completa continua dependendo de um projeto Supabase configurado; os testes de domínio e autorização interna usam PostgreSQL isolado e não criam usuários no Supabase.

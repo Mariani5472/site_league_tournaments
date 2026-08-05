@@ -110,6 +110,9 @@ export class LeagueMembersService {
       throw new AppError("League requester not found", 404);
     }
 
+    if (!['owner', 'admin'].includes(requester.role)) throw new AppError("Unauthorized", 403);
+    if (requester.role === 'admin' && ['owner', 'admin'].includes(params.role)) throw new AppError("Admins cannot assign privileged roles", 403);
+
     const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
     if (member) {
       return member;
@@ -154,20 +157,18 @@ export class LeagueMembersService {
       throw new AppError("League requester not found", 404);
     }
 
-    const user = await this.usersRepository.findById(user_id);
-    if (!user) {
-      throw new AppError("User not found", 404);
-    }
+    const member = await this.leagueMembersRepository.findById(user_id);
 
-    const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, user_id);
-
-    if (!member) {
+    if (!member || member.league_id !== league_id) {
       throw new AppError("League member not found", 404);
     }
 
+    const user = await this.usersRepository.findById(member.user_id);
+    if (!user) throw new AppError("User not found", 404);
+
     this.ensureCanChangeRole(requester, member, params.role)
 
-    const updatedRole = await this.leagueMembersRepository.update(league_id, user_id, params);
+    const updatedRole = await this.leagueMembersRepository.update(league_id, member.user_id, params);
 
     SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, {
       league_id
@@ -203,10 +204,12 @@ export class LeagueMembersService {
       throw new AppError("League requester not found", 404);
     }
 
-    const member = await this.leagueMembersRepository.findByLeagueAndUser(league_id, member_id);
-    if (!member) {
+    const member = await this.leagueMembersRepository.findById(member_id);
+    if (!member || member.league_id !== league_id) {
       throw new AppError("League member not found", 404);
     }
+
+    if (member.role === "owner") throw new AppError("The league must always have an owner", 409);
 
     const user = await this.usersRepository.findById(member.user_id);
     if (!user) {

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Outlet, Navigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export function ProtectedLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   if (loading) {
@@ -55,7 +57,11 @@ export function ProtectedLayout() {
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
+            <Button type="button" variant="outline" size="sm" onClick={() => void signOut()}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
           </div>
         </header>
 

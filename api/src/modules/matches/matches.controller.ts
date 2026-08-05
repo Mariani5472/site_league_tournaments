@@ -17,7 +17,7 @@ export class MatchesController {
     const match = await this.matchesService.vote(req.params.match_id as string, req.user.id, body.winner_team)
     return res.json(match);
   }
-  async resolve(req: Request, res: Response) { const body = resolveSchema.parse(req.body); return res.json(await this.service.resolve(req.params.match_id as string, req.user.id, body.winner_team, body.reason)); }
-  async list(req: Request, res: Response) { return res.json(await this.service.list(req.params.league_id as string, req.user.id)); }
-  async standings(req: Request, res: Response) { return res.json(await this.service.standings(req.params.league_id as string, req.user.id)); }
+  async resolve(req: Request, res: Response) { const body = resolveSchema.parse(req.body); return res.json(await this.matchesService.resolve(req.params.match_id as string, req.user.id, body.winner_team, body.reason)); }
+  async list(req: Request, res: Response) { return res.json(await this.matchesService.list(req.params.league_id as string, req.user.id)); }
+  async standings(req: Request, res: Response) { return res.json(await this.matchesService.standings(req.params.league_id as string, req.user.id)); }
 }

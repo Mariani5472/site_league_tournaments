@@ -3,6 +3,11 @@ import { db } from "../../database/connection";
 import { CreateUserDTO, User } from "./users.types";
 
 export class UsersRepository {
+  async nicknameExists(nickname: string) {
+    const result = await db.query("SELECT 1 FROM users WHERE nickname = $1", [nickname]);
+    return Boolean(result.rowCount);
+  }
+
   async create(data: CreateUserDTO) {
     const query = `
       INSERT INTO users (
