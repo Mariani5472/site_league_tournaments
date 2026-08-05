@@ -38,6 +38,7 @@ services:
   api:
     build:
       context: ./api
+      target: development
     container_name: lol_api
     ports:
       - "3000:3000"
