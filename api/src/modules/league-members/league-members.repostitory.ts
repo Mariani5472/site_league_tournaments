@@ -12,13 +12,11 @@ export class LeagueMembersRepository {
         lm.role,
         u.id as user_id,
         u.nickname,
-        ra.game_name,
-        ra.tag_line
+        u.avatar_url,
+        u.avatar_url
       FROM league_members lm
       INNER JOIN users u
         ON lm.user_id = u.id
-      LEFT JOIN riot_accounts ra
-        ON ra.user_id = u.id
     `;
 
     values.push(league_id);

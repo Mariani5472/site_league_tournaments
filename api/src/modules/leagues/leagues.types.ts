@@ -7,7 +7,6 @@ export type League = {
   join_policy: "open" | "request" | "invite_only";
   player_count?: number;
   max_players: number;
-  require_riot_account: boolean;
   created_at: Date;
 };
 
@@ -27,7 +26,6 @@ export type CreateLeagueDTO = Pick<
   | "visibility"
   | "join_policy"
   | "max_players"
-  | "require_riot_account"
 >;
 
 export type LeagueJoinRequest = {

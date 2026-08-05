@@ -1,8 +1,11 @@
-import axios, { AxiosInstance, get } from "axios";
+import axios, { AxiosInstance } from "axios";
 
 export class RiotClient {
-  private readonly token = process.env.RIOT_DEVELOPMENT_API_KEY!;
-  private readonly region = process.env.RIOT_REGION!;
+  constructor(
+    private readonly token: string,
+    private readonly region: string,
+  ) {}
+
   private getClient(): AxiosInstance {
     return axios.create({
       baseURL: `https://${this.region}.api.riotgames.com`,

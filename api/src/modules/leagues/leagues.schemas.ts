@@ -28,9 +28,17 @@ export const createLeagueSchema =
       .min(2)
       .max(500),
 
-    require_riot_account: z
-      .boolean()
   });
+
+export const updateLeagueSchema = z.object({
+  name: z.string().trim().min(3).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  visibility: z.enum(["public", "private"]).optional(),
+  join_policy: z.enum(["open", "request", "invite_only"]).optional(),
+  max_players: z.number().int().min(2).max(500).optional()
+}).strict().refine(body => Object.keys(body).length > 0, {
+  message: "At least one field must be provided"
+});
 
 export const createLeagueMemberSchema =
   z.object({
@@ -41,3 +49,7 @@ export const createLeagueMemberSchema =
       "owner"
     ]),
   });
+
+export const updateJoinRequestSchema = z.object({
+  status: z.enum(["approved", "rejected"])
+}).strict();

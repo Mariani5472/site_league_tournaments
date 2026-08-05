@@ -29,6 +29,18 @@ lobbiesRoutes.post(
   lobbiesController.join.bind(lobbiesController)
 );
 
+lobbiesRoutes.post(
+  "/:lobby_id/start",
+  authMiddleware,
+  lobbiesController.start.bind(lobbiesController)
+);
+
+lobbiesRoutes.post("/:lobby_id/team-selection/vote", authMiddleware, lobbiesController.voteTeamSelection.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/confirm", authMiddleware, lobbiesController.confirmTeamSelection.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/captain-vote", authMiddleware, lobbiesController.voteCaptain.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/captains/finalize", authMiddleware, lobbiesController.finalizeCaptains.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/pick", authMiddleware, lobbiesController.draftPick.bind(lobbiesController));
+
 lobbiesRoutes.patch(
   "/:lobby_id/ready",
   authMiddleware,
@@ -50,7 +62,13 @@ lobbiesRoutes.patch(
 lobbiesRoutes.delete(
   "/:lobby_id",
   authMiddleware,
-  lobbiesController.remove.bind(lobbiesController)
+  lobbiesController.cancel.bind(lobbiesController)
+);
+
+lobbiesRoutes.post(
+  "/:lobby_id/cancel",
+  authMiddleware,
+  lobbiesController.cancel.bind(lobbiesController)
 );
 
 lobbiesRoutes.delete(
