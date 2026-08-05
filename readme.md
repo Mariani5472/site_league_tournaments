@@ -38,6 +38,8 @@ Cada liga possui exatamente um owner canônico. A promoção de outro membro par
 
 Lobbies seguem `waiting → in_game → finished` ou `waiting → cancelled`. Cancelamento é lógico e preserva a lobby para consulta; exclusão física acontece apenas por cascata ao excluir a liga. IDs aninhados são validados e o banco impede associar uma partida a uma lobby de outra liga.
 
+Políticas de entrada são exclusivas: ligas públicas `open` aceitam entrada direta; `request` exige solicitação e aprovação; `invite_only` não permite autoentrada, mas owner/admin pode adicionar o usuário diretamente. Aprovações bloqueiam a liga e a solicitação na mesma transação, impedindo aprovação duplicada ou consumo concorrente da última vaga.
+
 A maioria absoluta é `floor(participantes / 2) + 1`. Sem maioria, a votação permanece aberta. Owner ou admin pode resolver uma disputa antes da finalização, obrigatoriamente com justificativa. A finalização bloqueia a partida, grava vencedor/forma/data e marca vitória ou derrota no snapshot em uma única transação. O `UPDATE ... WHERE status = 'in_game'` impede aplicação duplicada.
 
 A classificação é calculada a partir dos snapshots de partidas finalizadas, ordenada por vitórias, derrotas, aproveitamento e nickname. Assim, o histórico é a fonte da verdade e não há contadores independentes para reconciliar.

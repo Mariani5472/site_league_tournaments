@@ -1,54 +1,53 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { joinLeague, requestLeagueJoin } from "../services/leagues.service";
 import type { League } from "../types/league";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   league: League;
 };
 
 export function LeagueJoinActions({league}: Props) {  
+  const queryClient = useQueryClient();
+  const refreshLeagues = () => {
+    queryClient.invalidateQueries({ queryKey: ["mine-leagues"] });
+    queryClient.invalidateQueries({ queryKey: ["discover-leagues"] });
+    queryClient.invalidateQueries({ queryKey: ["league", league.id] });
+  };
   const joinMutation = useMutation({
     mutationFn: () => joinLeague(league.id),
-    onSuccess: () => toast.success("You joined the league"),
+    onSuccess: () => { refreshLeagues(); toast.success("You joined the league"); },
     onError: (error) => toast.error(error.message || "Failed to enter league")
   });
 
   const requestMutation = useMutation({
     mutationFn: () => requestLeagueJoin(league.id),
-    onSuccess: () => toast.success("Request sent"),
+    onSuccess: () => { refreshLeagues(); toast.success("Request sent"); },
     onError: (error) => toast.error(error.message || "Failed to send request")
   });
 
   if (league.join_policy === "open") {
     return (
-      <button
+      <Button
         onClick={() => joinMutation.mutate()}
-        className="
-          rounded-md
-          bg-primary
-          px-4
-          py-2
-          text-primary-foreground
-        "
+        disabled={joinMutation.isPending}
       >
-        Join League
-      </button>
+        {joinMutation.isPending ? "Joining..." : "Join League"}
+      </Button>
     );
   }
 
+  if (league.join_policy === "invite_only") {
+    return <p className="text-sm text-muted-foreground">This league is invite-only.</p>;
+  }
+
   return (
-    <button
+    <Button
       onClick={() => requestMutation.mutate()}
-      className="
-        rounded-md
-        bg-primary
-        px-4
-        py-2
-        text-primary-foreground
-      "
+      disabled={requestMutation.isPending}
     >
-      Request Join
-    </button>
+      {requestMutation.isPending ? "Sending..." : "Request Join"}
+    </Button>
   );
 }

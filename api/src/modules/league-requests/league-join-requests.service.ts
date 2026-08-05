@@ -36,7 +36,7 @@ export class LeagueJoinRequestsService {
     const allowedRoles = ["owner", "admin"];
 
     if (!requester || !allowedRoles.includes(requester.role)) {
-      throw new AppError("Unauthorized", 401);
+      throw new AppError("Only league owners and admins can view join requests", 403);
     }
 
     return await this.leagueJoinRequestsRepository.list(league_id, params);
@@ -49,6 +49,13 @@ export class LeagueJoinRequestsService {
     const league = await this.leaguesRepository.findById(league_id);
     if (!league) {
       throw new AppError("League not found", 404);
+    }
+
+    if (league.join_policy === "open") {
+      throw new AppError("This league accepts direct entry; use the join action", 409);
+    }
+    if (league.join_policy === "invite_only") {
+      throw new AppError("This league is invite-only", 403);
     }
 
     const totalPlayers = await this.leagueMembersRepository.count(league_id);
@@ -72,10 +79,6 @@ export class LeagueJoinRequestsService {
 
     if (existingRequests.some(req => req.status == 'pending')) {
       throw new AppError("Join request already exists", 409);
-    }
-
-    if (league.join_policy !== "request") {
-      throw new AppError(`This action is only allowed for request leagues`, 409);
     }
 
     const request = await this.leagueJoinRequestsRepository.create({
@@ -140,32 +143,23 @@ export class LeagueJoinRequestsService {
       throw new AppError("League not found", 404);
     }
 
-    const league = await this.leaguesRepository.findById(league_id);
-    if (!league) {
-      throw new AppError("League not found", 404);
-    }
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
+      const league = await client.query("SELECT 1 FROM leagues WHERE id = $1", [league_id]);
+      if (!league.rowCount) throw new AppError("League not found", 404);
+      const requestResult = await client.query("SELECT * FROM league_join_requests WHERE id = $1 AND league_id = $2 FOR UPDATE", [request_id, league_id]);
+      const joinRequest = requestResult.rows[0];
+      if (!joinRequest) throw new AppError("Join request not found", 404);
+      if (joinRequest.status !== "pending") throw new AppError("Join request has already been processed", 409);
+      const member = await client.query("SELECT role FROM league_members WHERE league_id = $1 AND user_id = $2", [league_id, requester_id]);
+      const canManage = member.rowCount && ["owner", "admin"].includes(member.rows[0].role);
+      if (joinRequest.user_id !== requester_id && !canManage) throw new AppError("You cannot cancel this join request", 403);
+      await client.query("DELETE FROM league_join_requests WHERE id = $1", [request_id]);
+      await client.query("COMMIT");
+    } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
 
-    const request = await this.leagueJoinRequestsRepository.findById(request_id);
-    if (!request) {
-      throw new AppError("Request not found", 404);
-    }
-
-    if (request.status !== 'pending') {
-      throw new AppError("Request unavailable", 409);
-    }
-
-    const requester = await this.leagueMembersRepository.findByLeagueAndUser(
-      league_id,
-      requester_id
-    );
-    const allowedRoles = ["owner", "admin"];
-    if (!requester || !allowedRoles.includes(requester.role)) {
-      throw new AppError("Unauthorized", 401);
-    }
-
-    this.leagueJoinRequestsRepository.delete(request_id);
-
-    SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
+    SocketEmitter.emitToLeague(league_id, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
       league_id
     });
   }

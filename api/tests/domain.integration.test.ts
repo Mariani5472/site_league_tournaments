@@ -59,6 +59,44 @@ describe("critical domain flows", { concurrency: false }, () => {
     assert.equal((await db.query("SELECT status FROM league_join_requests WHERE id=$1", [rejected.id])).rows[0].status, "rejected");
   });
 
+  test("open, request and invite-only policies expose only their intended entry flow", async () => {
+    const open = await createLeague(4, "open", "public");
+    await assert.rejects(() => requests.create(ids[1], open.id));
+    await leagues.join(open.id, ids[1]);
+
+    const requested = await leagues.create(ids[2], { owner_id: ids[2], name: "Request league", visibility: "public", join_policy: "request", max_players: 4 });
+    await assert.rejects(() => leagues.join(requested.id, ids[3]));
+    const joinRequest = await requests.create(ids[3], requested.id);
+    assert.equal(joinRequest.status, "pending");
+
+    const invited = await leagues.create(ids[4], { owner_id: ids[4], name: "Invite league", visibility: "public", join_policy: "invite_only", max_players: 4 });
+    await assert.rejects(() => leagues.join(invited.id, ids[5]));
+    await assert.rejects(() => requests.create(ids[5], invited.id));
+    const invitedMember = await members.create(ids[4], invited.id, ids[5], { role: "player" });
+    assert.equal(invitedMember.user_id, ids[5]);
+  });
+
+  test("concurrent approvals cannot consume the same final league slot", async () => {
+    const league = await createLeague(2, "request", "private");
+    const first = await requests.create(ids[1], league.id);
+    const second = await requests.create(ids[2], league.id);
+    const results = await Promise.allSettled([
+      requests.update(league.id, first.id, ids[0], { status: "approved" }),
+      requests.update(league.id, second.id, ids[0], { status: "approved" })
+    ]);
+    assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
+    assert.equal(Number((await db.query("SELECT COUNT(*) total FROM league_members WHERE league_id=$1", [league.id])).rows[0].total), 2);
+    assert.deepEqual((await db.query("SELECT status FROM league_join_requests WHERE league_id=$1 ORDER BY created_at", [league.id])).rows.map(row => row.status).sort(), ["approved", "pending"]);
+  });
+
+  test("a requester can cancel only their own pending request", async () => {
+    const league = await createLeague(4, "request", "private");
+    const joinRequest = await requests.create(ids[1], league.id);
+    await assert.rejects(() => requests.remove(league.id, joinRequest.id, ids[2]));
+    await requests.remove(league.id, joinRequest.id, ids[1]);
+    assert.equal(Number((await db.query("SELECT COUNT(*) total FROM league_join_requests WHERE id=$1", [joinRequest.id])).rows[0].total), 0);
+  });
+
   test("roles cannot be escalated by players or remove the owner", async () => {
     const league = await createLeague();
     const player = await leagues.join(league.id, ids[1]);

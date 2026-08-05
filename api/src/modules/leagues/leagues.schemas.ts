@@ -49,3 +49,7 @@ export const createLeagueMemberSchema =
       "owner"
     ]),
   });
+
+export const updateJoinRequestSchema = z.object({
+  status: z.enum(["approved", "rejected"])
+}).strict();

@@ -50,7 +50,7 @@ export class LeaguesController {
 
   async join(request: Request, response: Response) {
     const member = await this.leaguesService.join(request.params.league_id as string, request.user.id);
-    return response.status(201).json(member);
+    return response.status(200).json(member);
   }
 
   async update(request: Request, response: Response) {
@@ -64,7 +64,7 @@ export class LeaguesController {
     );
 
     return response
-      .status(201)
+      .status(200)
       .json(league);
   }
 
