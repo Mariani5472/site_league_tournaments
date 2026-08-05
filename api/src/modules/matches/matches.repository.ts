@@ -18,7 +18,7 @@ export class MatchesRepository {
     return result.rows;
   }
 
-  async details(matchId: string) {
+  async details(matchId: string, userId: string) {
     const result = await db.query(`
       SELECT m.*,
         COALESCE(json_agg(json_build_object(
@@ -29,10 +29,11 @@ export class MatchesRepository {
           'team_1', COUNT(*) FILTER (WHERE winner_team = 1),
           'team_2', COUNT(*) FILTER (WHERE winner_team = 2),
           'total', COUNT(*)
-        ) FROM match_votes mv WHERE mv.match_id = m.id) AS votes
+        ) FROM match_votes mv WHERE mv.match_id = m.id) AS votes,
+        (SELECT winner_team FROM match_votes mv WHERE mv.match_id = m.id AND mv.voter_id = $2) AS my_vote
       FROM matches m JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
       LEFT JOIN match_players mp ON mp.match_id = m.id
-      LEFT JOIN users u ON u.id = mp.user_id WHERE m.id = $1 GROUP BY m.id`, [matchId]);
+      LEFT JOIN users u ON u.id = mp.user_id WHERE m.id = $1 GROUP BY m.id`, [matchId, userId]);
     return result.rows[0] ?? null;
   }
 

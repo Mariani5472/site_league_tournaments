@@ -26,7 +26,7 @@ export class MatchesService {
   }
 
   async show(matchId: string, userId: string) {
-    const match = await this.repository.details(matchId);
+    const match = await this.repository.details(matchId, userId);
     if (!match) throw new AppError("Match not found", 404);
     await this.requireLeagueAccess(match.league_id, userId);
     const eligible = match.players.length;
