@@ -3,6 +3,7 @@ export const queryKeys = {
     me: ["profile", "me"] as const,
   },
   riot: {
+    config: ["riot", "config"] as const,
     me: ["riot", "me"] as const,
     account: (gameName: string, tagLine: string) => ["riot", "account", gameName, tagLine] as const,
   },

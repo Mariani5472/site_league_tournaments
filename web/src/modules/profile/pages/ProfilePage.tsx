@@ -9,11 +9,13 @@ import { useMyRiotAccount } from "@/modules/riot/hooks/useMyRiotAccount";
 import { RiotAccountCard } from "../components/riotAccount";
 import { linkRiotAccount, unlinkAccount } from "@/modules/riot/services/riot.service";
 import { queryKeys } from "@/lib/queryKeys";
+import { useRiotConfiguration } from "@/modules/riot/hooks/useRiotConfiguration";
 
 export function ProfilePage() {
   const queryClient = useQueryClient();
   const profileQuery = useMyProfile();
   const riotQuery = useMyRiotAccount();
+  const riotConfiguration = useRiotConfiguration();
   const { data: profile, isLoading: accountLoading } = profileQuery;
   const { data: riotAccount, isLoading: riotLoading } = riotQuery;
 
@@ -90,7 +92,7 @@ export function ProfilePage() {
 
   }, [profile]);
 
-  if (riotLoading || accountLoading) {
+  if (riotLoading || accountLoading || riotConfiguration.isLoading) {
     return <p className="text-muted-foreground">Carregando perfil...</p>;
   }
 
@@ -201,7 +203,7 @@ export function ProfilePage() {
             : "Save Changes"}
         </Button>
 
-        {!riotAccount && (
+        {!riotAccount && riotConfiguration.data?.enabled && (
           <div className="rounded-xl border p-6 space-y-4">
             <h2 className="text-xl font-semibold">
               Riot Account
@@ -232,6 +234,10 @@ export function ProfilePage() {
                 : "Link Riot Account"}
             </Button>
           </div>
+        )}
+
+        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (
+          <p className="text-sm text-muted-foreground">A vinculação com a Riot não está habilitada neste ambiente.</p>
         )}
 
         {riotAccount && (
