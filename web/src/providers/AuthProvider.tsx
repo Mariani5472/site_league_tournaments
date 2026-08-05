@@ -21,6 +21,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
+      const { data: sessionData, error: sessionError } = await mySupabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        setUser(null);
+        return;
+      }
       const { data, error: authError } = await mySupabase.auth.getUser();
       if (authError) throw authError;
       if (data.user) await syncLocalProfile();

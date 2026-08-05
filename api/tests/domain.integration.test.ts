@@ -201,6 +201,24 @@ describe("critical domain flows", { concurrency: false }, () => {
     await assert.rejects(() => matches.show(match.id, ids[2]));
   });
 
+  test("a non-participant cannot vote and an admin from another league cannot resolve", async () => {
+    const league = await createLeague(4);
+    await leagues.join(league.id, ids[1]);
+    const lobby = await lobbies.create(league.id, ids[0], { max_players: 2 });
+    await lobbies.joinLobby(lobby.id, ids[0], league.id);
+    await lobbies.joinLobby(lobby.id, ids[1], league.id);
+    await db.query("UPDATE lobby_players SET is_ready=true WHERE lobby_id=$1", [lobby.id]);
+    const match = await lobbies.start(lobby.id, league.id, ids[0]);
+
+    const otherLeague = await leagues.create(ids[2], { owner_id: ids[2], name: "Other league", visibility: "public", join_policy: "open", max_players: 4 });
+    const otherAdmin = await leagues.join(otherLeague.id, ids[3]);
+    await members.update(ids[2], otherLeague.id, otherAdmin.id, { role: "admin" });
+
+    await assert.rejects(() => matches.vote(match.id, ids[2], 1), /participants/i);
+    await assert.rejects(() => matches.resolve(match.id, ids[3], 1, "Cross-league attempt"), /permissions/i);
+    assert.equal((await db.query("SELECT status FROM matches WHERE id=$1", [match.id])).rows[0].status, "in_game");
+  });
+
   test("private resources and socket rooms reject outsiders", async () => {
     const league = await createLeague(4, "request", "private");
     const lobby = await lobbies.create(league.id, ids[0], { max_players: 2 });

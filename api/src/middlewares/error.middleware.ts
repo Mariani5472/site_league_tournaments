@@ -27,7 +27,7 @@ export function errorMiddleware(
     return response.status(409).json({ status: "error", message: "Resource already exists or capacity changed" });
   }
 
-  request.log.error(error);
+  request.log?.error(error);
 
   return response.status(500).json({
     status: "error",

@@ -28,6 +28,17 @@ Os testes críticos usam um PostgreSQL isolado. Crie um banco de teste, configur
 
 Na pasta `web`: `npm run lint` e `npm run build`.
 
+Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perfis locais idempotentes. Esses UUIDs não criam identidades no Supabase; para testar login completo, use contas de desenvolvimento correspondentes no projeto de autenticação.
+
+## Produção e operação
+
+- Defina `NODE_ENV=production`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` e `LOG_LEVEL`. Em produção, a API se recusa a iniciar sem `CORS_ORIGINS`.
+- `CORS_ORIGINS` aceita origens exatas separadas por vírgula e é compartilhado pelo Express e Socket.IO. Não use `*` com autenticação.
+- Logs HTTP são estruturados e removem `Authorization` e cookies. Use `LOG_LEVEL=info` normalmente e `warn` quando a plataforma de observabilidade já registrar acessos.
+- `/health` verifica API e PostgreSQL. O Compose também possui healthchecks para PostgreSQL, API, web e Adminer.
+- Faça backup com `pg_dump -Fc` e restaure primeiro em outro banco com `pg_restore`; valide migrations, contagens e acesso antes de substituir qualquer banco.
+- Segredos não devem entrar no repositório. A chave Supabase usada aqui é publicável; operações administrativas exigiriam uma chave separada e nunca devem ser expostas ao frontend.
+
 ## Arquitetura e fluxo
 
 Os módulos da API seguem controller → service → repository. As regras e autorização ficam no service; repositories usam queries parametrizadas. REST é a fonte da verdade e Socket.IO apenas sinaliza invalidações nas rooms `league:{id}` e `lobby:{id}`.

@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit --skipLibCheck",
     "build": "tsc --skipLibCheck",
     "test:integration": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "seed:dev": "tsx src/database/seed-development.ts",
     "migrate:create": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down",
