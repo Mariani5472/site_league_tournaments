@@ -1,5 +1,11 @@
 import { Request, Response } from "express";
 import { LobbiesService } from "./lobbies.service";
+import { z } from "zod";
+
+const selectionVoteSchema = z.object({ mode: z.enum(["random", "balanced", "player_picks"]) });
+const draftPickSchema = z.object({ user_id: z.uuid() });
+const confirmationSchema = z.object({ decision: z.enum(["accept", "reroll"]) });
+const captainVoteSchema = z.object({ candidate_id: z.uuid() });
 
 export class LobbiesController {
   private lobbiesService = new LobbiesService();
@@ -136,5 +142,31 @@ export class LobbiesController {
       request.user.id
     );
     return response.status(201).json(match);
+  }
+
+  async voteTeamSelection(request: Request, response: Response) {
+    const body = selectionVoteSchema.parse(request.body);
+    const lobby = await this.lobbiesService.voteTeamSelection(request.params.lobby_id as string, request.params.league_id as string, request.user.id, body.mode);
+    return response.json(lobby);
+  }
+
+  async draftPick(request: Request, response: Response) {
+    const body = draftPickSchema.parse(request.body);
+    const lobby = await this.lobbiesService.draftPick(request.params.lobby_id as string, request.params.league_id as string, request.user.id, body.user_id);
+    return response.json(lobby);
+  }
+
+  async confirmTeamSelection(request: Request, response: Response) {
+    const body = confirmationSchema.parse(request.body);
+    return response.json(await this.lobbiesService.confirmRandomTeams(request.params.lobby_id as string, request.params.league_id as string, request.user.id, body.decision));
+  }
+
+  async voteCaptain(request: Request, response: Response) {
+    const body = captainVoteSchema.parse(request.body);
+    return response.json(await this.lobbiesService.voteCaptain(request.params.lobby_id as string, request.params.league_id as string, request.user.id, body.candidate_id));
+  }
+
+  async finalizeCaptains(request: Request, response: Response) {
+    return response.json(await this.lobbiesService.finalizeCaptains(request.params.lobby_id as string, request.params.league_id as string, request.user.id));
   }
 }

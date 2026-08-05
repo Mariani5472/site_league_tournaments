@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLeague } from "../services/leagues.service";
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
-export function CreateLeagueDialog() {
+export function CreateLeagueDialog({ children }: { children?: ReactNode } = {}) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -66,9 +66,7 @@ export function CreateLeagueDialog() {
       onOpenChange={setOpen}
     >
       <DialogTrigger asChild>
-        <Button>
-          Create League
-        </Button>
+        {children ?? <Button variant="secondary">Create League</Button>}
       </DialogTrigger>
 
       <DialogContent>

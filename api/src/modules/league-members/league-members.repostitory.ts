@@ -12,6 +12,7 @@ export class LeagueMembersRepository {
         lm.role,
         u.id as user_id,
         u.nickname,
+        u.avatar_url,
         u.avatar_url
       FROM league_members lm
       INNER JOIN users u

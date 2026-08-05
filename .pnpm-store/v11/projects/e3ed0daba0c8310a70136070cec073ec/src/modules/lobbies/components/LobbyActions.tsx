@@ -13,6 +13,7 @@ interface Props {
   isLoading?: boolean;
   status: "waiting" | "in_game" | "finished" | "cancelled";
   canManage: boolean;
+  teamSelectionLocked?: boolean;
 }
 
 export function LobbyActions({
@@ -26,6 +27,7 @@ export function LobbyActions({
   isLoading,
   status,
   canManage,
+  teamSelectionLocked,
 }: Props) {
 
   const isWaiting = status === "waiting";
@@ -48,7 +50,7 @@ export function LobbyActions({
         <>
           <Button
             variant="secondary"
-            disabled={!isWaiting || isLoading}
+            disabled={!isWaiting || isLoading || teamSelectionLocked}
             onClick={currentPlayer.is_ready ? unready : ready}
           >
             {currentPlayer.is_ready ? "Unready" : "Ready"}
@@ -56,7 +58,7 @@ export function LobbyActions({
 
           <Button
             variant="outline"
-            disabled={!isWaiting || isLoading}
+            disabled={!isWaiting || isLoading || teamSelectionLocked}
             onClick={switchTeam}
           >
             Switch to Team {currentPlayer.team_number == 1 ? 'Red' : "Blue"}

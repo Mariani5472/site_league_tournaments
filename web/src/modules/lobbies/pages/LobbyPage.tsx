@@ -18,6 +18,8 @@ import { useLeagueRole } from "@/modules/leagues/hooks/useLeagueRole";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
 import { useLeagueSocket } from "@/modules/leagues/hooks/useLeagueSocket";
+import { ArrowLeft } from "lucide-react";
+import { TeamSelection } from "../components/TeamSelection";
 
 export function LobbyPage() {
     const { leagueId, lobbyId } = useParams();
@@ -66,6 +68,7 @@ export function LobbyPage() {
                 space-y-6
             "
         >
+            <Button variant="ghost" className="w-fit" onClick={() => navigate(`/leagues/${leagueId}`)}><ArrowLeft className="h-4 w-4" /> Voltar para a liga</Button>
 
             <LobbyHeader
                 lobby={lobby}
@@ -74,10 +77,13 @@ export function LobbyPage() {
                 lobby={lobby}
             />
 
+            <TeamSelection lobby={lobby} />
+
             <LobbyActions
                 currentPlayer={me}
                 status={lobby.status}
                 canManage={role.isAdmin}
+                teamSelectionLocked={Boolean(lobby.team_selection?.available && !lobby.team_selection.completed)}
                 {...actions}
             />
 

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
 export function ProtectedLayout() {
   const { user, loading, signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -18,11 +19,11 @@ export function ProtectedLayout() {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden bg-muted/20 text-foreground">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {isSidebarOpen && (
@@ -33,7 +34,7 @@ export function ProtectedLayout() {
       )}
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center justify-between border-b bg-card px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/90 px-4 backdrop-blur sm:px-6">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -58,14 +59,14 @@ export function ProtectedLayout() {
           
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
-            <Button type="button" variant="outline" size="sm" onClick={() => void signOut()}>
+            <Button type="button" variant="outline" size="sm" onClick={async () => { await signOut(); navigate("/", { replace: true }); }}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
           <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>

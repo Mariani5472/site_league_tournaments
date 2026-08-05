@@ -35,6 +35,12 @@ lobbiesRoutes.post(
   lobbiesController.start.bind(lobbiesController)
 );
 
+lobbiesRoutes.post("/:lobby_id/team-selection/vote", authMiddleware, lobbiesController.voteTeamSelection.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/confirm", authMiddleware, lobbiesController.confirmTeamSelection.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/captain-vote", authMiddleware, lobbiesController.voteCaptain.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/captains/finalize", authMiddleware, lobbiesController.finalizeCaptains.bind(lobbiesController));
+lobbiesRoutes.post("/:lobby_id/team-selection/pick", authMiddleware, lobbiesController.draftPick.bind(lobbiesController));
+
 lobbiesRoutes.patch(
   "/:lobby_id/ready",
   authMiddleware,

@@ -159,6 +159,50 @@ describe("critical domain flows", { concurrency: false }, () => {
     assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
   });
 
+  test("a 5x5 lobby selects random teams only after an absolute majority", async () => {
+    const league = await createLeague(10);
+    for (const id of ids.slice(1)) await leagues.join(league.id, id);
+    const lobby = await lobbies.create(league.id, ids[0], { max_players: 10 });
+    for (const id of ids) await lobbies.joinLobby(lobby.id, id, league.id);
+    for (const id of ids.slice(0, 5)) await lobbies.voteTeamSelection(lobby.id, league.id, id, "random");
+    assert.equal((await db.query("SELECT team_selection_mode FROM lobbies WHERE id=$1", [lobby.id])).rows[0].team_selection_mode, null);
+    await lobbies.voteTeamSelection(lobby.id, league.id, ids[5], "random");
+    const selected = (await db.query("SELECT team_selection_mode,team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0];
+    assert.equal(selected.team_selection_mode, "random"); assert.equal(selected.team_selection_completed, false);
+    const teams = await db.query("SELECT team_number,COUNT(*)::int total FROM lobby_players WHERE lobby_id=$1 GROUP BY team_number ORDER BY team_number", [lobby.id]);
+    assert.deepEqual(teams.rows.map(row => row.total), [5, 5]);
+    const firstRound = (await db.query("SELECT team_selection_round FROM lobbies WHERE id=$1", [lobby.id])).rows[0].team_selection_round;
+    for (const id of ids.slice(0, 6)) await lobbies.confirmRandomTeams(lobby.id, league.id, id, "reroll");
+    assert.equal(Number((await db.query("SELECT team_selection_round FROM lobbies WHERE id=$1", [lobby.id])).rows[0].team_selection_round), Number(firstRound) + 1);
+    assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_team_confirmation_votes WHERE lobby_id=$1", [lobby.id])).rows[0].total), 0);
+    for (const id of ids.slice(0, 6)) await lobbies.confirmRandomTeams(lobby.id, league.id, id, "accept");
+    const accepted = (await db.query("SELECT team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0];
+    assert.equal(accepted.team_selection_completed, true);
+    assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready", [lobby.id])).rows[0].total), 10);
+  });
+
+  test("player picks follows the 1-2-2 snake draft and only the active captain can pick", async () => {
+    const league = await createLeague(10);
+    for (const id of ids.slice(1)) await leagues.join(league.id, id);
+    const lobby = await lobbies.create(league.id, ids[0], { max_players: 10 });
+    for (const id of ids) await lobbies.joinLobby(lobby.id, id, league.id);
+    for (const id of ids.slice(0, 6)) await lobbies.voteTeamSelection(lobby.id, league.id, id, "player_picks");
+    for (const id of ids.slice(0, 4)) await lobbies.voteCaptain(lobby.id, league.id, id, ids[0]);
+    for (const id of ids.slice(4)) await lobbies.voteCaptain(lobby.id, league.id, id, ids[1]);
+    await db.query("UPDATE lobbies SET captain_vote_ends_at=current_timestamp-interval '1 second' WHERE id=$1", [lobby.id]);
+    await lobbies.finalizeCaptains(lobby.id, league.id, ids[0]);
+    const state = (await db.query("SELECT draft_captain_1,draft_captain_2 FROM lobbies WHERE id=$1", [lobby.id])).rows[0];
+    assert.deepEqual(new Set([state.draft_captain_1, state.draft_captain_2]), new Set([ids[0], ids[1]]));
+    const remaining = ids.filter(id => ![state.draft_captain_1, state.draft_captain_2].includes(id));
+    const sequence = [1, 2, 2, 1, 1, 2, 2, 1];
+    await assert.rejects(() => lobbies.draftPick(lobby.id, league.id, state.draft_captain_2, remaining[0]), /turn/i);
+    for (const [index, target] of remaining.entries()) {
+      const captain = sequence[index] === 1 ? state.draft_captain_1 : state.draft_captain_2;
+      await lobbies.draftPick(lobby.id, league.id, captain, target);
+    }
+    assert.equal((await db.query("SELECT team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0].team_selection_completed, true);
+  });
+
   test("nested lobby ids cannot be used through another league", async () => {
     const first = await createLeague(4);
     const second = await leagues.create(ids[1], { owner_id: ids[1], name: "Second league", visibility: "public", join_policy: "open", max_players: 4 });

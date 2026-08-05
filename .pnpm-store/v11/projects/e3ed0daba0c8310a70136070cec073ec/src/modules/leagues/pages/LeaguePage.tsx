@@ -72,6 +72,7 @@ export function LeaguePage() {
         league={league}
         isAdmin={roleData.isAdmin}
         isOwner={roleData.isOwner}
+        role={roleData.role}
       />
 
       <div
