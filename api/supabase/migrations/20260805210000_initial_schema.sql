@@ -185,6 +185,66 @@ create table public.lobby_captain_votes (
   constraint unique_captain_vote unique (lobby_id, voter_id)
 );
 
+create unique index unique_owner_per_league
+  on public.league_members (league_id)
+  where role = 'owner';
+
+create or replace function public.check_league_owner_consistency(target_league_id uuid)
+returns void
+language plpgsql
+as $$
+declare
+  canonical_owner_id uuid;
+  owner_count integer;
+  matching_owner_count integer;
+begin
+  select owner_id into canonical_owner_id
+    from public.leagues where id = target_league_id;
+  if not found then return; end if;
+
+  select count(*) filter (where role = 'owner'),
+         count(*) filter (where role = 'owner' and user_id = canonical_owner_id)
+    into owner_count, matching_owner_count
+    from public.league_members where league_id = target_league_id;
+
+  if owner_count <> 1 or matching_owner_count <> 1 then
+    raise exception 'league % must have exactly one owner matching leagues.owner_id',
+      target_league_id using errcode = '23514';
+  end if;
+end;
+$$;
+
+create or replace function public.enforce_league_owner_from_league()
+returns trigger language plpgsql as $$
+begin
+  perform public.check_league_owner_consistency(new.id);
+  return null;
+end;
+$$;
+
+create or replace function public.enforce_league_owner_from_member()
+returns trigger language plpgsql as $$
+begin
+  if tg_op = 'UPDATE' and old.league_id is distinct from new.league_id then
+    perform public.check_league_owner_consistency(old.league_id);
+  end if;
+  perform public.check_league_owner_consistency(
+    case when tg_op = 'DELETE' then old.league_id else new.league_id end
+  );
+  return null;
+end;
+$$;
+
+create constraint trigger enforce_league_owner_on_league
+after insert or update of owner_id on public.leagues
+deferrable initially deferred for each row
+execute function public.enforce_league_owner_from_league();
+
+create constraint trigger enforce_league_owner_on_member
+after insert or update or delete on public.league_members
+deferrable initially deferred for each row
+execute function public.enforce_league_owner_from_member();
+
 -- A aplicação acessa estas tabelas apenas pela API Express. RLS sem policies
 -- impede acesso direto pelas chaves anon/authenticated do Supabase.
 alter table public.users enable row level security;

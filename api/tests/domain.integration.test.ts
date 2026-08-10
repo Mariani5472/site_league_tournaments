@@ -192,6 +192,68 @@ describe("critical domain flows", { concurrency: false }, () => {
         assert.equal((await db.query("SELECT owner_id FROM leagues WHERE id=$1", [league.id])).rows[0].ownerId, ids[1]);
         await assert.rejects(() => members.remove(ids[0], league.id, target.id));
     });
+    test("database rejects a second owner and owner_id divergence", async () => {
+        const league = await createLeague();
+        await leagues.join(league.id, ids[1]);
+
+        await assert.rejects(() => db.query(
+            "UPDATE league_members SET role = 'owner' WHERE league_id = $1 AND user_id = $2",
+            [league.id, ids[1]]
+        ));
+        await assert.rejects(() => db.query(
+            "UPDATE leagues SET owner_id = $2 WHERE id = $1",
+            [league.id, ids[1]]
+        ));
+
+        const state = await db.query(`
+            SELECT l.owner_id, lm.user_id, lm.role
+              FROM leagues l
+              JOIN league_members lm ON lm.league_id = l.id
+             WHERE l.id = $1
+             ORDER BY lm.user_id
+        `, [league.id]);
+        assert.equal(state.rows.filter(row => row.role === "owner").length, 1);
+        assert.equal(state.rows.find(row => row.role === "owner")?.userId, ids[0]);
+        assert.equal(state.rows[0].ownerId, ids[0]);
+    });
+    test("ownership transfer rolls back every owner change when one step fails", async () => {
+        const league = await createLeague();
+        const target = await leagues.join(league.id, ids[1]);
+
+        await db.query(`
+            CREATE FUNCTION reject_owner_id_change() RETURNS trigger AS $$
+            BEGIN
+              IF NEW.owner_id IS DISTINCT FROM OLD.owner_id THEN
+                RAISE EXCEPTION 'forced ownership transfer failure';
+              END IF;
+              RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql
+        `);
+        await db.query(`
+            CREATE TRIGGER reject_owner_id_change
+            BEFORE UPDATE OF owner_id ON leagues
+            FOR EACH ROW EXECUTE FUNCTION reject_owner_id_change()
+        `);
+
+        await assert.rejects(() => members.update(
+            ids[0], league.id, target.id, { role: "owner" }
+        ));
+
+        const leagueAfterFailure = await db.query(
+            "SELECT owner_id FROM leagues WHERE id = $1",
+            [league.id]
+        );
+        const membersAfterFailure = await db.query(
+            "SELECT user_id, role FROM league_members WHERE league_id = $1 ORDER BY user_id",
+            [league.id]
+        );
+        assert.equal(leagueAfterFailure.rows[0].ownerId, ids[0]);
+        assert.deepEqual(membersAfterFailure.rows.map(row => row.role), ["owner", "player"]);
+
+        await db.query("DROP TRIGGER reject_owner_id_change ON leagues");
+        await db.query("DROP FUNCTION reject_owner_id_change()");
+    });
     test("league update rejects unknown fields and invalid capacity reductions", async () => {
         assert.throws(() => updateLeagueSchema.parse({ name: "Valid name", ownerId: ids[2] }));
         const league = await createLeague();
