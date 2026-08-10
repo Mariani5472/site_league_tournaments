@@ -1,8 +1,11 @@
-declare namespace Express {
-  export interface Request {
-    user: {
-      id: string;
-      email?: string;
-    };
+import { UserIdentity } from "../../modules/users/users.types";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: UserIdentity;
+    }
   }
 }
+
+export {};
