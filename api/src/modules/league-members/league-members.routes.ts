@@ -12,19 +12,19 @@ leagueMembersRoutes.get(
 )
 
 leagueMembersRoutes.post(
-  "/:user_id",
+  "/:memberId",
   authMiddleware,
   leagueMembersController.create.bind(leagueMembersController)
 )
 
 leagueMembersRoutes.patch(
-  "/:member_id",
+  "/:memberId",
   authMiddleware,
   leagueMembersController.update.bind(leagueMembersController)
 )
 
 leagueMembersRoutes.delete(
-  "/:member_id",
+  "/:memberId",
   authMiddleware,
   leagueMembersController.remove.bind(leagueMembersController)
 )

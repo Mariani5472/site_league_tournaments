@@ -1,8 +1,13 @@
 import { db } from "../../database/connection";
-import { CreateLeagueMemberDTO, LeagueMember, ListLeagueMembersParams } from "../leagues/leagues.types";
+import { FindOptions } from "../../@types/shared/FindOptions";
+import { CreateLeagueMemberDTO, LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
+import { QueryOptions } from "../../@types/shared/QueryOptions";
 
 export class LeagueMembersRepository {
-  async list(league_id: string, params: ListLeagueMembersParams): Promise<LeagueMember[]> {
+  async list(
+    league_id: string,
+    params: LeagueMemberIdentity
+  ): Promise<LeagueMember[]> {
     const values: unknown[] = [];
     const where: string[] = [];
 
@@ -48,44 +53,65 @@ export class LeagueMembersRepository {
     return result.rows;
   }
 
-  async count(league_id: string): Promise<number> {
-    const query = `
-      SELECT COUNT(*)::int as total
+  async count(
+    leagueId: string,
+    options: QueryOptions = {}
+  ): Promise<number> {
+    const { executor = db } = options;
+
+    const result = await executor.query<{ total: number }>(
+      `
+      SELECT COUNT(*)::int AS total
       FROM league_members
       WHERE league_id = $1
-    `;
-
-    const result = await db.query(query, [
-      league_id
-    ]);
+    `,
+      [leagueId]
+    );
 
     return result.rows[0].total;
   }
 
-  async findById(member_id: string): Promise<LeagueMember | null> {
-    const query = `
+  async findById(
+    memberId: string,
+    options: FindOptions = {}
+  ): Promise<LeagueMember | null> {
+    const {
+      executor = db,
+      lock,
+    } = options;
+
+    const result = await executor.query<LeagueMember>(
+      `
       SELECT *
       FROM league_members
       WHERE id = $1
-    `;
-
-    const result = await db.query<LeagueMember>(
-      query,
-      [member_id]
+      ${lock === "update" ? "FOR UPDATE" : ""}
+    `,
+      [memberId]
     );
 
     return result.rows[0] ?? null;
   }
 
-  async findByLeagueAndUser(league_id: string, user_id: string): Promise<LeagueMember | null> {
+  async findByLeagueAndUser(
+    league_id: string,
+    user_id: string,
+    options: FindOptions = {}
+  ): Promise<LeagueMember | null> {
+    const {
+      executor = db,
+      lock,
+    } = options;
+
     const query = `
       SELECT *
       FROM league_members
       WHERE league_id = $1
       AND user_id = $2
+      ${lock === "update" ? "FOR UPDATE" : ""}
     `;
 
-    const result = await db.query<LeagueMember>(
+    const result = await executor.query<LeagueMember>(
       query,
       [league_id, user_id]
     );
@@ -93,7 +119,14 @@ export class LeagueMembersRepository {
     return result.rows[0] ?? null;
   }
 
-  async create(league_id: string, user_id: string, params: CreateLeagueMemberDTO): Promise<LeagueMember> {
+  async create(
+    leagueId: string,
+    userId: string,
+    params: CreateLeagueMemberDTO,
+    options: QueryOptions = {}
+  ): Promise<LeagueMember> {
+    const { executor = db } = options;
+
     const query = `
       INSERT INTO league_members (
         league_id,
@@ -104,17 +137,22 @@ export class LeagueMembersRepository {
       RETURNING *
     `;
 
-    const values = [
-      league_id,
-      user_id,
+    const result = await executor.query<LeagueMember>(query, [
+      leagueId,
+      userId,
       params.role
-    ];
-
-    const result = await db.query<LeagueMember>(query, values);
+    ]);
     return result.rows[0];
   }
 
-  async update(league_id: string, user_id: string, params: CreateLeagueMemberDTO): Promise<LeagueMember> {
+  async update(
+    league_id: string,
+    user_id: string,
+    params: UpdateLeagueMemberDTO,
+    options: QueryOptions = {}
+  ): Promise<LeagueMember> {
+    const { executor = db } = options;
+
     const query = `
     UPDATE league_members
     SET role = $3
@@ -123,7 +161,7 @@ export class LeagueMembersRepository {
     RETURNING *
   `;
 
-    const result = await db.query<LeagueMember>(query, [
+    const result = await executor.query<LeagueMember>(query, [
       league_id,
       user_id,
       params.role
@@ -132,16 +170,20 @@ export class LeagueMembersRepository {
     return result.rows[0];
   }
 
-  async remove(league_id: string, user_id: string) {
-    const query = `
+  async remove(
+    leagueId: string,
+    userId: string,
+    options: QueryOptions = {}
+  ): Promise<void> {
+    const { executor = db } = options;
+
+    await executor.query(
+      `
       DELETE FROM league_members
       WHERE league_id = $1
         AND user_id = $2
-    `;
-
-    await db.query(query, [
-      league_id,
-      user_id
-    ]);
+    `,
+      [leagueId, userId]
+    );
   }
 }

@@ -45,24 +45,3 @@ export type LeagueJoinRequestsDTO = {
   league_id: string,
   user_id: string,
 }
-
-export type LeagueMember = {
-  id: string;
-  league_id: string;
-  user_id: string;
-  role: "owner" | "player" | "admin" | "spec";
-  created_at: Date;
-  nickname?: string;
-  game_name?: string;
-  tag_line?: string;
-};
-
-export type ListLeagueMembersParams = {
-  user_id?: string[];
-  nickname?: string[],
-  role?: string[]
-}
-
-export type CreateLeagueMemberDTO = {
-  role: | "player" | "admin" | "spec" | "owner"
-}

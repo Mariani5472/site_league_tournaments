@@ -1,5 +1,7 @@
 import { db } from "../../database/connection";
 import { CreateLeagueDTO, League, ListLeaguesParams } from "./leagues.types";
+import { FindOptions } from "../../@types/shared/FindOptions";
+import { QueryOptions } from "../../@types/shared/QueryOptions";
 
 export class LeaguesRepository {
   async list(params: ListLeaguesParams) {
@@ -111,14 +113,23 @@ export class LeaguesRepository {
     return result.rows;
   }
 
-  async findById(league_id: string): Promise<League | null> {
+  async findById(
+    league_id: string,
+    options: FindOptions = {}
+  ): Promise<League | null> {
+    const {
+      executor = db,
+      lock,
+    } = options;
+
     const query = `
       SELECT *
       FROM leagues
       WHERE id = $1
+      ${lock === "update" ? "FOR UPDATE" : ""}
     `;
 
-    const result = await db.query<League>(
+    const result = await executor.query<League>(
       query,
       [league_id]
     );
@@ -199,5 +210,22 @@ export class LeaguesRepository {
     `;
 
     await db.query(query, [league_id]);
+  }
+
+  async updateOwner(
+    leagueId: string,
+    ownerId: string,
+    options: QueryOptions = {}
+  ): Promise<void> {
+    const { executor = db } = options;
+
+    await executor.query(
+      `
+      UPDATE leagues
+      SET owner_id = $2
+      WHERE id = $1
+    `,
+      [leagueId, ownerId]
+    );
   }
 }

@@ -40,16 +40,6 @@ export const updateLeagueSchema = z.object({
   message: "At least one field must be provided"
 });
 
-export const createLeagueMemberSchema =
-  z.object({
-    role: z.enum([
-      "admin",
-      "player",
-      "spec",
-      "owner"
-    ]),
-  });
-
 export const updateJoinRequestSchema = z.object({
   status: z.enum(["approved", "rejected"])
 }).strict();

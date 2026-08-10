@@ -27,12 +27,12 @@ export class UsersRepository {
     return result.rows[0];
   }
 
-  async findById(user_id: string) {
+  async findById(userId: string) {
     const result = await db.query<User>(
       `SELECT *
       FROM users
       WHERE id = $1`,
-      [user_id]
+      [userId]
     );
 
     return result.rows[0];
