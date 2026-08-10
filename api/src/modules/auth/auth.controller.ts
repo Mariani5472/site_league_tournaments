@@ -4,13 +4,11 @@ import { AuthService } from "./auth.service";
 export class AuthController {
   private authService = new AuthService();
 
-  async sync(
-    request: Request,
-    response: Response
-  ) {
-    const user = await this.authService.sync({
-      id: request.user.id,
-      email: request.user.email!
+  async syncAuthenticatedUser(request: Request, response: Response) {
+    const { id, email } = request.user;
+
+    const user = await this.authService.syncAuthenticatedUser({
+      id, email: email
     });
 
     return response.status(201).json(user);
