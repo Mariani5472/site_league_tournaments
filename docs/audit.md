@@ -167,13 +167,13 @@ API
 
 **Status:** Pending — crítico.
 
-**Problema:** o banco não impõe owner único por liga nem coerência entre `leagues.owner_id` e `league_members(role='owner')`.
+**Problema:** o banco não impunha owner único por liga nem coerência entre `leagues.owner_id` e `league_members(role='owner')`.
 
 **Impacto:** qualquer bug/carga manual pode quebrar a principal invariante de autorização.
 
-**Decisão:** adicionar constraint/trigger ou remodelar ownership para haver uma única fonte da verdade.
+**Decisão:** `leagues.owner_id` é a fonte canônica; a linha `league_members(role='owner')` é uma projeção obrigatória. Índice parcial único e constraint triggers diferíveis tornam a projeção única e coerente. Ver ADR `docs/adr/0001-canonical-league-owner.md`.
 
-**Status:** Pending — alto.
+**Status:** Resolvido — migration faz preflight dos dados, bloqueia segundo owner e valida exatamente um owner correspondente no commit.
 
 ### League requests
 
