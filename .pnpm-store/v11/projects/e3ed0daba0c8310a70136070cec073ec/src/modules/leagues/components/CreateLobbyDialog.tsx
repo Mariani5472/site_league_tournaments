@@ -1,90 +1,41 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { toast } from "sonner";
 import { useState, type ReactNode } from "react";
 import { createLobby } from "../services/leagues.service";
 import { queryKeys } from "@/lib/queryKeys";
-
-
 interface Props {
-  leagueId: string;
-  children: ReactNode;
+    leagueId: string;
+    children: ReactNode;
 }
-
-export function CreateLobbyDialog({
-  leagueId,
-  children
-}: Props) {
-  const queryClient =
-    useQueryClient();
-
-  const [open, setOpen] =
-    useState(false);
-
-  const [maxPlayers, setMaxPlayers] =
-    useState(10);
-
-  const mutation =
-    useMutation({
-      mutationFn: ( data: { maxPlayers: number; }
-      ) =>
-        createLobby(
-          leagueId,
-          data
-        ),
-
-      onSuccess: () => {
-
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.leagues.lobbies(leagueId)
+export function CreateLobbyDialog({ leagueId, children }: Props) {
+    const queryClient = useQueryClient();
+    const [open, setOpen] = useState(false);
+    const [maxPlayers, setMaxPlayers] = useState(10);
+    const mutation = useMutation({
+        mutationFn: (data: {
+            maxPlayers: number;
+        }) => createLobby(leagueId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.leagues.lobbies(leagueId)
+            });
+            toast.success("Lobby created!");
+            setOpen(false);
+            setMaxPlayers(10);
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        }
+    });
+    function handleSubmit() {
+        mutation.mutate({
+            maxPlayers
         });
-
-        toast.success(
-          "Lobby created!"
-        );
-
-        setOpen(false);
-
-        setMaxPlayers(10);
-      },
-
-      onError: (
-        error: Error
-      ) => {
-
-        toast.error(
-          error.message
-        );
-
-      }
-    });
-
-  function handleSubmit() {
-
-    mutation.mutate({
-
-      maxPlayers
-
-    });
-
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
+    }
+    return (<Dialog open={open} onOpenChange={setOpen}>
 
       <DialogTrigger asChild>
 
@@ -104,52 +55,28 @@ export function CreateLobbyDialog({
 
         </DialogHeader>
 
-        <div
-          className="
+        <div className="
             space-y-4
-          "
-        >
+          ">
 
           <div>
 
-            <label
-              className="
+            <label className="
                 text-sm
                 font-medium
-              "
-            >
+              ">
               Maximum Players
             </label>
 
-            <Input
-              type="number"
-              min={2}
-              max={10}
-              value={maxPlayers}
-              onChange={(e) =>
-                setMaxPlayers(
-                  Number(
-                    e.target.value
-                  )
-                )
-              }
-            />
+            <Input type="number" min={2} max={10} value={maxPlayers} onChange={(e) => setMaxPlayers(Number(e.target.value))}/>
 
           </div>
 
-          <Button
-            className="w-full"
-            disabled={
-              mutation.isPending
-            }
-            onClick={
-              handleSubmit
-            }
-          >
+          <Button className="w-full" disabled={mutation.isPending} onClick={handleSubmit}>
 
             {mutation.isPending
-              ? "Creating..."
-              : "Create Lobby"}
+            ? "Creating..."
+            : "Create Lobby"}
 
           </Button>
 
@@ -157,6 +84,5 @@ export function CreateLobbyDialog({
 
       </DialogContent>
 
-    </Dialog>
-  );
+    </Dialog>);
 }

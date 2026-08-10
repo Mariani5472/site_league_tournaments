@@ -1,60 +1,45 @@
 import type { LobbyDetails } from "../types/lobby.types";
 interface Props {
-  lobby: LobbyDetails;
+    lobby: LobbyDetails;
 }
-
-export function LobbyHeader({
-  lobby,
-}: Props) {
-  return (
-    <div
-      className="
+export function LobbyHeader({ lobby, }: Props) {
+    return (<div className="
         rounded-xl
         border
         p-6
         flex
         justify-between
         items-center
-      "
-    >
+      ">
       <div>
-        <h1
-          className="
+        <h1 className="
             text-3xl
             font-bold
-          "
-        >
+          ">
           Lobby
         </h1>
 
-        <p
-          className="
+        <p className="
             text-muted-foreground
-          "
-        >
+          ">
           Waiting for players...
         </p>
       </div>
 
-      <div
-        className="
+      <div className="
           text-right
-        "
-      >
-        <span
-          className="
+        ">
+        <span className="
             text-sm
             text-muted-foreground
-          "
-        >
+          ">
           Players
         </span>
         <p className="font-semibold">
-          {lobby.players_count}
+          {lobby.playersCount}
           /
-          {lobby.max_players}
+          {lobby.maxPlayers}
         </p>
       </div>
-    </div>
-  );
+    </div>);
 }

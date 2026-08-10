@@ -1,32 +1,29 @@
 export type CreateLobbyDTO = {
-  max_players: number;
+    maxPlayers: number;
 };
-
 export type Lobby = {
-  id: string,
-  league_id: string,
-  status: string,
-  max_players: number,
-  created_by: string,
-  created_at: Date
-  team_selection_mode: "random" | "balanced" | "player_picks" | null,
-  team_selection_completed: boolean,
-  draft_captain_1: string | null,
-  draft_captain_2: string | null,
-  draft_pick_index: number,
-  team_selection_round: number,
-  captain_vote_ends_at: Date | null,
-}
-
+    id: string;
+    leagueId: string;
+    status: string;
+    maxPlayers: number;
+    createdBy: string;
+    createdAt: Date;
+    teamSelectionMode: "random" | "balanced" | "player_picks" | null;
+    teamSelectionCompleted: boolean;
+    draftCaptain1: string | null;
+    draftCaptain2: string | null;
+    draftPickIndex: number;
+    teamSelectionRound: number;
+    captainVoteEndsAt: Date | null;
+};
 export type LobbyPlayer = {
-  id: string,
-  lobby_id: string,
-  user_id: string,
-  team_number: number
-  is_ready: boolean,
-}
-
+    id: string;
+    lobbyId: string;
+    userId: string;
+    teamNumber: number;
+    isReady: boolean;
+};
 export type LobbyPlayerProfile = LobbyPlayer & {
-  nickname: string;
-  avatar_url: string;
-}
+    nickname: string;
+    avatarUrl: string;
+};

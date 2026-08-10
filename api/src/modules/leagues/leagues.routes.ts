@@ -1,61 +1,22 @@
 import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware";
-
 import { LeaguesController } from "./leagues.controller";
 import { lobbiesRoutes } from "../lobbies/lobbies.routes";
 import { leagueMembersRoutes } from "../league-members/league-members.routes";
 import { leagueJoinRequestsRoutes } from "../league-requests/league-join-requests.routes";
 import { leagueMatchesRoutes } from "../matches/matches.routes";
-
 const leaguesRoutes = Router();
 const leaguesController = new LeaguesController();
-
-leaguesRoutes.get(
-  "/",
-  authMiddleware,
-  leaguesController.list.bind(leaguesController)
-);
-
-leaguesRoutes.get(
-  "/mine",
-  authMiddleware,
-  leaguesController.mine.bind(leaguesController)
-);
-
-leaguesRoutes.get(
-  "/discover",
-  authMiddleware,
-  leaguesController.discover.bind(leaguesController)
-);
-
-leaguesRoutes.get(
-  "/:league_id",
-  authMiddleware,
-  leaguesController.show.bind(leaguesController)
-);
-
-leaguesRoutes.post(
-  "/",
-  authMiddleware,
-  leaguesController.create.bind(leaguesController)
-);
-leaguesRoutes.post("/:league_id/join", authMiddleware, leaguesController.join.bind(leaguesController));
-
-leaguesRoutes.patch(
-  "/:league_id",
-  authMiddleware,
-  leaguesController.update.bind(leaguesController)
-);
-
-leaguesRoutes.delete(
-  "/:league_id",
-  authMiddleware,
-  leaguesController.remove.bind(leaguesController)
-);
-
-leaguesRoutes.use("/:league_id/lobbies", lobbiesRoutes);
-leaguesRoutes.use("/:league_id/members", leagueMembersRoutes);
-leaguesRoutes.use("/:league_id/requests", leagueJoinRequestsRoutes);
-leaguesRoutes.use("/:league_id/matches", leagueMatchesRoutes);
-
+leaguesRoutes.get("/", authMiddleware, leaguesController.list.bind(leaguesController));
+leaguesRoutes.get("/mine", authMiddleware, leaguesController.mine.bind(leaguesController));
+leaguesRoutes.get("/discover", authMiddleware, leaguesController.discover.bind(leaguesController));
+leaguesRoutes.get("/:leagueId", authMiddleware, leaguesController.show.bind(leaguesController));
+leaguesRoutes.post("/", authMiddleware, leaguesController.create.bind(leaguesController));
+leaguesRoutes.post("/:leagueId/join", authMiddleware, leaguesController.join.bind(leaguesController));
+leaguesRoutes.patch("/:leagueId", authMiddleware, leaguesController.update.bind(leaguesController));
+leaguesRoutes.delete("/:leagueId", authMiddleware, leaguesController.remove.bind(leaguesController));
+leaguesRoutes.use("/:leagueId/lobbies", lobbiesRoutes);
+leaguesRoutes.use("/:leagueId/members", leagueMembersRoutes);
+leaguesRoutes.use("/:leagueId/requests", leagueJoinRequestsRoutes);
+leaguesRoutes.use("/:leagueId/matches", leagueMatchesRoutes);
 export { leaguesRoutes };

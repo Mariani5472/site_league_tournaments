@@ -1,13 +1,9 @@
 export type RiotAccount = {
-  id: string;
-  user_id: string;
-
-  game_name: string;
-  tag_line: string;
-
-  puuid: string;
-
-  region: string;
-
-  linked_at: string;
+    id: string;
+    userId: string;
+    gameName: string;
+    tagLine: string;
+    puuid: string;
+    region: string;
+    linkedAt: string;
 };

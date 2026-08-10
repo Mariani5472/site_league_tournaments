@@ -10,150 +10,112 @@ import { RiotAccountCard } from "../components/riotAccount";
 import { linkRiotAccount, unlinkAccount } from "@/modules/riot/services/riot.service";
 import { queryKeys } from "@/lib/queryKeys";
 import { useRiotConfiguration } from "@/modules/riot/hooks/useRiotConfiguration";
-
 export function ProfilePage() {
-  const queryClient = useQueryClient();
-  const profileQuery = useMyProfile();
-  const riotQuery = useMyRiotAccount();
-  const riotConfiguration = useRiotConfiguration();
-  const { data: profile, isLoading: accountLoading } = profileQuery;
-  const { data: riotAccount, isLoading: riotLoading } = riotQuery;
-
-  const [nickname, setNickname] = useState(profile?.nickname || "");
-  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
-  const [bannerUrl, setBannerUrl] = useState(profile?.banner_url || "");
-  const [gameName, setGameName] = useState("");
-  const [tagLine, setTagLine] = useState("");
-
-  const profileUpdateMutation = useMutation({
-    mutationFn: updateProfile,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.profile.me
-      });
-
-      toast.success("Profile updated");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
-  });
-
-  const riotLinkMutation = useMutation({
-    mutationFn: linkRiotAccount,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.riot.me
-      });
-
-      toast.success("Riot account linked!");
-
-      setGameName("");
-      setTagLine("");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
-  });
-
-  const riotUnlinkMutation = useMutation({
-    mutationFn: unlinkAccount,
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.riot.me
-      });
-
-      toast.success("Riot account unlinked!");
-
-      setGameName("");
-      setTagLine("");
-    },
-
-    onError: (error: Error) => {
-      toast.error(error.message);
-    }
-  });
-
-  useEffect(() => {
-    if (!profile) {
-      return;
-    }
-
-    (() => {
-      setNickname(profile.nickname || "");
-      setAvatarUrl(profile.avatar_url || "");
-      setBannerUrl(profile.banner_url || "");
-    })()
-
-  }, [profile]);
-
-  if (riotLoading || accountLoading || riotConfiguration.isLoading) {
-    return <p className="text-muted-foreground">Carregando perfil...</p>;
-  }
-
-  if (profileQuery.isError) return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar seu perfil.</p><Button variant="outline" onClick={() => profileQuery.refetch()}>Tentar novamente</Button></div>;
-
-  function handleSubmit() {
-    profileUpdateMutation.mutate({
-      nickname,
-      avatar_url: avatarUrl || null,
-      banner_url: bannerUrl || null
+    const queryClient = useQueryClient();
+    const profileQuery = useMyProfile();
+    const riotQuery = useMyRiotAccount();
+    const riotConfiguration = useRiotConfiguration();
+    const { data: profile, isLoading: accountLoading } = profileQuery;
+    const { data: riotAccount, isLoading: riotLoading } = riotQuery;
+    const [nickname, setNickname] = useState(profile?.nickname || "");
+    const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || "");
+    const [bannerUrl, setBannerUrl] = useState(profile?.bannerUrl || "");
+    const [gameName, setGameName] = useState("");
+    const [tagLine, setTagLine] = useState("");
+    const profileUpdateMutation = useMutation({
+        mutationFn: updateProfile,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.profile.me
+            });
+            toast.success("Profile updated");
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        }
     });
-  }
-
-  function handleLinkRiot() {
-    if (!gameName.trim()) {
-      toast.error("Game Name required");
-      return;
-    }
-
-    if (!tagLine.trim()) {
-      toast.error("Tag Line required");
-      return;
-    }
-
-    riotLinkMutation.mutate({
-      gameName,
-      tagLine
+    const riotLinkMutation = useMutation({
+        mutationFn: linkRiotAccount,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.riot.me
+            });
+            toast.success("Riot account linked!");
+            setGameName("");
+            setTagLine("");
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        }
     });
-  }
-
-  return (
-    <div className="space-y-6">
+    const riotUnlinkMutation = useMutation({
+        mutationFn: unlinkAccount,
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.riot.me
+            });
+            toast.success("Riot account unlinked!");
+            setGameName("");
+            setTagLine("");
+        },
+        onError: (error: Error) => {
+            toast.error(error.message);
+        }
+    });
+    useEffect(() => {
+        if (!profile) {
+            return;
+        }
+        (() => {
+            setNickname(profile.nickname || "");
+            setAvatarUrl(profile.avatarUrl || "");
+            setBannerUrl(profile.bannerUrl || "");
+        })();
+    }, [profile]);
+    if (riotLoading || accountLoading || riotConfiguration.isLoading) {
+        return <p className="text-muted-foreground">Carregando perfil...</p>;
+    }
+    if (profileQuery.isError)
+        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar seu perfil.</p><Button variant="outline" onClick={() => profileQuery.refetch()}>Tentar novamente</Button></div>;
+    function handleSubmit() {
+        profileUpdateMutation.mutate({
+            nickname,
+            avatarUrl: avatarUrl || null,
+            bannerUrl: bannerUrl || null
+        });
+    }
+    function handleLinkRiot() {
+        if (!gameName.trim()) {
+            toast.error("Game Name required");
+            return;
+        }
+        if (!tagLine.trim()) {
+            toast.error("Tag Line required");
+            return;
+        }
+        riotLinkMutation.mutate({
+            gameName,
+            tagLine
+        });
+    }
+    return (<div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">
           Profile
         </h1>
 
-        {bannerUrl && (
-            <img
-              src={bannerUrl}
-              alt="Banner"
-              className="
+        {bannerUrl && (<img src={bannerUrl} alt="Banner" className="
                 w-full
                 h-40
                 rounded-lg
-              "
-            />
-        )}
+              "/>)}
 
-        {avatarUrl && (
-            <img
-              src={avatarUrl}
-              alt="Avatar"
-              className="
+        {avatarUrl && (<img src={avatarUrl} alt="Avatar" className="
                 w-20
                 h-20
                 rounded-lg
                 object-cover
-              "
-            />
-        )}
+              "/>)}
 
         <p className="text-muted-foreground">
           Manage your account.
@@ -164,98 +126,53 @@ export function ProfilePage() {
         <div className="space-y-2">
           <label>Nickname</label>
 
-          <Input
-            value={nickname}
-            onChange={(e) =>
-              setNickname(e.target.value)
-            }
-          />
+          <Input value={nickname} onChange={(e) => setNickname(e.target.value)}/>
         </div>
 
         <div className="space-y-2">
           <label>Avatar URL</label>
 
-          <Input
-            value={avatarUrl}
-            onChange={(e) =>
-              setAvatarUrl(e.target.value)
-            }
-          />
+          <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)}/>
         </div>
 
         <div className="space-y-2">
           <label>Banner URL</label>
 
-          <Input
-            value={bannerUrl}
-            onChange={(e) =>
-              setBannerUrl(e.target.value)
-            }
-          />
+          <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)}/>
         </div>
 
-        <Button
-          onClick={handleSubmit}
-          disabled={profileUpdateMutation.isPending}
-        >
+        <Button onClick={handleSubmit} disabled={profileUpdateMutation.isPending}>
           {profileUpdateMutation.isPending
             ? "Saving..."
             : "Save Changes"}
         </Button>
 
-        {!riotAccount && riotConfiguration.data?.enabled && (
-          <div className="rounded-xl border p-6 space-y-4">
+        {!riotAccount && riotConfiguration.data?.enabled && (<div className="rounded-xl border p-6 space-y-4">
             <h2 className="text-xl font-semibold">
               Riot Account
             </h2>
 
-            <Input
-              placeholder="Game Name"
-              value={gameName}
-              onChange={(e) =>
-                setGameName(e.target.value)
-              }
-            />
+            <Input placeholder="Game Name" value={gameName} onChange={(e) => setGameName(e.target.value)}/>
 
-            <Input
-              placeholder="Tag Line"
-              value={tagLine}
-              onChange={(e) =>
-                setTagLine(e.target.value)
-              }
-            />
+            <Input placeholder="Tag Line" value={tagLine} onChange={(e) => setTagLine(e.target.value)}/>
 
-            <Button
-              onClick={handleLinkRiot}
-              disabled={riotLinkMutation.isPending}
-            >
+            <Button onClick={handleLinkRiot} disabled={riotLinkMutation.isPending}>
               {riotLinkMutation.isPending
                 ? "Linking..."
                 : "Link Riot Account"}
             </Button>
-          </div>
-        )}
+          </div>)}
 
-        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (
-          <p className="text-sm text-muted-foreground">A vinculação com a Riot não está habilitada neste ambiente.</p>
-        )}
+        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (<p className="text-sm text-muted-foreground">A vinculação com a Riot não está habilitada neste ambiente.</p>)}
 
-        {riotAccount && (
-          <>
-          <RiotAccountCard
-            riotAccount={riotAccount}
-          />
-          <Button
-            onClick={() => riotUnlinkMutation.mutate()}
-            disabled={riotUnlinkMutation.isPending}
-          >
+        {riotAccount && (<>
+          <RiotAccountCard riotAccount={riotAccount}/>
+          <Button onClick={() => riotUnlinkMutation.mutate()} disabled={riotUnlinkMutation.isPending}>
             {riotUnlinkMutation.isPending
-              ? "Unlinking..."
-              : "Unlink Riot Account"}
+                ? "Unlinking..."
+                : "Unlink Riot Account"}
           </Button>
-        </>
-        )}
+        </>)}
       </div>
-    </div>
-  );
+    </div>);
 }

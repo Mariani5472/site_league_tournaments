@@ -1,28 +1,17 @@
 import { db } from "../../database/connection";
 import { CreateLobbyDTO, Lobby, LobbyPlayer, LobbyPlayerProfile } from "./lobbies.types";
-
 export class LobbiesRepository {
-  async findById(lobby_id: string) {
-    const query = `
+    async findById(lobbyId: string) {
+        const query = `
       SELECT *
       FROM lobbies
       WHERE id = $1
     `;
-
-    const result = await db.query<Lobby>(
-      query,
-      [lobby_id]
-    );
-
-    return result.rows[0];
-  }
-
-  async create(
-    league_id: string,
-    user_id: string,
-    data: CreateLobbyDTO
-  ) {
-    const query = `
+        const result = await db.query<Lobby>(query, [lobbyId]);
+        return result.rows[0];
+    }
+    async create(leagueId: string, userId: string, data: CreateLobbyDTO) {
+        const query = `
       INSERT INTO lobbies (
         league_id,
         created_by,
@@ -31,22 +20,15 @@ export class LobbiesRepository {
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-
-    const result = await db.query<Lobby>(query, [
-      league_id,
-      user_id,
-      data.max_players
-    ]);
-
-    return result.rows[0]
-  }
-
-  async addPlayer(
-    lobby_id: string,
-    user_id: string,
-    team_number: number,
-  ) {
-    const query = `
+        const result = await db.query<Lobby>(query, [
+            leagueId,
+            userId,
+            data.maxPlayers
+        ]);
+        return result.rows[0];
+    }
+    async addPlayer(lobbyId: string, userId: string, teamNumber: number) {
+        const query = `
       INSERT INTO lobby_players (
         lobby_id,
         user_Id,
@@ -55,22 +37,15 @@ export class LobbiesRepository {
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-
-    const result = await db.query(query, [
-      lobby_id,
-      user_id,
-      team_number,
-    ]);
-
-    return result.rows[0]
-  }
-
-  async updatePlayerTeam(
-    lobby_id: string,
-    user_id: string,
-    team_number: number,
-  ) {
-    const query = `
+        const result = await db.query(query, [
+            lobbyId,
+            userId,
+            teamNumber,
+        ]);
+        return result.rows[0];
+    }
+    async updatePlayerTeam(lobbyId: string, userId: string, teamNumber: number) {
+        const query = `
       UPDATE lobby_players
       SET team_number = $1,
       is_ready = FALSE
@@ -78,59 +53,43 @@ export class LobbiesRepository {
       AND user_id = $3
       RETURNING * 
     `;
-
-    const result = await db.query(query, [
-      team_number,
-      lobby_id,
-      user_id,
-    ]);
-
-    return result.rows[0]
-  }
-
-  async updatePlayerReady(
-    lobby_id: string,
-    user_id: string,
-    is_ready: boolean,
-  ) {
-    const query = `
+        const result = await db.query(query, [
+            teamNumber,
+            lobbyId,
+            userId,
+        ]);
+        return result.rows[0];
+    }
+    async updatePlayerReady(lobbyId: string, userId: string, isReady: boolean) {
+        const query = `
       UPDATE lobby_players
       SET is_ready = $1
       WHERE lobby_id = $2
       AND user_id = $3
       RETURNING * 
     `;
-
-    const result = await db.query<LobbyPlayer>(query, [
-      is_ready,
-      lobby_id,
-      user_id,
-    ]);
-
-    return result.rows[0]
-  }
-
-  async removePlayer(
-    lobby_id: string,
-    user_id: string,
-  ) {
-    const query = `
+        const result = await db.query<LobbyPlayer>(query, [
+            isReady,
+            lobbyId,
+            userId,
+        ]);
+        return result.rows[0];
+    }
+    async removePlayer(lobbyId: string, userId: string) {
+        const query = `
       DELETE FROM lobby_players
       WHERE lobby_id = $1
       AND user_id = $2
       RETURNING *
     `;
-
-    const result = await db.query(query, [
-      lobby_id,
-      user_id,
-    ]);
-
-    return result.rows[0]
-  }
-
-  async countPlayersByTeam(lobby_id: string) {
-    const query = `
+        const result = await db.query(query, [
+            lobbyId,
+            userId,
+        ]);
+        return result.rows[0];
+    }
+    async countPlayersByTeam(lobbyId: string) {
+        const query = `
       SELECT
         team_number,
         COUNT(*) as total
@@ -138,14 +97,11 @@ export class LobbiesRepository {
       WHERE lobby_id = $1
       GROUP BY team_number
     `;
-
-    const result = await db.query(query, [lobby_id]);
-
-    return result.rows
-  }
-
-  async findActiveLobbyByPlayer(user_id: string) {
-    const query = `
+        const result = await db.query(query, [lobbyId]);
+        return result.rows;
+    }
+    async findActiveLobbyByPlayer(userId: string) {
+        const query = `
       SELECT l.* 
       FROM lobbies l
       INNER JOIN lobby_players lp ON lp.lobby_id = l.id
@@ -153,30 +109,21 @@ export class LobbiesRepository {
         AND l.status IN ('in_game', 'waiting')
       LIMIT 1;
     `;
-
-    const result = await db.query<Lobby>(query, [user_id]);
-
-    return result.rows[0]
-  }
-
-  async findPlayerInLobby(
-    lobby_id: string,
-    user_id: string
-  ) {
-    const query = `
+        const result = await db.query<Lobby>(query, [userId]);
+        return result.rows[0];
+    }
+    async findPlayerInLobby(lobbyId: string, userId: string) {
+        const query = `
       SELECT *
       FROM lobby_players
       WHERE lobby_id = $1
       AND user_id = $2
     `;
-
-    const result = await db.query<LobbyPlayer>(query, [lobby_id, user_id]);
-
-    return result.rows[0]
-  }
-
-  async getLobbyPlayers(lobby_id: string) {
-    const query = `
+        const result = await db.query<LobbyPlayer>(query, [lobbyId, userId]);
+        return result.rows[0];
+    }
+    async getLobbyPlayers(lobbyId: string) {
+        const query = `
       SELECT 
         lp.*,
         u.nickname,
@@ -185,73 +132,58 @@ export class LobbiesRepository {
       INNER JOIN users u ON u.id = lp.user_id
       WHERE lobby_id = $1
     `;
-
-    const result = await db.query<LobbyPlayerProfile>(query, [lobby_id]);
-
-    return result.rows;
-  }
-
-  async findWaitingLobbyByLeague(league_id: string) {
-    const query = `
+        const result = await db.query<LobbyPlayerProfile>(query, [lobbyId]);
+        return result.rows;
+    }
+    async findWaitingLobbyByLeague(leagueId: string) {
+        const query = `
       SELECT *
       FROM lobbies
       WHERE league_id = $1
        AND status = 'waiting'
       LIMIT 1
     `;
-
-    const result = await db.query<Lobby>(query, [
-      league_id
-    ]);
-
-    return result.rows[0];
-  }
-
-  async findInGameLobbyByLeague(league_id: string) {
-    const query = `
+        const result = await db.query<Lobby>(query, [
+            leagueId
+        ]);
+        return result.rows[0];
+    }
+    async findInGameLobbyByLeague(leagueId: string) {
+        const query = `
       SELECT *
       FROM lobbies
       WHERE league_id = $1
        AND status = 'in_game'
       LIMIT 1
     `;
-
-    const result = await db.query(query, [
-      league_id
-    ]);
-
-    return result.rows[0];
-  }
-
-  async updateStatus(lobby_id: string, status: string) {
-    const query = `
+        const result = await db.query(query, [
+            leagueId
+        ]);
+        return result.rows[0];
+    }
+    async updateStatus(lobbyId: string, status: string) {
+        const query = `
       UPDATE lobbies
       SET status = $1
       WHERE id = $2
       RETURNING *
     `;
-
-    const result = await db.query(query, [
-      status,
-      lobby_id
-    ]);
-
-    return result.rows[0];
-  }
-
-  async resetReady(lobbyId: string) {
-    const query = `
+        const result = await db.query(query, [
+            status,
+            lobbyId
+        ]);
+        return result.rows[0];
+    }
+    async resetReady(lobbyId: string) {
+        const query = `
       UPDATE lobby_players
       SET is_ready = FALSE
       WHERE lobby_id = $1
     `;
-
-    await db.query(query, [lobbyId]);
-  }
-
-
-  async findByLeague(lobby_id: string) {
-    const query = `
+        await db.query(query, [lobbyId]);
+    }
+    async findByLeague(lobbyId: string) {
+        const query = `
         SELECT
           l.id,
           l.status,
@@ -267,20 +199,15 @@ export class LobbiesRepository {
         ORDER BY
           l.created_at DESC
     `;
-
-    const result = await db.query(query, [lobby_id]);
-
-    return result.rows;
-  }
-
-  async remove(lobby_id: string) {
-    const query = `
+        const result = await db.query(query, [lobbyId]);
+        return result.rows;
+    }
+    async remove(lobbyId: string) {
+        const query = `
       DELETE FROM lobbies
       WHERE id = $1
     `;
-
-    const result = await db.query(query, [lobby_id]);
-
-    return result.rows;
-  }
+        const result = await db.query(query, [lobbyId]);
+        return result.rows;
+    }
 }

@@ -1,10 +1,10 @@
 export type League = {
-  id: string;
-  name: string;
-  description: string | null;
-  visibility: "public" | "private";
-  join_policy: "open" | "request" | "invite_only";
-  player_count: number;
-  max_players: number;
-  created_at: string;
+    id: string;
+    name: string;
+    description: string | null;
+    visibility: "public" | "private";
+    joinPolicy: "open" | "request" | "invite_only";
+    playerCount: number;
+    maxPlayers: number;
+    createdAt: string;
 };

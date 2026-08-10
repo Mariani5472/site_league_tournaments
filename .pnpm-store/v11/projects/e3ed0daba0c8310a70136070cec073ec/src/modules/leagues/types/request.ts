@@ -1,7 +1,7 @@
 export type LeagueRequest = {
-  id: string;
-  user_id: string;
-  nickname: string;
-  avatar_url: string | null;
-  status: string;
+    id: string;
+    userId: string;
+    nickname: string;
+    avatarUrl: string | null;
+    status: string;
 };
