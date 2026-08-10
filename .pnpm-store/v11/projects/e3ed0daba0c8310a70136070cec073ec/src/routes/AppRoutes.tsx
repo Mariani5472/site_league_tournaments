@@ -10,58 +10,24 @@ import { LeagueSettingsPage } from "@/modules/leagues/pages/LeagueSettingsPage";
 import { LobbyPage } from "@/modules/lobbies/pages/LobbyPage";
 import { LandingPage } from "@/modules/landing/pages/LandingPage";
 import { FallbackRedirect } from "./FallbackRedirect";
-
 export function AppRoutes() {
-  return (
-    <BrowserRouter>
+    return (<BrowserRouter>
       <Routes>
-        <Route
-            path="/"
-            element={<LandingPage />}
-          />
+        <Route path="/" element={<LandingPage />}/>
 
-        <Route 
-          element={<PublicLayout />} 
-        >
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
+        <Route element={<PublicLayout />}>
+          <Route path="/login" element={<LoginPage />}/>
         </Route>          
-        <Route
-          element={<ProtectedLayout />}
-        >
-          <Route
-            path="/main"
-            element={<DashboardPage />}
-          />
-          <Route
-            path="/leagues/:id"
-            element={<LeaguePage />}
-          />
-          <Route
-            path="/leagues"
-            element={<LeaguesPage  />}
-          />
-          <Route
-            path="/profile"
-            element={<ProfilePage />}
-          />
-          <Route
-            path="/leagues/:id/settings"
-            element={<LeagueSettingsPage />}
-          />
-          <Route
-              path="/leagues/:leagueId/lobbies/:lobbyId"
-              element={<LobbyPage />}
-          />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/main" element={<DashboardPage />}/>
+          <Route path="/leagues/:id" element={<LeaguePage />}/>
+          <Route path="/leagues" element={<LeaguesPage />}/>
+          <Route path="/profile" element={<ProfilePage />}/>
+          <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />}/>
+          <Route path="/leagues/:leagueId/lobbies/:lobbyId" element={<LobbyPage />}/>
         </Route>
-        <Route
-          path="*"
-          element={<FallbackRedirect />}
-        />
+        <Route path="*" element={<FallbackRedirect />}/>
 
       </Routes>
-    </BrowserRouter>
-  )
+    </BrowserRouter>);
 }

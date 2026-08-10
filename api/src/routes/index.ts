@@ -5,15 +5,12 @@ import { leaguesRoutes } from "../modules/leagues/leagues.routes";
 import { profileRoutes } from "../modules/profile/profile.routes";
 import { matchesRoutes } from "../modules/matches/matches.routes";
 import { riotRoutes } from "../modules/riot/riot.routes";
-
 export const routes = Router();
-
 routes.get("/", (_, response) => {
-  return response.json({
-    message: "API running"
-  });
+    return response.json({
+        message: "API running"
+    });
 });
-
 routes.use("/auth", authRoutes);
 routes.use("/users", usersRoutes);
 routes.use("/profile", profileRoutes);

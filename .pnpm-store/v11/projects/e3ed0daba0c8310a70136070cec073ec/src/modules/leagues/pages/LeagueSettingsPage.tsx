@@ -1,175 +1,101 @@
 import { useEffect } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
-
 import { useForm, useWatch } from "react-hook-form";
-
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
-
 import { Input } from "@/components/ui/input";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-
-import {
-  useLeague
-} from "../hooks/useLeague";
-
-import {
-  useUpdateLeague
-} from "../hooks/useUpdateLeague";
-
-
-
-import {
-  useLeagueMembers
-} from "../hooks/useLeagueMembers";
-
-import {
-  useLeagueRole
-} from "../hooks/useLeagueRole";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLeague } from "../hooks/useLeague";
+import { useUpdateLeague } from "../hooks/useUpdateLeague";
+import { useLeagueMembers } from "../hooks/useLeagueMembers";
+import { useLeagueRole } from "../hooks/useLeagueRole";
 import { leagueSettingsSchema, type LeagueSettingsForm } from "../utils/leagueSettings.schema";
 import { DangerZone } from "../components/DangerZone";
 import { ArrowLeft, Save } from "lucide-react";
-
 export function LeagueSettingsPage() {
-  const { id } = useParams();
-
-  const leagueId = id!;
-
-  const {
-    data: league,
-    isLoading
-  } = useLeague(leagueId);
-
-  const { data: members } = useLeagueMembers(leagueId);
-
-  const roleData = useLeagueRole(members || []);
-  const mutation = useUpdateLeague();
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    control,
-  } = useForm<LeagueSettingsForm>({
-    resolver: zodResolver(leagueSettingsSchema)
-  });
-
-  const visibilityValue = useWatch({ 
-    control, 
-    name: "visibility", 
-    defaultValue: league?.visibility
-  });
-  const joinPolicyValue = useWatch({ 
-    control, 
-    name: "join_policy",
-    defaultValue: league?.join_policy
-  });
-
-  useEffect(() => {
-    if (!league) {
-      return;
-    }
-
-    reset({
-      name: league.name,
-      description: league.description || "",
-      visibility: league.visibility,
-      join_policy: league.join_policy,
-      max_players: league.max_players
+    const { id } = useParams();
+    const leagueId = id!;
+    const { data: league, isLoading } = useLeague(leagueId);
+    const { data: members } = useLeagueMembers(leagueId);
+    const roleData = useLeagueRole(members || []);
+    const mutation = useUpdateLeague();
+    const { register, handleSubmit, setValue, reset, control, } = useForm<LeagueSettingsForm>({
+        resolver: zodResolver(leagueSettingsSchema)
     });
-  }, [league, reset]);
-
-  if (!isLoading && !roleData.isAdmin) {
-    return (
-      <Navigate
-        to={`/leagues/${leagueId}`}
-      />
-    );
-  }
-
-  function onSubmit(data: LeagueSettingsForm) {
-    mutation.mutate(
-      {leagueId, data},
-      {
-        onSuccess: () => {
-          toast.success("League updated");
-        },
-
-        onError: (error: Error) => {
-          toast.error(error.message);
+    const visibilityValue = useWatch({
+        control,
+        name: "visibility",
+        defaultValue: league?.visibility
+    });
+    const joinPolicyValue = useWatch({
+        control,
+        name: "joinPolicy",
+        defaultValue: league?.joinPolicy
+    });
+    useEffect(() => {
+        if (!league) {
+            return;
         }
-      }
-    );
-  }
-
-  if (isLoading || !league) {
-    return (
-      <div>
+        reset({
+            name: league.name,
+            description: league.description || "",
+            visibility: league.visibility,
+            joinPolicy: league.joinPolicy,
+            maxPlayers: league.maxPlayers
+        });
+    }, [league, reset]);
+    if (!isLoading && !roleData.isAdmin) {
+        return (<Navigate to={`/leagues/${leagueId}`}/>);
+    }
+    function onSubmit(data: LeagueSettingsForm) {
+        mutation.mutate({ leagueId, data }, {
+            onSuccess: () => {
+                toast.success("League updated");
+            },
+            onError: (error: Error) => {
+                toast.error(error.message);
+            }
+        });
+    }
+    if (isLoading || !league) {
+        return (<div>
         Loading...
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className="
+      </div>);
+    }
+    return (<div className="
         mx-auto
         max-w-4xl
         space-y-6
-      "
-    >
-      <Button variant="ghost" asChild><Link to={`/leagues/${leagueId}`}><ArrowLeft className="h-4 w-4" /> Voltar para a liga</Link></Button>
+      ">
+      <Button variant="ghost" asChild><Link to={`/leagues/${leagueId}`}><ArrowLeft className="h-4 w-4"/> Voltar para a liga</Link></Button>
       <div>
-        <h1
-          className="
+        <h1 className="
             text-3xl
             font-bold
-          "
-        >
+          ">
           Editar liga
         </h1>
 
-        <p
-          className="
+        <p className="
             text-muted-foreground
-          "
-        >
+          ">
           Atualize as informações e regras da sua liga.
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit(
-          onSubmit
-        )}
-        className="
+      <form onSubmit={handleSubmit(onSubmit)} className="
           rounded-xl
           border
           p-6
           space-y-6
-        "
-      >
+        ">
         <div>
           <label>
             League Name
           </label>
 
-          <Input
-            {...register(
-              "name"
-            )}
-          />
+          <Input {...register("name")}/>
         </div>
 
         <div>
@@ -177,11 +103,7 @@ export function LeagueSettingsPage() {
             Description
           </label>
 
-          <Input
-            {...register(
-              "description"
-            )}
-          />
+          <Input {...register("description")}/>
         </div>
 
         <div>
@@ -189,12 +111,7 @@ export function LeagueSettingsPage() {
             Visibility
           </label>
 
-          <Select
-            value={visibilityValue || ""}
-            onValueChange={(value) => setValue("visibility",
-                value as | "public" | "private"
-              )}
-          >
+          <Select value={visibilityValue || ""} onValueChange={(value) => setValue("visibility", value as "public" | "private")}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -216,20 +133,7 @@ export function LeagueSettingsPage() {
             Join Policy
           </label>
 
-          <Select
-            value={joinPolicyValue || ""}
-            onValueChange={(
-              value
-            ) =>
-              setValue(
-                "join_policy",
-                value as
-                  | "open"
-                  | "request"
-                  | "invite_only"
-              )
-            }
-          >
+          <Select value={joinPolicyValue || ""} onValueChange={(value) => setValue("joinPolicy", value as "open" | "request" | "invite_only")}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -255,34 +159,18 @@ export function LeagueSettingsPage() {
             Max Players
           </label>
 
-          <Input
-            type="number"
-            {...register(
-              "max_players",
-              {
-                valueAsNumber: true
-              }
-            )}
-          />
+          <Input type="number" {...register("maxPlayers", {
+        valueAsNumber: true
+    })}/>
         </div>
 
-        <Button
-          type="submit"
-          disabled={
-            mutation.isPending
-          }
-        >
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending
             ? "Saving..."
-            : <><Save className="h-4 w-4" /> Salvar alterações</>}
+            : <><Save className="h-4 w-4"/> Salvar alterações</>}
         </Button>
       </form>
 
-      {roleData.isOwner && (
-        <DangerZone
-          leagueId={leagueId}
-        />
-      )}
-    </div>
-  );
+      {roleData.isOwner && (<DangerZone leagueId={leagueId}/>)}
+    </div>);
 }

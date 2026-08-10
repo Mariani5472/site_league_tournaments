@@ -1,25 +1,22 @@
 export type LeagueMember = {
-  id: string;
-  league_id: string;
-  user_id: string;
-  role: "owner" | "player" | "admin" | "spec";
-  created_at: Date;
-  nickname?: string;
-  game_name?: string;
-  tag_line?: string;
+    id: string;
+    leagueId: string;
+    userId: string;
+    role: "owner" | "player" | "admin" | "spec";
+    createdAt: Date;
+    nickname?: string;
+    gameName?: string;
+    tagLine?: string;
 };
-
 export type LeagueMemberIdentity = {
-  user_id?: string[];
-  role?: string[];
-  league_id?: string[];
-  nickname?: string[];
+    userId?: string[];
+    role?: string[];
+    leagueId?: string[];
+    nickname?: string[];
 };
-
 export type CreateLeagueMemberDTO = {
-  role: Exclude<LeagueMember['role'], 'owner'>;
+    role: Exclude<LeagueMember['role'], 'owner'>;
 };
-
 export type UpdateLeagueMemberDTO = {
-  role: LeagueMember['role'];
+    role: LeagueMember['role'];
 };
