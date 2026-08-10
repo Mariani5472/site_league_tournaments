@@ -31,7 +31,8 @@ export class LobbiesRepository {
         ]);
         return result.rows[0];
     }
-    async addPlayer(lobbyId: string, userId: string, teamNumber: number) {
+    async addPlayer(lobbyId: string, userId: string, teamNumber: number, options: QueryOptions = {}) {
+        const { executor = db } = options;
         const query = `
       INSERT INTO lobby_players (
         lobby_id,
@@ -41,7 +42,7 @@ export class LobbiesRepository {
       VALUES ($1, $2, $3)
       RETURNING *
     `;
-        const result = await db.query(query, [
+        const result = await executor.query<LobbyPlayer>(query, [
             lobbyId,
             userId,
             teamNumber,
@@ -93,7 +94,8 @@ export class LobbiesRepository {
         ]);
         return result.rows[0];
     }
-    async countPlayersByTeam(lobbyId: string) {
+    async countPlayersByTeam(lobbyId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
         const query = `
       SELECT
         team_number,
@@ -102,10 +104,11 @@ export class LobbiesRepository {
       WHERE lobby_id = $1
       GROUP BY team_number
     `;
-        const result = await db.query(query, [lobbyId]);
+        const result = await executor.query(query, [lobbyId]);
         return result.rows;
     }
-    async findActiveLobbyByPlayer(userId: string) {
+    async findActiveLobbyByPlayer(userId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
         const query = `
       SELECT l.* 
       FROM lobbies l
@@ -114,7 +117,7 @@ export class LobbiesRepository {
         AND l.status IN ('in_game', 'waiting')
       LIMIT 1;
     `;
-        const result = await db.query<Lobby>(query, [userId]);
+        const result = await executor.query<Lobby>(query, [userId]);
         return result.rows[0];
     }
     async findPlayerInLobby(lobbyId: string, userId: string, options: QueryOptions = {}) {
@@ -209,6 +212,51 @@ export class LobbiesRepository {
                 captain_vote_ends_at = NULL
             WHERE id = $1
         `, [lobbyId]);
+    }
+
+    async getSelectionView(lobbyId: string, userId: string, lobby: Lobby) {
+        const match = await db.query("SELECT id FROM matches WHERE lobby_id=$1 ORDER BY created_at DESC LIMIT 1", [lobbyId]);
+        const selectionVotes = Number(lobby.maxPlayers) === 10
+            ? await db.query("SELECT mode, COUNT(*)::int total FROM lobby_team_selection_votes WHERE lobby_id=$1 GROUP BY mode", [lobbyId]) : { rows: [] };
+        const draftPicks = lobby.teamSelectionMode === "player_picks"
+            ? await db.query("SELECT dp.user_id,dp.team_number,dp.pick_number,u.nickname,u.avatar_url FROM lobby_draft_picks dp JOIN users u ON u.id=dp.user_id WHERE dp.lobby_id=$1 ORDER BY dp.pick_number", [lobbyId]) : { rows: [] };
+        const mySelectionVote = await db.query("SELECT mode FROM lobby_team_selection_votes WHERE lobby_id=$1 AND user_id=$2", [lobbyId, userId]);
+        const confirmationVotes = lobby.teamSelectionMode === "random" && !lobby.teamSelectionCompleted
+            ? await db.query("SELECT decision, COUNT(*)::int total FROM lobby_team_confirmation_votes WHERE lobby_id=$1 GROUP BY decision", [lobbyId]) : { rows: [] };
+        const myConfirmationVote = await db.query("SELECT decision FROM lobby_team_confirmation_votes WHERE lobby_id=$1 AND user_id=$2", [lobbyId, userId]);
+        const captainVotes = lobby.teamSelectionMode === "player_picks" && !lobby.draftCaptain1
+            ? await db.query(`SELECT lp.user_id,u.nickname,u.avatar_url,COUNT(cv.voter_id)::int votes
+                FROM lobby_players lp JOIN users u ON u.id=lp.user_id
+                LEFT JOIN lobby_captain_votes cv ON cv.lobby_id=lp.lobby_id AND cv.candidate_id=lp.user_id
+                WHERE lp.lobby_id=$1 GROUP BY lp.user_id,u.nickname,u.avatar_url ORDER BY votes DESC,u.nickname`, [lobbyId]) : { rows: [] };
+        const myCaptainVote = await db.query("SELECT candidate_id FROM lobby_captain_votes WHERE lobby_id=$1 AND voter_id=$2", [lobbyId, userId]);
+        return { matchId: match.rows[0]?.id ?? null, selectionVotes: selectionVotes.rows, draftPicks: draftPicks.rows,
+            mySelectionVote: mySelectionVote.rows[0]?.mode ?? null, confirmationVotes: confirmationVotes.rows,
+            myConfirmationVote: myConfirmationVote.rows[0]?.decision ?? null, captainVotes: captainVotes.rows,
+            myCaptainVote: myCaptainVote.rows[0]?.candidateId ?? null };
+    }
+
+    async getPlayersForUpdate(lobbyId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query(`SELECT lp.*,u.nickname FROM lobby_players lp
+            JOIN users u ON u.id=lp.user_id WHERE lp.lobby_id=$1 ORDER BY lp.user_id FOR UPDATE OF lp`, [lobbyId]);
+        return result.rows;
+    }
+
+    async createMatch(lobbyId: string, leagueId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query("INSERT INTO matches (lobby_id,league_id,status,started_at) VALUES ($1,$2,'in_game',current_timestamp) RETURNING *", [lobbyId, leagueId]);
+        return result.rows[0];
+    }
+
+    async addMatchPlayer(matchId: string, player: LobbyPlayerProfile, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        await executor.query("INSERT INTO match_players (match_id,user_id,team_number,nickname_snapshot) VALUES ($1,$2,$3,$4)", [matchId, player.userId, player.teamNumber, player.nickname]);
+    }
+
+    async lockPlayer(userId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        await executor.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [userId]);
     }
     async findByLeague(lobbyId: string) {
         const query = `
