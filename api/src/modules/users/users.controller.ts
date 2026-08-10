@@ -1,18 +1,5 @@
-import { Request, Response } from "express";
 
-import { UsersService } from "./users.service";
-
+// TODO: add novas funcionalidades (ex: banimento, ult login) futuramente
 export class UsersController {
-  private usersService = new UsersService();
 
-  async create(
-    request: Request,
-    response: Response
-  ) {
-    const user = await this.usersService.create(
-      request.body
-    );
-
-    return response.status(201).json(user);
-  }
 }
