@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
+import { LayoutDashboard, Trophy, UserRound } from "lucide-react";
 
 const links = [
-  { to: "/main", label: "Dashboard" },
-  { to: "/leagues", label: "Leagues" },
-  { to: "/profile", label: "Profile" }
+  { to: "/main", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/leagues", label: "Leagues", icon: Trophy },
+  { to: "/profile", label: "Profile", icon: UserRound }
 ];
 
 interface SidebarProps {
@@ -20,7 +21,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
     >
-      <div className="flex h-16 shrink-0 items-center justify-end px-6">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b px-5">
+        <NavLink to="/main" className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">L</span><span>ligas</span></NavLink>
         <button
           onClick={onClose}
           className="rounded-md p-1 hover:bg-muted lg:hidden"
@@ -43,7 +45,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
-        {links.map((link) => (
+        {links.map((link) => {
+          const Icon = link.icon;
+          return (
           <NavLink
             key={link.to}
             to={link.to}
@@ -57,9 +61,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               }`
             }
           >
+            <Icon className="mr-3 h-4 w-4" />
             {link.label}
           </NavLink>
-        ))}
+        )})}
       </nav>
     </aside>
   );

@@ -134,8 +134,7 @@ export class LeaguesRepository {
         description,
         visibility,
         join_policy,
-        max_players,
-        require_riot_account
+        max_players
       )
       VALUES (
         $1,
@@ -143,8 +142,7 @@ export class LeaguesRepository {
         $3,
         $4,
         $5,
-        $6,
-        $7
+        $6
       )
       RETURNING *
     `;
@@ -155,8 +153,7 @@ export class LeaguesRepository {
       params.description ?? null,
       params.visibility,
       params.join_policy,
-      params.max_players,
-      params.require_riot_account
+      params.max_players
     ];
 
     const result = await db.query<League>(
@@ -173,7 +170,6 @@ export class LeaguesRepository {
     visibility?: string;
     join_policy?: string;
     max_players?: number;
-    require_riot_account?: boolean;
   }) {
     const query = `
       UPDATE leagues
@@ -182,8 +178,7 @@ export class LeaguesRepository {
         description = COALESCE($3, description),
         visibility = COALESCE($4, visibility),
         join_policy = COALESCE($5, join_policy),
-        max_players = COALESCE($6, max_players),
-        require_riot_account = COALESCE($7, require_riot_account)
+        max_players = COALESCE($6, max_players)
       WHERE id = $1
     `;
 
@@ -193,8 +188,7 @@ export class LeaguesRepository {
       params.description ?? null,
       params.visibility ?? null,
       params.join_policy ?? null,
-      params.max_players ?? null,
-      params.require_riot_account ?? null
+      params.max_players ?? null
     ]);
   }
 

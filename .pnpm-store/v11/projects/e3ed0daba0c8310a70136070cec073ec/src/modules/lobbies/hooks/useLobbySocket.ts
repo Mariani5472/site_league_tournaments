@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { socket } from "@/services/socket";
 import { SOCKET_EVENTS } from "@/services/socket-events";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function useLobbySocket(
   leagueId: string,
@@ -22,11 +23,11 @@ export function useLobbySocket(
       if (payload.lobby_id !== lobbyId) return;
 
       queryClient.invalidateQueries({
-        queryKey: ["league", leagueId],
+        queryKey: queryKeys.leagues.detail(leagueId),
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["lobby", leagueId, lobbyId],
+        queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
       });
     };
 
@@ -38,7 +39,7 @@ export function useLobbySocket(
 
 
       queryClient.removeQueries({
-        queryKey: ["lobby", leagueId, lobbyId],
+        queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
       });
 
       navigate(`/leagues/${leagueId}`, {

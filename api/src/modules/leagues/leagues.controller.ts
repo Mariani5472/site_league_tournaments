@@ -1,5 +1,5 @@
 import { parseStringArray } from "../../utils/parseStringArray";
-import { createLeagueSchema } from "./leagues.schemas";
+import { createLeagueSchema, updateLeagueSchema } from "./leagues.schemas";
 import { LeaguesService } from "./leagues.service";
 import { Request, Response } from "express";
 
@@ -32,7 +32,7 @@ export class LeaguesController {
 
   async show(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
-    const league = await this.leaguesService.show(league_id);
+    const league = await this.leaguesService.show(league_id, request.user.id);
     return response.json(league);
   }
 
@@ -48,16 +48,23 @@ export class LeaguesController {
     return response.status(201).json(league);
   }
 
+  async join(request: Request, response: Response) {
+    const member = await this.leaguesService.join(request.params.league_id as string, request.user.id);
+    return response.status(200).json(member);
+  }
+
   async update(request: Request, response: Response) {
     const league_id = request.params.league_id as string | undefined;
     const user_id = request.user.id;
 
-    const league = await this.leaguesService.update(league_id, user_id, {
-      ...request.body
-    });
+    const league = await this.leaguesService.update(
+      league_id,
+      user_id,
+      updateLeagueSchema.parse(request.body)
+    );
 
     return response
-      .status(201)
+      .status(200)
       .json(league);
   }
 

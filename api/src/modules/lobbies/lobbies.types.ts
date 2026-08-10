@@ -9,6 +9,13 @@ export type Lobby = {
   max_players: number,
   created_by: string,
   created_at: Date
+  team_selection_mode: "random" | "balanced" | "player_picks" | null,
+  team_selection_completed: boolean,
+  draft_captain_1: string | null,
+  draft_captain_2: string | null,
+  draft_pick_index: number,
+  team_selection_round: number,
+  captain_vote_ends_at: Date | null,
 }
 
 export type LobbyPlayer = {

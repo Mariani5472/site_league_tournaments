@@ -1,7 +1,8 @@
 export type LobbyStatus =
   | "waiting"
   | "in_game"
-  | "finished";
+  | "finished"
+  | "cancelled";
 
 export interface Lobby {
   id: string;
@@ -20,6 +21,7 @@ export interface Lobby {
 export interface LobbyDetails {
   id: string;
   league_id: string;
+  match_id: string | null;
 
   status: LobbyStatus;
 
@@ -38,6 +40,17 @@ export interface LobbyDetails {
 
   players: LobbyPlayer[];
   teams: LobbyTeams;
+  team_selection: TeamSelection | null;
+}
+
+export type TeamSelectionMode = "random" | "balanced" | "player_picks";
+export interface TeamSelection {
+  available: boolean; can_vote: boolean; mode: TeamSelectionMode | null; completed: boolean; majority_required: number;
+  my_vote: TeamSelectionMode | null; votes: Record<TeamSelectionMode, number>;
+  round: number;
+  confirmation: null | { my_vote: "accept" | "reroll" | null; votes: Record<"accept" | "reroll", number> };
+  captain_vote: null | { ends_at: string; my_vote: string | null; candidates: Array<Pick<LobbyPlayer, "user_id" | "nickname" | "avatar_url"> & { votes: number }> };
+  draft: null | { captain_1: string; captain_2: string; next_team: 1 | 2 | null; pick_index: number; picks: Array<LobbyPlayer & { pick_number: number }>; available_players: LobbyPlayer[] };
 }
 
 export interface LobbyCurrentPlayer {

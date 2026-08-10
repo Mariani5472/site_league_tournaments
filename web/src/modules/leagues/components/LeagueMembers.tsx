@@ -11,6 +11,8 @@ import {
 import { kickMember, updateMemberRole } from "../services/leagues.service";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { queryKeys } from "@/lib/queryKeys";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Props = {
   members: LeagueMember[];
@@ -32,10 +34,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "league-members",
-          leagueId
-        ]
+        queryKey: queryKeys.leagues.members(leagueId)
       });
 
       toast.success(
@@ -49,10 +48,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "league-members",
-          leagueId
-        ]
+        queryKey: queryKeys.leagues.members(leagueId)
       });
 
       toast.success(
@@ -80,6 +76,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
       </h2>
 
       <div className="space-y-3">
+        {members.length === 0 && <p className="text-muted-foreground">Nenhum membro encontrado.</p>}
         {members.map((member) => {
           const canManage = role && canManageRole(role, member.role);
           return (
@@ -87,17 +84,22 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
               key={member.id}
               className="
                 flex
+                flex-wrap
                 items-center
                 justify-between
+                gap-3
                 rounded-lg
                 border
                 p-3
               "
             >
-              <div>
-                <div>
-                  {member.nickname}
-                </div>
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar className="h-10 w-10 border bg-muted">
+                  <AvatarImage src={member.avatar_url || undefined} alt={member.nickname} />
+                  <AvatarFallback>{member.nickname.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                <div className="truncate font-medium">{member.nickname}</div>
 
                 {member.game_name && (
                   <div
@@ -111,6 +113,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                     {member.tag_line}
                   </div>
                 )}
+                </div>
               </div>
 
               <span
@@ -133,6 +136,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                   "
                 >
                   <Select
+                    disabled={updateRoleMutation.isPending || kickMutation.isPending}
                     value={member.role}
                     onValueChange={(value) =>
                       updateRoleMutation.mutate({
@@ -163,6 +167,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                   <Button
                     variant="destructive"
                     size="sm"
+                    disabled={updateRoleMutation.isPending || kickMutation.isPending}
                     onClick={() =>
                       kickMutation.mutate(member.id)
                     }

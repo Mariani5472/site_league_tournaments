@@ -16,3 +16,14 @@ api.interceptors.request.use(async (config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return Promise.reject(new Error(typeof message === "string" ? message : "The request could not be completed"));
+    }
+    return Promise.reject(error);
+  }
+);

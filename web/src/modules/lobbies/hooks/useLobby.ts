@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { getLobby } from "../services/lobbies.service";
 
 export function useLobby(
@@ -6,7 +7,7 @@ export function useLobby(
   lobbyId: string
 ) {
   return useQuery({
-    queryKey: ["lobby", leagueId, lobbyId],
+    queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
     queryFn: () => getLobby(leagueId, lobbyId),
     enabled: !!leagueId && !!lobbyId,
   });

@@ -5,6 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --legacy-watch --watch src --ext ts --exec tsx src/server.ts",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "build": "tsc --skipLibCheck",
+    "start": "node dist/server.js",
+    "test:integration": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "seed:dev": "tsx src/database/seed-development.ts",
     "migrate:create": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down",
@@ -35,6 +40,7 @@
     "@types/pg": "^8.20.0",
     "node-pg-migrate": "^8.0.4",
     "nodemon": "^3.1.14",
+    "supabase": "^2.111.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
   }

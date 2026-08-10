@@ -12,5 +12,6 @@ export type AuthContextData = {
   signUp(data: LoginDto): Promise<void>;
   signOut(): Promise<void>;
   loading: boolean;
+  error: string | null;
 };
 export const AuthContext = createContext({} as AuthContextData);

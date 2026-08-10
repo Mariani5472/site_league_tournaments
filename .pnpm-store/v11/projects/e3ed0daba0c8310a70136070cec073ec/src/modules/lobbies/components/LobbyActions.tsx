@@ -10,8 +10,10 @@ interface Props {
   unready: () => void;
   switchTeam: () => void;
   deleteLobby: () => void;
-  startMatch?: () => void;
   isLoading?: boolean;
+  status: "waiting" | "in_game" | "finished" | "cancelled";
+  canManage: boolean;
+  teamSelectionLocked?: boolean;
 }
 
 export function LobbyActions({
@@ -22,9 +24,13 @@ export function LobbyActions({
   unready,
   deleteLobby,
   switchTeam,
-  startMatch,
   isLoading,
+  status,
+  canManage,
+  teamSelectionLocked,
 }: Props) {
+
+  const isWaiting = status === "waiting";
 
   return (
     <div
@@ -38,16 +44,13 @@ export function LobbyActions({
       "
     >
 
-      <Button
-        onClick={join}
-      >
-        Join
-      </Button>
+      {!currentPlayer && <Button disabled={!isWaiting || isLoading} onClick={join}>Join</Button>}
 
       {currentPlayer && (
         <>
           <Button
             variant="secondary"
+            disabled={!isWaiting || isLoading || teamSelectionLocked}
             onClick={currentPlayer.is_ready ? unready : ready}
           >
             {currentPlayer.is_ready ? "Unready" : "Ready"}
@@ -55,6 +58,7 @@ export function LobbyActions({
 
           <Button
             variant="outline"
+            disabled={!isWaiting || isLoading || teamSelectionLocked}
             onClick={switchTeam}
           >
             Switch to Team {currentPlayer.team_number == 1 ? 'Red' : "Blue"}
@@ -62,6 +66,7 @@ export function LobbyActions({
 
           <Button
             variant="outline"
+            disabled={!isWaiting || isLoading}
             onClick={leave}
           >
             Leave
@@ -69,19 +74,7 @@ export function LobbyActions({
         </>
       )}
 
-      <Button
-        disabled={isLoading}
-        onClick={startMatch}
-      >
-        Start Match
-      </Button>
-
-      <Button
-        disabled={isLoading}
-        onClick={deleteLobby}
-      >
-        Delete Lobby
-      </Button>
+      {canManage && isWaiting && <Button variant="destructive" disabled={isLoading} onClick={deleteLobby}>Cancel Lobby</Button>}
 
     </div>
 

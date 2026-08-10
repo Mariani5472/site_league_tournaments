@@ -8,11 +8,16 @@ import { toast } from "sonner";
 import { useMyRiotAccount } from "@/modules/riot/hooks/useMyRiotAccount";
 import { RiotAccountCard } from "../components/riotAccount";
 import { linkRiotAccount, unlinkAccount } from "@/modules/riot/services/riot.service";
+import { queryKeys } from "@/lib/queryKeys";
+import { useRiotConfiguration } from "@/modules/riot/hooks/useRiotConfiguration";
 
 export function ProfilePage() {
   const queryClient = useQueryClient();
-  const { data: profile, isLoading: accountLoading } = useMyProfile();
-  const { data: riotAccount, isLoading: riotLoading } = useMyRiotAccount();
+  const profileQuery = useMyProfile();
+  const riotQuery = useMyRiotAccount();
+  const riotConfiguration = useRiotConfiguration();
+  const { data: profile, isLoading: accountLoading } = profileQuery;
+  const { data: riotAccount, isLoading: riotLoading } = riotQuery;
 
   const [nickname, setNickname] = useState(profile?.nickname || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
@@ -25,7 +30,7 @@ export function ProfilePage() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["my-profile"]
+        queryKey: queryKeys.profile.me
       });
 
       toast.success("Profile updated");
@@ -41,7 +46,7 @@ export function ProfilePage() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["my-riot-account"]
+        queryKey: queryKeys.riot.me
       });
 
       toast.success("Riot account linked!");
@@ -60,7 +65,7 @@ export function ProfilePage() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["my-riot-account"]
+        queryKey: queryKeys.riot.me
       });
 
       toast.success("Riot account unlinked!");
@@ -87,9 +92,11 @@ export function ProfilePage() {
 
   }, [profile]);
 
-  if (riotLoading || accountLoading) {
-    return <div>Loading...</div>;
+  if (riotLoading || accountLoading || riotConfiguration.isLoading) {
+    return <p className="text-muted-foreground">Carregando perfil...</p>;
   }
+
+  if (profileQuery.isError) return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar seu perfil.</p><Button variant="outline" onClick={() => profileQuery.refetch()}>Tentar novamente</Button></div>;
 
   function handleSubmit() {
     profileUpdateMutation.mutate({
@@ -196,7 +203,7 @@ export function ProfilePage() {
             : "Save Changes"}
         </Button>
 
-        {!riotAccount && (
+        {!riotAccount && riotConfiguration.data?.enabled && (
           <div className="rounded-xl border p-6 space-y-4">
             <h2 className="text-xl font-semibold">
               Riot Account
@@ -227,6 +234,10 @@ export function ProfilePage() {
                 : "Link Riot Account"}
             </Button>
           </div>
+        )}
+
+        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (
+          <p className="text-sm text-muted-foreground">A vinculação com a Riot não está habilitada neste ambiente.</p>
         )}
 
         {riotAccount && (

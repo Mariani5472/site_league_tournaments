@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { approveRequest, rejectRequest } from "../services/leagues.service";
 import type { LeagueRequest } from "../types/request";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 
 type Props = {
   leagueId: string;
@@ -20,17 +21,11 @@ export function LeagueRequests({
 
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: [
-            "league-requests",
-            leagueId
-          ]
+          queryKey: queryKeys.leagues.requests(leagueId)
         });
 
         queryClient.invalidateQueries({
-          queryKey: [
-            "league-members",
-            leagueId
-          ]
+          queryKey: queryKeys.leagues.members(leagueId)
         });
 
         toast.success("Player approved");
@@ -43,10 +38,7 @@ export function LeagueRequests({
 
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: [
-            "league-requests",
-            leagueId
-          ]
+          queryKey: queryKeys.leagues.requests(leagueId)
         });
         
         toast.success("Request rejected")
@@ -75,6 +67,7 @@ export function LeagueRequests({
       </h2>
 
       <div className="space-y-3">
+        {pendingRequests.length === 0 && <p className="text-muted-foreground">Nenhuma solicitação pendente.</p>}
         {pendingRequests.map((request) => (
           <div
             key={request.id}
@@ -104,6 +97,7 @@ export function LeagueRequests({
               "
             >
               <button
+                disabled={approveMutation.isPending || rejectMutation.isPending}
                 onClick={() => approveMutation.mutate(request.id)}
                 className="
                   rounded-md
@@ -118,6 +112,7 @@ export function LeagueRequests({
               </button>
 
               <button
+                disabled={approveMutation.isPending || rejectMutation.isPending}
                 onClick={() => rejectMutation.mutate(request.id)}
                 className="
                   rounded-md

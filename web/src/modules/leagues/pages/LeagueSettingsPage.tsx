@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 
 import { useForm, useWatch } from "react-hook-form";
 
@@ -38,7 +38,7 @@ import {
 } from "../hooks/useLeagueRole";
 import { leagueSettingsSchema, type LeagueSettingsForm } from "../utils/leagueSettings.schema";
 import { DangerZone } from "../components/DangerZone";
-import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Save } from "lucide-react";
 
 export function LeagueSettingsPage() {
   const { id } = useParams();
@@ -75,11 +75,6 @@ export function LeagueSettingsPage() {
     name: "join_policy",
     defaultValue: league?.join_policy
   });
-  const linkedAccountValue = useWatch({ 
-    control, 
-    name: "require_riot_account",
-    defaultValue: league?.require_riot_account
-  });
 
   useEffect(() => {
     if (!league) {
@@ -91,8 +86,7 @@ export function LeagueSettingsPage() {
       description: league.description || "",
       visibility: league.visibility,
       join_policy: league.join_policy,
-      max_players: league.max_players,
-      require_riot_account: league.require_riot_account
+      max_players: league.max_players
     });
   }, [league, reset]);
 
@@ -135,6 +129,7 @@ export function LeagueSettingsPage() {
         space-y-6
       "
     >
+      <Button variant="ghost" asChild><Link to={`/leagues/${leagueId}`}><ArrowLeft className="h-4 w-4" /> Voltar para a liga</Link></Button>
       <div>
         <h1
           className="
@@ -142,7 +137,7 @@ export function LeagueSettingsPage() {
             font-bold
           "
         >
-          League Settings
+          Editar liga
         </h1>
 
         <p
@@ -150,7 +145,7 @@ export function LeagueSettingsPage() {
             text-muted-foreground
           "
         >
-          Manage your league.
+          Atualize as informações e regras da sua liga.
         </p>
       </div>
 
@@ -271,17 +266,6 @@ export function LeagueSettingsPage() {
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <label>
-            Require Riot Account
-          </label>
-
-          <Switch
-            checked={linkedAccountValue}
-            onCheckedChange={(e) => setValue("require_riot_account", e)}
-          />
-        </div>
-
         <Button
           type="submit"
           disabled={
@@ -290,7 +274,7 @@ export function LeagueSettingsPage() {
         >
           {mutation.isPending
             ? "Saving..."
-            : "Save Changes"}
+            : <><Save className="h-4 w-4" /> Salvar alterações</>}
         </Button>
       </form>
 

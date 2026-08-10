@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateLeague } from "../services/leagues.service";
+import { queryKeys } from "@/lib/queryKeys";
 
 
 export function useUpdateLeague() {
@@ -11,16 +12,13 @@ export function useUpdateLeague() {
       data
     }: {
       leagueId: string;
-      data: any;
+      data: Parameters<typeof updateLeague>[1];
     }) =>
       updateLeague(leagueId, data),
 
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: [
-          "league",
-          variables.leagueId
-        ]
+        queryKey: queryKeys.leagues.detail(variables.leagueId)
       });
     }
   });

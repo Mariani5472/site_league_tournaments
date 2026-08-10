@@ -2,13 +2,16 @@ import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
 import { registerSocketHandlers } from "./socket-handlers";
 import { socketAuthMiddleware } from "../middlewares/socket.middleware";
+import { corsOrigin } from "../config/runtime";
 
 let io: Server;
 
 export function initializeSocket(server: HTTPServer) {
   io = new Server(server, {
+    maxHttpBufferSize: 100_000,
     cors: {
-      origin: '*'
+      origin: corsOrigin,
+      credentials: true,
     }
   });
 

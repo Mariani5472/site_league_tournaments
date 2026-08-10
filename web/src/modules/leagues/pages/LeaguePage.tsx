@@ -9,6 +9,7 @@ import { useLeagueRole } from "../hooks/useLeagueRole";
 import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { LeagueLobbySection } from "../components/LeagueLobbySelection";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
+import { LeagueResults } from "@/modules/matches/LeagueResults";
 
 export function LeaguePage() {
   const { id } = useParams();
@@ -17,13 +18,18 @@ export function LeaguePage() {
 
   const {
     data: league,
-    isLoading: loadingLeague
+    isLoading: loadingLeague,
+    isError: leagueError,
+    refetch: retryLeague,
   } = useLeague(leagueId);
 
   useLeagueSocket(leagueId);
 
   const {
-    data: members
+    data: members,
+    isLoading: loadingMembers,
+    isError: membersError,
+    refetch: retryMembers,
   } = useLeagueMembers(leagueId);
 
   
@@ -31,19 +37,29 @@ export function LeaguePage() {
   const roleData = useLeagueRole(members || []);
 
   const {
-    data: lobbies
+    data: lobbies,
+    isLoading: loadingLobbies,
+    isError: lobbiesError,
+    refetch: retryLobbies,
   } = useLeagueLobbies(leagueId)
 
   const {
-    data: requests
+    data: requests,
+    isLoading: loadingRequests,
+    isError: requestsError,
+    refetch: retryRequests,
   } = useLeagueRequests(leagueId, (roleData.isAdmin || roleData.isOwner));
 
-  if (loadingLeague || !league) {
+  if (loadingLeague) {
     return (
       <div>
-        Loading league...
+        Carregando liga...
       </div>
     );
+  }
+
+  if (leagueError || !league) {
+    return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar a liga.</p><button className="underline" onClick={() => retryLeague()}>Tentar novamente</button></div>;
   }
 
   return (
@@ -56,6 +72,7 @@ export function LeaguePage() {
         league={league}
         isAdmin={roleData.isAdmin}
         isOwner={roleData.isOwner}
+        role={roleData.role}
       />
 
       <div
@@ -65,26 +82,27 @@ export function LeaguePage() {
           xl:grid-cols-2
         "
       >
-        <LeagueLobbySection
+        {loadingLobbies ? <p className="text-muted-foreground">Carregando lobbies...</p> : lobbiesError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar os lobbies.</p><button className="mt-2 underline" onClick={() => retryLobbies()}>Tentar novamente</button></div> : <LeagueLobbySection
           leagueId={leagueId}
           lobbies={lobbies ?? []}
           isAdmin={roleData.isAdmin}
-        />
+        />}
 
-        <LeagueMembers
+        {loadingMembers ? <p className="text-muted-foreground">Carregando membros...</p> : membersError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar os membros.</p><button className="mt-2 underline" onClick={() => retryMembers()}>Tentar novamente</button></div> : <LeagueMembers
           leagueId={leagueId}
           members={members || []}
           role={roleData.role}
           isAdmin={roleData.isAdmin}
-        />
+        />}
 
-        {roleData.isAdmin && (
+        {roleData.isAdmin && (loadingRequests ? <p className="text-muted-foreground">Carregando solicitações...</p> : requestsError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar as solicitações.</p><button className="mt-2 underline" onClick={() => retryRequests()}>Tentar novamente</button></div> : (
           <LeagueRequests
             leagueId={leagueId}
             requests={requests || []}
           />
-        )}
+        ))}
       </div>
+      <LeagueResults leagueId={leagueId} />
     </div>
   );
 }

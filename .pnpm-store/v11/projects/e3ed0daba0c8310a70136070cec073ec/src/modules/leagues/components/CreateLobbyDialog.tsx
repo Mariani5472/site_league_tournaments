@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useState, type ReactNode } from "react";
 import { createLobby } from "../services/leagues.service";
+import { queryKeys } from "@/lib/queryKeys";
 
 
 interface Props {
@@ -46,10 +47,7 @@ export function CreateLobbyDialog({
       onSuccess: () => {
 
         queryClient.invalidateQueries({
-          queryKey: [
-            "league-lobbies",
-            leagueId
-          ]
+          queryKey: queryKeys.leagues.lobbies(leagueId)
         });
 
         toast.success(

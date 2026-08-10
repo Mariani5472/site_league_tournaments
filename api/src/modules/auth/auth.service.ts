@@ -1,20 +1,10 @@
-import { UsersRepository } from "../users/users.repository";
-import { SyncInput } from "./auth.types";
+import { UsersService } from "../users/users.service";
+import { UserIdentity } from "../users/users.types";
 
 export class AuthService {
-  private usersRepository = new UsersRepository();
+  private usersService = new UsersService();
 
-  async sync({ id, email }: SyncInput) {
-    let user = await this.usersRepository.findById(id);
-
-    if (!user) {
-      user = await this.usersRepository.create({
-        id,
-        email,
-        nickname: email.split("@")[0]
-      });
-    }
-
-    return user;
+  async syncAuthenticatedUser(identity: UserIdentity) {
+    return this.usersService.ensureExists(identity)
   }
 }
