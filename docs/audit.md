@@ -290,13 +290,13 @@ API
 
 **Invariantes:** token Supabase obrigatório; somente membro entra em room de liga/lobby.
 
-**Problema:** autorização ocorre apenas no evento de join. Um usuário removido da liga continua na room até sair/desconectar.
+**Problema:** autorização ocorria apenas no evento de join. Um usuário removido da liga continuava na room até sair/desconectar.
 
 **Impacto:** continua recebendo IDs e eventos futuros da liga privada; embora REST revalide acesso, há vazamento de metadados e atividade.
 
-**Decisão:** ao remover membro/excluir liga, expulsar sockets associados; ou revalidar membership antes de emissões sensíveis e manter índice user→sockets.
+**Decisão:** manter índice local `userId → sockets` e grants por conexão. Após commit de remoção, expulsar todas as abas das rooms da liga e de suas lobbies; na exclusão, revogar todos os grants da liga. Reconnect continua revalidando no PostgreSQL. Ver ADR `docs/adr/0002-realtime-membership-revocation.md`.
 
-**Status:** Pending — alto.
+**Status:** Resolvido — revogação ativa implementada e coberta por cliente Socket.IO real, incluindo múltiplas conexões, lobby, exclusão e tentativa de reentrada.
 
 **Problema:** handlers async não possuem wrapper/callback de erro e negam acesso silenciosamente.
 
