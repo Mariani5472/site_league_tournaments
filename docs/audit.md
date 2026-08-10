@@ -151,13 +151,13 @@ API
 
 **Invariantes:** um owner canônico por liga; admins não promovem privilegiados; owner não é removido sem transferência.
 
-**Problema:** `list` verifica apenas que a liga existe; não verifica membership do solicitante.
+**Problema:** `list` verificava apenas que a liga existia; não verificava membership do solicitante.
 
 **Impacto:** qualquer usuário autenticado que conheça o UUID pode listar membros e avatares de liga privada.
 
-**Decisão:** exigir membership antes de listar; para eventual página pública, criar projeção explícita separada.
+**Decisão:** ligas privadas exigem membership antes de listar. Ligas públicas mantêm a listagem atual; qualquer projeção pública mais limitada deverá ser criada em endpoint explícito e separado.
 
-**Status:** Pending — alto.
+**Status:** Resolvido — o service retorna `403` antes de consultar a lista para não membros de ligas privadas. Testes HTTP cobrem membro autorizado, não membro sem vazamento de dados e liga inexistente.
 
 **Problema:** `create` não trava a liga, não confere `max_players`, emite evento antes do INSERT e permite ao owner adicionar outro membro com role `owner`.
 

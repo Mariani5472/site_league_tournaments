@@ -49,6 +49,18 @@ export class LeagueMembersService {
         if (!league) {
             throw new AppError("League not found", 404);
         }
+
+        if (league.visibility === "private") {
+            const requester = await this.leagueMembersRepository.findByLeagueAndUser(
+                leagueId,
+                userId
+            );
+
+            if (!requester) {
+                throw new AppError("Requester is not a league member", 403);
+            }
+        }
+
         return this.leagueMembersRepository.list(leagueId, params);
     }
     async create(requesterId: string, leagueId: string, userId: string, params: CreateLeagueMemberDTO): Promise<LeagueMember> {

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import http from "node:http";
 import { after, before, beforeEach, describe, test } from "node:test";
+import express, { NextFunction, Request, Response } from "express";
 import { db } from "../src/database/connection";
 import { initializeSocket } from "../src/weboscket/socket";
 import { LeaguesService } from "../src/modules/leagues/leagues.service";
@@ -12,13 +14,37 @@ import { registerLeagueSocket } from "../src/modules/leagues/leagues.socket";
 import { registerLobbySocket } from "../src/modules/lobbies/lobbies.socket";
 import { AuthService } from "../src/modules/auth/auth.service";
 import { updateLeagueSchema } from "../src/modules/leagues/leagues.schemas";
+import { LeagueMembersController } from "../src/modules/league-members/league-members.controller";
+import { errorMiddleware } from "../src/middlewares/error.middleware";
 const ids = Array.from({ length: 10 }, (_, index) => `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`);
 const leagues = new LeaguesService();
 const members = new LeagueMembersService();
 const requests = new LeagueJoinRequestsService();
 const lobbies = new LobbiesService();
 const matches = new MatchesService();
-const server = http.createServer();
+const testApp = express();
+const leagueMembersController = new LeagueMembersController();
+
+testApp.use(express.json());
+testApp.get(
+    "/leagues/:leagueId/members",
+    (request: Request, _response: Response, next: NextFunction) => {
+        const userId = request.header("x-test-user-id");
+
+        if (userId) {
+            request.user = {
+                id: userId,
+                email: `${userId}@test.local`
+            };
+        }
+
+        next();
+    },
+    leagueMembersController.list.bind(leagueMembersController)
+);
+testApp.use(errorMiddleware);
+
+const server = http.createServer(testApp);
 async function seedUsers() {
     for (const [index, id] of ids.entries()) {
         await db.query("INSERT INTO users (id, email, nickname) VALUES ($1, $2, $3)", [id, `user${index + 1}@test.local`, `user${index + 1}`]);
@@ -27,13 +53,67 @@ async function seedUsers() {
 async function createLeague(maxPlayers = 10, policy: "open" | "request" = "open", visibility: "public" | "private" = "public") {
     return leagues.create(ids[0], { ownerId: ids[0], name: "Test league", description: "Integration", visibility, joinPolicy: policy, maxPlayers: maxPlayers });
 }
-before(() => initializeSocket(server));
+before(async () => {
+    initializeSocket(server);
+    await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
+});
 beforeEach(async () => {
     await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, standings, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
     await seedUsers();
 });
-after(async () => { await db.end(); server.close(); });
+after(async () => {
+    await db.end();
+    await new Promise<void>((resolve, reject) => {
+        server.close(error => error ? reject(error) : resolve());
+    });
+});
+
+async function listMembersOverHttp(leagueId: string, userId: string) {
+    const address = server.address();
+
+    if (!address || typeof address === "string") {
+        throw new Error("HTTP test server is not listening");
+    }
+
+    return fetch(`http://127.0.0.1:${address.port}/leagues/${leagueId}/members`, {
+        headers: {
+            "x-test-user-id": userId
+        }
+    });
+}
+
 describe("critical domain flows", { concurrency: false }, () => {
+    test("private league members endpoint allows an existing member", async () => {
+        const league = await createLeague(10, "open", "private");
+        const response = await listMembersOverHttp(league.id, ids[0]);
+        const body = await response.json() as Array<{ userId: string }>;
+
+        assert.equal(response.status, 200);
+        assert.equal(body.length, 1);
+        assert.equal(body[0].userId, ids[0]);
+    });
+
+    test("private league members endpoint rejects outsiders without leaking member data", async () => {
+        const league = await createLeague(10, "open", "private");
+        const secretAvatar = "https://private.test/owner-avatar.png";
+
+        await db.query("UPDATE users SET avatar_url = $1 WHERE id = $2", [secretAvatar, ids[0]]);
+
+        const response = await listMembersOverHttp(league.id, ids[1]);
+        const body = await response.text();
+
+        assert.equal(response.status, 403);
+        assert.equal(body.includes(secretAvatar), false);
+        assert.equal(body.includes(ids[0]), false);
+    });
+
+    test("league members endpoint returns 404 when the league does not exist", async () => {
+        const missingLeagueId = randomUUID();
+        const response = await listMembersOverHttp(missingLeagueId, ids[0]);
+
+        assert.equal(response.status, 404);
+    });
+
     test("open league entry is idempotent and respects the locked capacity", async () => {
         const league = await createLeague(2);
         const results = await Promise.allSettled([leagues.join(league.id, ids[1]), leagues.join(league.id, ids[2])]);
