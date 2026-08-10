@@ -99,7 +99,8 @@ export class LeaguesRepository {
         const result = await executor.query<League>(query, [leagueId]);
         return result.rows[0] ?? null;
     }
-    async create(params: CreateLeagueDTO): Promise<League> {
+    async create(params: CreateLeagueDTO, options: QueryOptions = {}): Promise<League> {
+        const { executor = db } = options;
         const query = `
       INSERT INTO leagues (
         owner_id,
@@ -127,34 +128,38 @@ export class LeaguesRepository {
             params.joinPolicy,
             params.maxPlayers
         ];
-        const result = await db.query<League>(query, values);
+        const result = await executor.query<League>(query, values);
         return result.rows[0];
     }
     async update(leagueId: string, params: {
         name?: string;
-        description?: string;
+        description?: string | null;
         visibility?: string;
         joinPolicy?: string;
         maxPlayers?: number;
-    }) {
+    }, options: QueryOptions = {}): Promise<League> {
+        const { executor = db } = options;
         const query = `
       UPDATE leagues
       SET
         name = COALESCE($2, name),
-        description = COALESCE($3, description),
-        visibility = COALESCE($4, visibility),
-        join_policy = COALESCE($5, join_policy),
-        max_players = COALESCE($6, max_players)
+        description = CASE WHEN $3::boolean THEN $4 ELSE description END,
+        visibility = COALESCE($5, visibility),
+        join_policy = COALESCE($6, join_policy),
+        max_players = COALESCE($7, max_players)
       WHERE id = $1
+      RETURNING *
     `;
-        await db.query<League>(query, [
+        const result = await executor.query<League>(query, [
             leagueId,
             params.name ?? null,
+            Object.hasOwn(params, "description"),
             params.description ?? null,
             params.visibility ?? null,
             params.joinPolicy ?? null,
             params.maxPlayers ?? null
         ]);
+        return result.rows[0];
     }
     async remove(leagueId: string) {
         const query = `

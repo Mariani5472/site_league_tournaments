@@ -19,7 +19,13 @@ function camelCaseResult<T extends QueryResult>(result: T): T {
 }
 
 function executeCamelCaseQuery(query: (...args: any[]) => any, args: any[]) {
-  const callbackIndex = args.findLastIndex(argument => typeof argument === "function");
+  let callbackIndex = -1;
+  for (let index = args.length - 1; index >= 0; index -= 1) {
+    if (typeof args[index] === "function") {
+      callbackIndex = index;
+      break;
+    }
+  }
 
   if (callbackIndex === args.length - 1) {
     const callback = args[callbackIndex];

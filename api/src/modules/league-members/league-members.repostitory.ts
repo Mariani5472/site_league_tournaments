@@ -1,6 +1,6 @@
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
-import { CreateLeagueMemberDTO, LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
+import { LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
 export class LeagueMembersRepository {
     async list(leagueId: string, params: LeagueMemberIdentity): Promise<LeagueMember[]> {
@@ -72,7 +72,7 @@ export class LeagueMembersRepository {
         const result = await executor.query<LeagueMember>(query, [leagueId, userId]);
         return result.rows[0] ?? null;
     }
-    async create(leagueId: string, userId: string, params: CreateLeagueMemberDTO, options: QueryOptions = {}): Promise<LeagueMember> {
+    async create(leagueId: string, userId: string, params: Pick<LeagueMember, "role">, options: QueryOptions = {}): Promise<LeagueMember> {
         const { executor = db } = options;
         const query = `
       INSERT INTO league_members (

@@ -4,6 +4,7 @@ import { SocketEmitter } from "../../weboscket/emitter";
 import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { MatchesRepository } from "./matches.repository";
+import { QueryOptions } from "../../@types/shared/QueryOptions";
 export class MatchesService {
     private repository = new MatchesRepository();
     private members = new LeagueMembersRepository();
@@ -39,10 +40,8 @@ export class MatchesService {
         let leagueId = "";
         try {
             await client.query("BEGIN");
-            const locked = await client.query(`SELECT m.* FROM matches m
-        JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
-        WHERE m.id = $1 FOR UPDATE OF m`, [matchId]);
-            const match = locked.rows[0];
+            const options = { executor: client } satisfies QueryOptions;
+            const match = await this.repository.findForUpdate(matchId, options);
             if (!match) {
                 throw new AppError("Match not found", 404);
             }
@@ -52,20 +51,16 @@ export class MatchesService {
                 throw new AppError("Voting is closed", 409);
             }
             ;
-            const eligible = await client.query("SELECT 1 FROM match_players WHERE match_id = $1 AND user_id = $2", [matchId, userId]);
-            if (!eligible.rowCount) {
+            const eligible = await this.repository.isParticipant(matchId, userId, options);
+            if (!eligible) {
                 throw new AppError("Only match participants can vote", 403);
             }
             ;
-            await client.query(`
-        INSERT INTO match_votes (match_id, voter_id, winner_team)
-        VALUES ($1, $2, $3) ON CONFLICT (match_id, voter_id)
-        DO UPDATE SET winner_team = EXCLUDED.winner_team, updated_at = current_timestamp`, [matchId, userId, winnerTeam]);
-            const counts = await client.query(`
-        SELECT winner_team, COUNT(*)::int total FROM match_votes WHERE match_id = $1 GROUP BY winner_team`, [matchId]);
-            const totalEligible = Number((await client.query("SELECT COUNT(*)::int total FROM match_players WHERE match_id = $1", [matchId])).rows[0].total);
+            await this.repository.saveVote(matchId, userId, winnerTeam, options);
+            const counts = await this.repository.voteCounts(matchId, options);
+            const totalEligible = await this.repository.playerCount(matchId, options);
             const majority = Math.floor(totalEligible / 2) + 1;
-            const winner = counts.rows.find(row => Number(row.total) >= majority);
+            const winner = counts.find(row => Number(row.total) >= majority);
             if (winner)
                 finished = await this.repository.finalize(client, matchId, Number(winner.winnerTeam), "vote");
             await client.query("COMMIT");
@@ -91,15 +86,13 @@ export class MatchesService {
         let leagueId = "";
         try {
             await client.query("BEGIN");
-            const locked = await client.query(`SELECT m.* FROM matches m
-        JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
-        WHERE m.id = $1 FOR UPDATE OF m`, [matchId]);
-            const match = locked.rows[0];
+            const options = { executor: client } satisfies QueryOptions;
+            const match = await this.repository.findForUpdate(matchId, options);
             if (!match)
                 throw new AppError("Match not found", 404);
             leagueId = match.leagueId;
-            const member = await client.query("SELECT role FROM league_members WHERE league_id = $1 AND user_id = $2", [leagueId, userId]);
-            if (!member.rowCount || !["owner", "admin"].includes(member.rows[0].role))
+            const member = await this.members.findByLeagueAndUser(leagueId, userId, { executor: client });
+            if (!member || !["owner", "admin"].includes(member.role))
                 throw new AppError("Insufficient permissions", 403);
             const finished = await this.repository.finalize(client, matchId, winnerTeam, "admin", userId, reason.trim());
             if (!finished)

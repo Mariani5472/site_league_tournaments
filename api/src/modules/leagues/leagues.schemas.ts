@@ -1,4 +1,11 @@
 import { z } from "zod";
+export const leagueParamsSchema = z.object({ leagueId: z.uuid() });
+export const listLeaguesQuerySchema = z.object({
+    membership: z.union([z.string(), z.array(z.string())]).optional().transform(value => value ? [value].flat() : undefined),
+    visibility: z.enum(["public", "private"]).optional(),
+    search: z.string().trim().optional(),
+});
+export const discoverLeaguesQuerySchema = z.object({ search: z.string().trim().optional() });
 export const createLeagueSchema = z.object({
     name: z
         .string()
@@ -31,6 +38,3 @@ export const updateLeagueSchema = z.object({
 }).strict().refine(body => Object.keys(body).length > 0, {
     message: "At least one field must be provided"
 });
-export const updateJoinRequestSchema = z.object({
-    status: z.enum(["approved", "rejected"])
-}).strict();

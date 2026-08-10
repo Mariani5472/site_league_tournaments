@@ -6,6 +6,7 @@ import { LeaguesRepository } from "../leagues/leagues.repository";
 import { SocketEmitter } from "../../weboscket/emitter";
 import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 import { db } from "../../database/connection";
+import { FindOptions } from "../../@types/shared/FindOptions";
 export class LeagueJoinRequestsService {
     private readonly leagueJoinRequestsRepository = new LeagueJoinRequestsRepository();
     private readonly leagueMembersRepository = new LeagueMembersRepository();
@@ -72,27 +73,26 @@ export class LeagueJoinRequestsService {
         let updatedRequest;
         try {
             await client.query("BEGIN");
-            const leagueResult = await client.query("SELECT * FROM leagues WHERE id = $1 FOR UPDATE", [leagueId]);
-            const league = leagueResult.rows[0];
+            const options = { executor: client, lock: "update" } satisfies FindOptions;
+            const league = await this.leaguesRepository.findById(leagueId, options);
             if (!league)
                 throw new AppError("League not found", 404);
-            const requester = await client.query("SELECT role FROM league_members WHERE league_id = $1 AND user_id = $2", [leagueId, requesterId]);
-            if (!requester.rowCount || !['owner', 'admin'].includes(requester.rows[0].role))
+            const requester = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, requesterId, options);
+            if (!requester || !['owner', 'admin'].includes(requester.role))
                 throw new AppError("Unauthorized", 403);
-            const requestResult = await client.query("SELECT * FROM league_join_requests WHERE id = $1 AND league_id = $2 FOR UPDATE", [requestId, leagueId]);
-            const request = requestResult.rows[0];
+            const request = await this.leagueJoinRequestsRepository.findById(requestId, leagueId, options);
             if (!request)
                 throw new AppError("Request not found", 404);
             if (request.status !== 'pending')
                 throw new AppError("Request already processed", 409);
             if (params.status === 'approved') {
-                const count = await client.query("SELECT COUNT(*)::int total FROM league_members WHERE league_id = $1", [leagueId]);
-                if (Number(count.rows[0].total) >= league.maxPlayers)
+                const count = await this.leagueMembersRepository.count(leagueId, options);
+                if (count >= league.maxPlayers)
                     throw new AppError("League is full", 409);
-                await client.query("INSERT INTO league_members (league_id, user_id, role) VALUES ($1, $2, 'player') ON CONFLICT (league_id, user_id) DO NOTHING", [leagueId, request.userId]);
+                const existing = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, request.userId, options);
+                if (!existing) await this.leagueMembersRepository.create(leagueId, request.userId, { role: "player" }, options);
             }
-            const updated = await client.query("UPDATE league_join_requests SET status = $2 WHERE id = $1 RETURNING *", [requestId, params.status]);
-            updatedRequest = updated.rows[0];
+            updatedRequest = await this.leagueJoinRequestsRepository.update(requestId, params, options);
             await client.query("COMMIT");
         }
         catch (error) {
@@ -114,20 +114,20 @@ export class LeagueJoinRequestsService {
         const client = await db.connect();
         try {
             await client.query("BEGIN");
-            const league = await client.query("SELECT 1 FROM leagues WHERE id = $1", [leagueId]);
-            if (!league.rowCount)
+            const options = { executor: client, lock: "update" } satisfies FindOptions;
+            const league = await this.leaguesRepository.findById(leagueId, options);
+            if (!league)
                 throw new AppError("League not found", 404);
-            const requestResult = await client.query("SELECT * FROM league_join_requests WHERE id = $1 AND league_id = $2 FOR UPDATE", [requestId, leagueId]);
-            const joinRequest = requestResult.rows[0];
+            const joinRequest = await this.leagueJoinRequestsRepository.findById(requestId, leagueId, options);
             if (!joinRequest)
                 throw new AppError("Join request not found", 404);
             if (joinRequest.status !== "pending")
                 throw new AppError("Join request has already been processed", 409);
-            const member = await client.query("SELECT role FROM league_members WHERE league_id = $1 AND user_id = $2", [leagueId, requesterId]);
-            const canManage = member.rowCount && ["owner", "admin"].includes(member.rows[0].role);
+            const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, requesterId, options);
+            const canManage = member && ["owner", "admin"].includes(member.role);
             if (joinRequest.userId !== requesterId && !canManage)
                 throw new AppError("You cannot cancel this join request", 403);
-            await client.query("DELETE FROM league_join_requests WHERE id = $1", [requestId]);
+            await this.leagueJoinRequestsRepository.delete(requestId, options);
             await client.query("COMMIT");
         }
         catch (error) {

@@ -1,6 +1,39 @@
 import { PoolClient } from "pg";
 import { db } from "../../database/connection";
+import { QueryOptions } from "../../@types/shared/QueryOptions";
 export class MatchesRepository {
+    async findForUpdate(matchId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query(`SELECT m.* FROM matches m
+            JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
+            WHERE m.id = $1 FOR UPDATE OF m`, [matchId]);
+        return result.rows[0] ?? null;
+    }
+
+    async isParticipant(matchId: string, userId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query("SELECT 1 FROM match_players WHERE match_id = $1 AND user_id = $2", [matchId, userId]);
+        return Boolean(result.rowCount);
+    }
+
+    async saveVote(matchId: string, userId: string, winnerTeam: number, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        await executor.query(`INSERT INTO match_votes (match_id, voter_id, winner_team)
+            VALUES ($1, $2, $3) ON CONFLICT (match_id, voter_id)
+            DO UPDATE SET winner_team = EXCLUDED.winner_team, updated_at = current_timestamp`, [matchId, userId, winnerTeam]);
+    }
+
+    async voteCounts(matchId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query("SELECT winner_team, COUNT(*)::int total FROM match_votes WHERE match_id = $1 GROUP BY winner_team", [matchId]);
+        return result.rows;
+    }
+
+    async playerCount(matchId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        const result = await executor.query("SELECT COUNT(*)::int total FROM match_players WHERE match_id = $1", [matchId]);
+        return Number(result.rows[0].total);
+    }
     async listByLeague(leagueId: string) {
         const result = await db.query(`
       SELECT m.*,
