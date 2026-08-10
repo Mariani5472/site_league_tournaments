@@ -1,0 +1,50 @@
+name: API tests
+
+on:
+  pull_request:
+    paths:
+      - "api/**"
+      - ".github/workflows/api-tests.yml"
+  push:
+    branches: [main, firstbranch]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: api_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d api_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: api
+    env:
+      NODE_ENV: test
+      LOG_LEVEL: silent
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/api_test
+      SUPABASE_URL: https://test.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+      CORS_ORIGINS: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      - name: Apply canonical migrations
+        run: npm run migrate:up
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Domain, HTTP and Socket.IO integration tests
+        run: npm run test:integration
