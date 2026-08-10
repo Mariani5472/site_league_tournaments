@@ -298,11 +298,11 @@ API
 
 **Status:** Resolvido — revogação ativa implementada e coberta por cliente Socket.IO real, incluindo múltiplas conexões, lobby, exclusão e tentativa de reentrada.
 
-**Problema:** handlers async não possuem wrapper/callback de erro e negam acesso silenciosamente.
+**Problema:** handlers async não possuíam wrapper/callback de erro e negavam acesso silenciosamente.
 
 **Impacto:** promises rejeitadas podem gerar erro não tratado; cliente não distingue ausência, proibição ou falha de banco.
 
-**Status:** Pending — médio.
+**Status:** Resolvido — joins/leaves usam wrapper uniforme, ack `{ ok, error }`, fallback `socket:error` e captura de falhas inesperadas sem rejection não tratada.
 
 **Problema:** `matches.socket.ts` existe, mas não é registrado em `socket-handlers.ts`; atualizações de match são emitidas apenas para room da liga.
 
@@ -383,7 +383,7 @@ WEB
 
 **Pontos positivos:** query keys estão centralizadas e incluem league/lobby IDs; interceptor normaliza mensagem; sockets invalidam queries em vez de replicar estado.
 
-**Problemas:** invalidações amplas como `queryKeys.leagues.all` escondem dependências e podem gerar refetch excessivo. Alguns fluxos dependem de polling (match a cada 15 s) apesar de eventos. Não há cancelamento/timeout Axios explícito. Eventos Socket.IO não possuem ack nem reconciliação de eventos perdidos além do refetch ao reconectar. A conexão socket é singleton com lifecycle fora do React.
+**Problemas:** invalidações amplas como `queryKeys.leagues.all` escondem dependências e podem gerar refetch excessivo. Alguns fluxos dependem de polling (match a cada 15 s) apesar de eventos. Não há cancelamento/timeout Axios explícito. A conexão socket é singleton com lifecycle fora do React. Joins agora possuem ack e, após reconnect autorizado, os hooks invalidam as queries relacionadas para reconciliar eventos perdidos.
 
 ### Estado/query
 
@@ -418,7 +418,6 @@ Os testes de integração cobrem políticas de entrada, capacidade/concorrência
 - Casos HTTP menos frequentes, como todos os filtros de query, payload acima do limite e CORS por origem.
 - Cadastro admin concorrente/capacidade/múltiplos owners.
 - Leave/cancel/change-team/ready concorrentes e rollback intermediário.
-- Socket.IO real: handshake, reconnect, revogação de room, múltiplas abas e erros async.
 - Relógio de capitães e ausência de clientes.
 - Riot concorrente e indisponibilidade externa.
 - Frontend inteiro: componentes, hooks, navegação, cache entre usuários e acessibilidade.

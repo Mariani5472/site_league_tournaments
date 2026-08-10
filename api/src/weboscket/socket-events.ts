@@ -1,4 +1,5 @@
 export const SOCKET_EVENTS = {
+    ERROR: "socket:error",
     LEAGUE_JOIN: "league:join",
     LEAGUE_LEAVE: "league:leave",
     LEAGUE_UPDATE: "league:update",
