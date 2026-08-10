@@ -1,5 +1,7 @@
 import { db } from "../../database/connection";
 import { LeagueJoinRequest, LeagueJoinRequestsDTO, ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
+import { FindOptions } from "../../@types/shared/FindOptions";
+import { QueryOptions } from "../../@types/shared/QueryOptions";
 export class LeagueJoinRequestsRepository {
     async list(leagueId: string, params: ListLeagueJoinRequestsParams) {
         const values: unknown[] = [];
@@ -36,13 +38,16 @@ export class LeagueJoinRequestsRepository {
         const result = await db.query<LeagueJoinRequest[]>(query, values);
         return result.rows;
     }
-    async findById(requestId: string) {
+    async findById(requestId: string, leagueId?: string, options: FindOptions = {}) {
+        const { executor = db, lock } = options;
         const query = `
       SELECT * 
       FROM league_join_requests 
       WHERE id = $1
+      AND ($2::uuid IS NULL OR league_id = $2)
+      ${lock === "update" ? "FOR UPDATE" : ""}
     `;
-        const result = await db.query<LeagueJoinRequest>(query, [requestId]);
+        const result = await executor.query<LeagueJoinRequest>(query, [requestId, leagueId ?? null]);
         return result.rows[0];
     }
     async findByLeagueAndUser(leagueId: string, userId: string) {
@@ -80,23 +85,25 @@ export class LeagueJoinRequestsRepository {
     }
     async update(requestId: string, params: {
         status: "rejected" | "approved";
-    }) {
+    }, options: QueryOptions = {}) {
+        const { executor = db } = options;
         const query = `
       UPDATE league_join_requests
       SET status = $1
       WHERE id = $2
       RETURNING *
     `;
-        const result = await db.query<LeagueJoinRequest>(query, [
+        const result = await executor.query<LeagueJoinRequest>(query, [
             params.status,
             requestId
         ]);
         return result.rows[0];
     }
-    async delete(requestId: string) {
+    async delete(requestId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
         const query = `
     DELETE FROM league_join_requests WHERE id = $1
     `;
-        await db.query(query, [requestId]);
+        await executor.query(query, [requestId]);
     }
 }
