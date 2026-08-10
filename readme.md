@@ -18,6 +18,8 @@ Requisitos: Docker Desktop com Compose e um projeto Supabase para autenticação
 4. Em outro terminal, execute `docker compose exec api npm run migrate:up`.
 5. Abra `http://localhost:5173`. Adminer fica em `http://localhost:8080`.
 
+As migrations incrementais em `api/migrations` são a fonte canônica do schema. Consulte [docs/migrations.md](docs/migrations.md) para criação de mudanças, banco novo, upgrade e verificação da baseline Supabase.
+
 O banco local usa `admin/admin`, database `lol_tournament`, host `postgres` dentro do Compose.
 
 ## Desenvolvimento e validação

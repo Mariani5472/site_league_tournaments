@@ -260,13 +260,13 @@ API
 
 **Invariantes existentes:** UUIDs, FKs com cascade, membro/jogador/voto únicos, pending único, waiting lobby única por liga, match único por lobby, FK composta match→lobby/league, checks de status/roles/modos/resultados.
 
-**Problema:** existem migrations incrementais em `api/migrations/*.js` e uma baseline final em `api/supabase/migrations/*.sql`.
+**Problema:** existiam migrations incrementais em `api/migrations/*.js` e uma baseline final em `api/supabase/migrations/*.sql` sem fonte canônica declarada.
 
 **Impacto:** mudanças futuras podem ser aplicadas em apenas uma trilha; local/teste e Supabase podem divergir silenciosamente.
 
-**Decisão:** eleger uma fonte canônica e adicionar CI que crie bancos vazios pelas duas estratégias enquanto a transição existir, comparando schema.
+**Decisão:** `api/migrations/*.js` é a fonte canônica e o único fluxo oficial de evolução. A baseline Supabase é uma fotografia legada temporária. O CI cria bancos vazios pelas duas estratégias e compara colunas, defaults, constraints, índices e RLS.
 
-**Status:** Pending — alto.
+**Status:** Resolvido — estratégia e procedimentos documentados em `docs/migrations.md`; migration failure e divergência estrutural falham o workflow `database-schema.yml`.
 
 **Problema:** constraints ausentes para owner único/coerente, `riot_accounts.user_id` único, `matches.status`, `lobby_draft_picks.team_number` e limite coerente de lobby.
 
