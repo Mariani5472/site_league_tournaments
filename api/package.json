@@ -13,7 +13,8 @@
     "migrate:create": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down",
-    "migrate:down:all": "npx node-pg-migrate down -1"
+    "migrate:down:all": "npx node-pg-migrate down -1",
+    "schema:compare": "node scripts/compare-database-schemas.mjs"
   },
   "keywords": [],
   "author": "",

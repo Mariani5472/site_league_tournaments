@@ -1,0 +1,63 @@
+name: Database schema
+
+on:
+  pull_request:
+    paths:
+      - "api/migrations/**"
+      - "api/supabase/migrations/**"
+      - "api/scripts/compare-database-schemas.mjs"
+      - "api/package*.json"
+      - ".github/workflows/database-schema.yml"
+  push:
+    branches: [main, firstbranch]
+
+jobs:
+  migrate-and-compare:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: api
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      CANONICAL_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_canonical
+      BASELINE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_baseline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - run: npm ci
+      - name: Create empty comparison databases
+        run: |
+          createdb schema_canonical
+          createdb schema_baseline
+      - name: Apply canonical incremental migrations
+        run: npm run migrate:up
+        env:
+          DATABASE_URL: ${{ env.CANONICAL_DATABASE_URL }}
+      - name: Verify canonical migrations are fully applied
+        run: npm run migrate:up
+        env:
+          DATABASE_URL: ${{ env.CANONICAL_DATABASE_URL }}
+      - name: Apply legacy Supabase baseline
+        run: psql "$BASELINE_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260805210000_initial_schema.sql
+      - name: Detect structural divergence
+        run: npm run schema:compare -- "$CANONICAL_DATABASE_URL" "$BASELINE_DATABASE_URL"

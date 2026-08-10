@@ -92,7 +92,7 @@ create table public.lobby_players (
 
 create table public.matches (
   id uuid primary key default gen_random_uuid(),
-  lobby_id uuid not null,
+  lobby_id uuid not null references public.lobbies(id) on delete cascade,
   league_id uuid not null references public.leagues(id) on delete cascade,
   status varchar not null default 'in_game',
   started_at timestamp,
