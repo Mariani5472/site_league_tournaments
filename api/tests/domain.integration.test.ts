@@ -486,17 +486,18 @@ describe("critical domain flows", { concurrency: false }, () => {
         const league = await createLeague(4, "request", "private");
         const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
         await assert.rejects(() => leagues.show(league.id, ids[1]));
-        const handlers = new Map<string, (id: string) => Promise<void> | void>();
+        const handlers = new Map<string, (id: string, ack?: (result: unknown) => void) => void>();
         const joined: string[] = [];
-        const fakeSocket = { data: { user: { id: ids[1] } }, on: (event: string, handler: (id: string) => Promise<void> | void) => handlers.set(event, handler), join: (room: string) => joined.push(room), leave: () => undefined };
+        const fakeSocket = { data: { user: { id: ids[1] } }, on: (event: string, handler: (id: string, ack?: (result: unknown) => void) => void) => handlers.set(event, handler), join: (room: string) => joined.push(room), leave: () => undefined };
         registerLeagueSocket(fakeSocket as never);
         registerLobbySocket(fakeSocket as never);
-        await handlers.get("league:join")!(league.id);
-        await handlers.get("lobby:join")!(lobby.id);
+        const invoke = (event: string, id: string) => new Promise(resolve => handlers.get(event)!(id, resolve));
+        await invoke("league:join", league.id);
+        await invoke("lobby:join", lobby.id);
         assert.deepEqual(joined, []);
         fakeSocket.data.user.id = ids[0];
-        await handlers.get("league:join")!(league.id);
-        await handlers.get("lobby:join")!(lobby.id);
+        await invoke("league:join", league.id);
+        await invoke("lobby:join", lobby.id);
         assert.deepEqual(joined.sort(), [`league:${league.id}`, `lobby:${lobby.id}`].sort());
     });
     test("membership revocation removes every live connection and blocks rejoin", async () => {

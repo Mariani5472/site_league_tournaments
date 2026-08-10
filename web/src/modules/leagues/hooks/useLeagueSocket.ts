@@ -7,33 +7,45 @@ type LeagueEventPayload = {
     leagueId: string;
     matchId?: string;
 };
+type JoinAck = { ok: true } | { ok: false; error: { code: string; message: string } };
 export function useLeagueSocket(leagueId: string) {
     const queryClient = useQueryClient();
     useEffect(() => {
-        const joinLeague = () => socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId);
-        const handleLeagueUpdate = ({ leagueId }: LeagueEventPayload) => {
-            if (leagueId !== leagueId)
+        const reconcileLeague = () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.members(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.lobbies(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.requests(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.matches(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.standings(leagueId) });
+        };
+        const joinLeague = () => socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId, (ack: JoinAck) => {
+            if (ack.ok)
+                reconcileLeague();
+        });
+        const handleLeagueUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
+            if (updatedLeagueId !== leagueId)
                 return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.detail(leagueId),
             });
         };
-        const handleLeagueLobbiesUpdate = ({ leagueId }: LeagueEventPayload) => {
-            if (leagueId !== leagueId)
+        const handleLeagueLobbiesUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
+            if (updatedLeagueId !== leagueId)
                 return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.lobbies(leagueId),
             });
         };
-        const handleLeagueMembersUpdate = ({ leagueId }: LeagueEventPayload) => {
-            if (leagueId !== leagueId)
+        const handleLeagueMembersUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
+            if (updatedLeagueId !== leagueId)
                 return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.members(leagueId),
             });
         };
-        const handleLeagueRequestsUpdate = ({ leagueId }: LeagueEventPayload) => {
-            if (leagueId !== leagueId)
+        const handleLeagueRequestsUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
+            if (updatedLeagueId !== leagueId)
                 return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.requests(leagueId),
