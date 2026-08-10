@@ -7,6 +7,7 @@ import { SOCKET_EVENTS } from "../../weboscket/socket-events";
 import { db } from "../../database/connection";
 import { CreateLeagueMemberDTO, LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
 import { FindOptions } from "../../@types/shared/FindOptions";
+import { SocketAccess } from "../../weboscket/socket-access";
 export class LeagueMembersService {
     private readonly leagueMembersRepository = new LeagueMembersRepository();
     private readonly leaguesRepository = new LeaguesRepository();
@@ -158,6 +159,7 @@ export class LeagueMembersService {
     }
     async remove(requesterId: string, leagueId: string, memberId: string): Promise<void> {
         const client = await db.connect();
+        let removedUserId: string;
         try {
             await client.query("BEGIN");
             const lockForUpdate = {
@@ -181,6 +183,7 @@ export class LeagueMembersService {
             if (requester.id !== member.id) {
                 this.ensureCanChangeRole(requester, member, "none");
             }
+            removedUserId = member.userId;
             await this.leagueMembersRepository.remove(leagueId, member.userId, lockForUpdate);
             await client.query("COMMIT");
         }
@@ -191,6 +194,7 @@ export class LeagueMembersService {
         finally {
             client.release();
         }
+        await SocketAccess.revokeMembership(removedUserId, leagueId);
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, { leagueId: leagueId });
     }
 }

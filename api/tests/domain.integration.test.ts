@@ -3,8 +3,9 @@ import { randomUUID } from "node:crypto";
 import http from "node:http";
 import { after, before, beforeEach, describe, test } from "node:test";
 import express, { NextFunction, Request, Response } from "express";
+import { io as createSocketClient, Socket as ClientSocket } from "socket.io-client";
 import { db } from "../src/database/connection";
-import { initializeSocket } from "../src/weboscket/socket";
+import { getIO, initializeSocket } from "../src/weboscket/socket";
 import { LeaguesService } from "../src/modules/leagues/leagues.service";
 import { LeagueMembersService } from "../src/modules/league-members/league-members.service";
 import { LeagueJoinRequestsService } from "../src/modules/league-requests/league-join-requests.service";
@@ -16,6 +17,8 @@ import { AuthService } from "../src/modules/auth/auth.service";
 import { updateLeagueSchema } from "../src/modules/leagues/leagues.schemas";
 import { LeagueMembersController } from "../src/modules/league-members/league-members.controller";
 import { errorMiddleware } from "../src/middlewares/error.middleware";
+import { SOCKET_EVENTS } from "../src/weboscket/socket-events";
+import { SocketEmitter } from "../src/weboscket/emitter";
 const ids = Array.from({ length: 10 }, (_, index) => `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`);
 const leagues = new LeaguesService();
 const members = new LeagueMembersService();
@@ -54,7 +57,7 @@ async function createLeague(maxPlayers = 10, policy: "open" | "request" = "open"
     return leagues.create(ids[0], { ownerId: ids[0], name: "Test league", description: "Integration", visibility, joinPolicy: policy, maxPlayers: maxPlayers });
 }
 before(async () => {
-    initializeSocket(server);
+    initializeSocket(server, async token => ({ id: token, email: `${token}@test.local` }));
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
 });
 beforeEach(async () => {
@@ -80,6 +83,32 @@ async function listMembersOverHttp(leagueId: string, userId: string) {
             "x-test-user-id": userId
         }
     });
+}
+
+async function connectRealtime(userId: string): Promise<ClientSocket> {
+    const address = server.address();
+    if (!address || typeof address === "string") {
+        throw new Error("Socket test server is not listening");
+    }
+    const socket = createSocketClient(`http://127.0.0.1:${address.port}`, {
+        auth: { token: userId }, transports: ["websocket"], reconnection: false
+    });
+    await new Promise<void>((resolve, reject) => {
+        socket.once("connect", () => resolve());
+        socket.once("connect_error", reject);
+    });
+    return socket;
+}
+
+async function waitForRoomSize(room: string, expectedSize: number) {
+    const deadline = Date.now() + 2_000;
+    while (Date.now() < deadline) {
+        if ((getIO().sockets.adapter.rooms.get(room)?.size ?? 0) === expectedSize) {
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    assert.equal(getIO().sockets.adapter.rooms.get(room)?.size ?? 0, expectedSize);
 }
 
 describe("critical domain flows", { concurrency: false }, () => {
@@ -469,6 +498,66 @@ describe("critical domain flows", { concurrency: false }, () => {
         await handlers.get("league:join")!(league.id);
         await handlers.get("lobby:join")!(lobby.id);
         assert.deepEqual(joined.sort(), [`league:${league.id}`, `lobby:${lobby.id}`].sort());
+    });
+    test("membership revocation removes every live connection and blocks rejoin", async () => {
+        const league = await createLeague(4, "request", "private");
+        const member = await members.create(ids[0], league.id, ids[1], { role: "player" });
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+        const firstTab = await connectRealtime(ids[1]);
+        const secondTab = await connectRealtime(ids[1]);
+        const sockets = [firstTab, secondTab];
+
+        try {
+            sockets.forEach(socket => {
+                socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, league.id);
+                socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobby.id);
+            });
+            await waitForRoomSize(`league:${league.id}`, 2);
+            await waitForRoomSize(`lobby:${lobby.id}`, 2);
+
+            let received = 0;
+            sockets.forEach(socket => socket.on("private:test", () => received++));
+            SocketEmitter.emitToLeague(league.id, "private:test", { leagueId: league.id });
+            await new Promise(resolve => setTimeout(resolve, 30));
+            assert.equal(received, 2);
+
+            await members.remove(ids[0], league.id, member.id);
+            await waitForRoomSize(`league:${league.id}`, 0);
+            await waitForRoomSize(`lobby:${lobby.id}`, 0);
+            SocketEmitter.emitToLeague(league.id, "private:test", { leagueId: league.id });
+            await new Promise(resolve => setTimeout(resolve, 30));
+            assert.equal(received, 2);
+        } finally {
+            sockets.forEach(socket => socket.disconnect());
+        }
+
+        const reconnect = await connectRealtime(ids[1]);
+        try {
+            reconnect.emit(SOCKET_EVENTS.LEAGUE_JOIN, league.id);
+            reconnect.emit(SOCKET_EVENTS.LOBBY_JOIN, lobby.id);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            assert.equal(getIO().sockets.adapter.rooms.get(`league:${league.id}`)?.has(reconnect.id ?? "") ?? false, false);
+            assert.equal(getIO().sockets.adapter.rooms.get(`lobby:${lobby.id}`)?.has(reconnect.id ?? "") ?? false, false);
+        } finally {
+            reconnect.disconnect();
+        }
+    });
+    test("league deletion clears league and lobby realtime access", async () => {
+        const league = await createLeague(4, "request", "private");
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+        const socket = await connectRealtime(ids[0]);
+
+        try {
+            socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, league.id);
+            socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobby.id);
+            await waitForRoomSize(`league:${league.id}`, 1);
+            await waitForRoomSize(`lobby:${lobby.id}`, 1);
+            await leagues.remove(league.id, ids[0]);
+            await waitForRoomSize(`league:${league.id}`, 0);
+            await waitForRoomSize(`lobby:${lobby.id}`, 0);
+        } finally {
+            socket.disconnect();
+        }
     });
     test("auth sync creates one local profile and handles nickname collisions", async () => {
         const auth = new AuthService();

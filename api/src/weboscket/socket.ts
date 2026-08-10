@@ -1,10 +1,10 @@
 import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
 import { registerSocketHandlers } from "./socket-handlers";
-import { socketAuthMiddleware } from "../middlewares/socket.middleware";
+import { createSocketAuthMiddleware, SocketAuthenticator } from "../middlewares/socket.middleware";
 import { corsOrigin } from "../config/runtime";
 let io: Server;
-export function initializeSocket(server: HTTPServer) {
+export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthenticator) {
     io = new Server(server, {
         maxHttpBufferSize: 100000,
         cors: {
@@ -12,7 +12,7 @@ export function initializeSocket(server: HTTPServer) {
             credentials: true,
         }
     });
-    io.use(socketAuthMiddleware);
+    io.use(createSocketAuthMiddleware(authenticate));
     registerSocketHandlers(io);
     return io;
 }
