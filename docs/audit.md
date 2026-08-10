@@ -206,9 +206,9 @@ API
 
 **Impacto:** pode competir com start, voto, pick ou outra saída; falha intermediária deixa jogador removido com seleção parcialmente ativa, ou lobby vazia ainda waiting.
 
-**Decisão:** mover toda saída/reset/cancelamento automático para uma transação com lock da lobby e jogadores.
+**Decisão:** toda saída/reset/cancelamento automático é executada em uma transação que adquire primeiro o lock da lobby. Remoção, limpeza de seleção, contagem, reset de ready e cancelamento usam o mesmo executor.
 
-**Status:** Pending — crítico.
+**Status:** Resolvido — coberto por testes de duas saídas concorrentes, corrida leave/start e rollback provocado durante a limpeza.
 
 **Problema:** `changeTeam`, `setReady`, `setUnready` e `cancel` fazem check-then-update sem lock/transação.
 
@@ -240,7 +240,7 @@ API
 
 **Status:** Pending — médio.
 
-**Testabilidade:** `LobbiesService` concentra mais de 800 linhas, SQL, relógio, aleatoriedade, autorização, projeção e eventos. `Math.random`, `new Date` e repositories concretos dificultam testes determinísticos/unitários. A suíte cobre concorrência principal, random e draft, mas não duas saídas/trocas/ready simultâneos, cancel versus start, votos concorrentes de método/consenso, timeout real e falhas entre statements.
+**Testabilidade:** `LobbiesService` ainda concentra SQL, relógio, aleatoriedade, autorização, projeção e eventos. `Math.random`, `new Date` e repositories concretos dificultam testes determinísticos/unitários. A suíte cobre concorrência principal, random, draft, duas saídas simultâneas, leave versus start e rollback da saída; ainda faltam trocas/ready simultâneos, cancel versus start, votos concorrentes de método/consenso e timeout real.
 
 ### Matches
 

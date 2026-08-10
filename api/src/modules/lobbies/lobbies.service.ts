@@ -7,6 +7,7 @@ import { LobbiesRepository } from "./lobbies.repository";
 import { CreateLobbyDTO } from "./lobbies.types";
 import { db } from "../../database/connection";
 import type { PoolClient } from "pg";
+import { FindOptions } from "../../@types/shared/FindOptions";
 export class LobbiesService {
     private lobbiesRepository = new LobbiesRepository();
     private leaguesRepository = new LeaguesRepository();
@@ -524,52 +525,44 @@ export class LobbiesService {
         return player;
     }
     async leaveLobby(lobbyId: string | undefined, userId: string | undefined, leagueId?: string) {
-        if (!userId) {
-            throw new AppError("User not found", 401);
+        if (!userId || !lobbyId || !leagueId) throw new AppError("Invalid request", 400);
+
+        const client = await db.connect();
+        let committedLobby;
+
+        try {
+            await client.query("BEGIN");
+            const options = { executor: client, lock: "update" } satisfies FindOptions;
+            const lobby = await this.lobbiesRepository.findById(lobbyId, options);
+
+            if (!lobby || lobby.leagueId !== leagueId) throw new AppError("Lobby not found", 404);
+            if (lobby.status !== "waiting") throw new AppError("Lobby is not accepting changes", 409);
+
+            const player = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId, options);
+            if (!player) throw new AppError("Player not found", 404);
+
+            await this.lobbiesRepository.removePlayer(lobbyId, userId, options);
+            await this.lobbiesRepository.resetTeamSelection(lobbyId, options);
+
+            const remainingPlayers = await this.lobbiesRepository.getLobbyPlayers(lobbyId, options);
+            if (remainingPlayers.length === 0) {
+                await this.lobbiesRepository.updateStatus(lobbyId, "cancelled", options);
+            } else {
+                await this.lobbiesRepository.resetReady(lobbyId, options);
+            }
+
+            await client.query("COMMIT");
+            committedLobby = lobby;
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
         }
-        if (!lobbyId) {
-            throw new AppError("Lobby no found", 401);
-        }
-        const lobby = await this.lobbiesRepository.findById(lobbyId);
-        if (!lobby) {
-            throw new AppError("Lobby not found");
-        }
-        if (lobby.leagueId !== leagueId)
-            throw new AppError("Lobby not found", 404);
-        if (lobby.status !== "waiting") {
-            throw new AppError("Lobby is not accepting changes", 409);
-        }
-        const player = await this.lobbiesRepository.findPlayerInLobby(lobby.id, userId);
-        if (!player) {
-            throw new AppError("Player not found", 401);
-        }
-        await this.lobbiesRepository.removePlayer(lobbyId, userId);
-        await db.query("DELETE FROM lobby_team_selection_votes WHERE lobby_id=$1", [lobby.id]);
-        await db.query("DELETE FROM lobby_team_confirmation_votes WHERE lobby_id=$1", [lobby.id]);
-        await db.query("DELETE FROM lobby_captain_votes WHERE lobby_id=$1", [lobby.id]);
-        await db.query("DELETE FROM lobby_draft_picks WHERE lobby_id=$1", [lobby.id]);
-        await db.query(`UPDATE lobbies SET team_selection_mode=NULL, team_selection_completed=false,
-      draft_captain_1=NULL,draft_captain_2=NULL,draft_pick_index=0,team_selection_round=0,captain_vote_ends_at=NULL WHERE id=$1`, [lobby.id]);
-        const players = await this.lobbiesRepository.getLobbyPlayers(lobby.id);
-        if (players.length === 0) {
-            await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
-            SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
-                leagueId: lobby.leagueId,
-                lobbyId: lobby.id,
-            });
-            SocketEmitter.emitToLeague(lobby.leagueId, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
-                leagueId: lobby.leagueId,
-            });
-            return;
-        }
-        await this.lobbiesRepository.resetReady(lobby.id);
-        SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
-            leagueId: lobby.leagueId,
-            lobbyId: lobby.id,
-        });
-        SocketEmitter.emitToLeague(lobby.leagueId, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
-            leagueId: lobby.leagueId,
-        });
+
+        SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.LOBBY_UPDATE, { leagueId, lobbyId });
+        SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, { leagueId });
+        return committedLobby;
     }
     async cancel(lobbyId: string | undefined, leagueId: string | undefined, userId: string | undefined) {
         if (!userId) {

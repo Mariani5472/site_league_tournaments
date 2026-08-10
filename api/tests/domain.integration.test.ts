@@ -144,6 +144,60 @@ describe("critical domain flows", { concurrency: false }, () => {
         await lobbies.cancel(lobby.id, league.id, ids[0]);
         assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
     });
+    test("two concurrent leaves serialize and cancel an empty lobby", async () => {
+        const league = await createLeague(4);
+        await leagues.join(league.id, ids[1]);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+        await lobbies.joinLobby(lobby.id, ids[0], league.id);
+        await lobbies.joinLobby(lobby.id, ids[1], league.id);
+
+        const results = await Promise.allSettled([
+            lobbies.leaveLobby(lobby.id, ids[0], league.id),
+            lobbies.leaveLobby(lobby.id, ids[1], league.id),
+        ]);
+
+        assert.equal(results.filter(result => result.status === "fulfilled").length, 2);
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total), 0);
+        assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
+    });
+    test("leave rolls back player removal when selection cleanup fails", async () => {
+        const league = await createLeague(4);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+        await lobbies.joinLobby(lobby.id, ids[0], league.id);
+        await db.query("INSERT INTO lobby_team_selection_votes (lobby_id,user_id,mode) VALUES ($1,$2,'random')", [lobby.id, ids[0]]);
+        await db.query(`CREATE OR REPLACE FUNCTION reject_leave_reset() RETURNS trigger AS $$
+            BEGIN RAISE EXCEPTION 'forced leave reset failure'; END; $$ LANGUAGE plpgsql`);
+        await db.query("CREATE TRIGGER reject_leave_reset BEFORE UPDATE ON lobbies FOR EACH ROW EXECUTE FUNCTION reject_leave_reset() ");
+
+        await assert.rejects(() => lobbies.leaveLobby(lobby.id, ids[0], league.id), /forced leave reset failure/);
+
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total), 1);
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_team_selection_votes WHERE lobby_id=$1", [lobby.id])).rows[0].total), 1);
+        await db.query("DROP TRIGGER reject_leave_reset ON lobbies");
+        await db.query("DROP FUNCTION reject_leave_reset()");
+    });
+    test("leave racing start produces either a complete start or a complete leave", async () => {
+        const league = await createLeague(4);
+        await leagues.join(league.id, ids[1]);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+        await lobbies.joinLobby(lobby.id, ids[0], league.id);
+        await lobbies.joinLobby(lobby.id, ids[1], league.id);
+        await lobbies.setReady(lobby.id, ids[0], league.id);
+        await lobbies.setReady(lobby.id, ids[1], league.id);
+
+        await Promise.allSettled([
+            lobbies.start(lobby.id, league.id, ids[0]),
+            lobbies.leaveLobby(lobby.id, ids[1], league.id),
+        ]);
+
+        const state = (await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status;
+        const playerCount = Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total);
+        const matchCount = Number((await db.query("SELECT COUNT(*) total FROM matches WHERE lobby_id=$1", [lobby.id])).rows[0].total);
+        assert.ok(
+            (state === "in_game" && playerCount === 2 && matchCount === 1) ||
+            (state === "waiting" && playerCount === 1 && matchCount === 0)
+        );
+    });
     test("a 5x5 lobby selects random teams only after an absolute majority", async () => {
         const league = await createLeague(10);
         for (const id of ids.slice(1))
