@@ -411,12 +411,11 @@ Não há store global além de AuthContext; estado servidor está corretamente n
 
 ### Coberto hoje
 
-Os 19 testes de integração cobrem políticas de entrada, capacidade/concorrência da liga, requests, roles/ownership, update schema, última vaga/duas lobbies, estados básicos de lobby, seleção random, player picks, IDs aninhados, snapshot/votação/finalização simultânea, resolução administrativa, standings, IDOR principal, room join e auth sync.
+Os testes de integração cobrem políticas de entrada, capacidade/concorrência da liga, requests, roles/ownership, update schema, última vaga/duas lobbies, estados básicos de lobby, seleção random, player picks, IDs aninhados, snapshot/votação/finalização simultânea, resolução administrativa, standings, IDOR principal, revogação realtime e auth sync. A suíte HTTP sobe a aplicação Express completa e cobre autenticação, Zod, contratos 400/401/403/404/409/500, profiles, ausência de `/users` público, ligas, members privados, requests, lobbies, matches e tradução de erros SQL.
 
 ### Não coberto ou insuficiente
 
-- Controllers, schemas e códigos HTTP fim a fim com servidor real.
-- `/users` público e listagem de membros de liga privada.
+- Casos HTTP menos frequentes, como todos os filtros de query, payload acima do limite e CORS por origem.
 - Cadastro admin concorrente/capacidade/múltiplos owners.
 - Leave/cancel/change-team/ready concorrentes e rollback intermediário.
 - Socket.IO real: handshake, reconnect, revogação de room, múltiplas abas e erros async.

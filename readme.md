@@ -26,7 +26,7 @@ O banco local usa `admin/admin`, database `lol_tournament`, host `postgres` dent
 
 Na pasta `api`: `npm run typecheck`, `npm run build` e `npm run migrate:up`.
 
-Os testes críticos usam um PostgreSQL isolado. Crie um banco de teste, configure `DATABASE_URL` para ele, aplique as migrations e execute `npm run test:integration`. Nunca aponte esse comando para o banco de produção, pois a suíte limpa suas tabelas entre cenários.
+Os testes críticos usam um PostgreSQL isolado. Crie um banco de teste, configure `DATABASE_URL` para ele, aplique as migrations e execute `npm run test:integration`. O comando executa testes de domínio, contratos HTTP com a aplicação Express real e transporte Socket.IO real. Nunca o aponte para produção, pois cada cenário limpa as tabelas. O workflow `api-tests.yml` reproduz esse processo no CI.
 
 Na pasta `web`: `npm run lint` e `npm run build`.
 
