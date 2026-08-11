@@ -91,7 +91,18 @@ async function createLeague(ownerId = ids[0], overrides: Record<string, unknown>
 
 describe("HTTP API contracts", { concurrency: false }, () => {
     test("health works and public user creation remains unavailable", async () => {
-        assert.equal((await request("/health")).status, 200);
+        const address = server.address();
+        assert.ok(address && typeof address !== "string");
+        const correlation = "integration-health-123";
+        const live = await fetch(`http://127.0.0.1:${address.port}/health/live`, {
+            headers: { "x-request-id": correlation }
+        });
+        assert.equal(live.status, 200);
+        assert.equal(live.headers.get("x-request-id"), correlation);
+        assert.equal((await request("/health/ready")).status, 200);
+        const metrics = await (await request("/metrics")).text();
+        assert.match(metrics, /http_requests_total/);
+        assert.match(metrics, /socket_connections_active/);
         assert.equal((await request("/users", {
             method: "POST",
             body: { id: randomUUID(), email: "public@test.local", nickname: "public" }

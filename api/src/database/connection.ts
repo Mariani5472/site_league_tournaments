@@ -1,4 +1,6 @@
 import { Pool, type PoolClient, type QueryResult } from "pg";
+import { observabilityContext } from "../observability/context";
+import { logger } from "../observability/logger";
 
 function camelCaseKey(key: string) {
   return key.replace(/_([a-z0-9])/g, (_, character: string) => character.toUpperCase());
@@ -19,6 +21,15 @@ function camelCaseResult<T extends QueryResult>(result: T): T {
 }
 
 function executeCamelCaseQuery(query: (...args: any[]) => any, args: any[]) {
+  const startedAt = performance.now();
+  const logFailure = (error: unknown) => logger.error({
+    databaseError: error instanceof Error
+      ? { name: error.name, message: error.message, code: "code" in error ? error.code : undefined }
+      : { name: "UnknownError" },
+    ...observabilityContext(),
+    operation: "database.query",
+    durationMs: Math.round(performance.now() - startedAt)
+  }, "database query failed");
   let callbackIndex = -1;
   for (let index = args.length - 1; index >= 0; index -= 1) {
     if (typeof args[index] === "function") {
@@ -29,12 +40,17 @@ function executeCamelCaseQuery(query: (...args: any[]) => any, args: any[]) {
 
   if (callbackIndex === args.length - 1) {
     const callback = args[callbackIndex];
-    args[callbackIndex] = (error: Error | null, result?: QueryResult) =>
+    args[callbackIndex] = (error: Error | null, result?: QueryResult) => {
+      if (error) logFailure(error);
       callback(error, result ? camelCaseResult(result) : result);
+    };
     return query(...args);
   }
 
-  return Promise.resolve(query(...args)).then(camelCaseResult);
+  return Promise.resolve(query(...args)).then(camelCaseResult).catch(error => {
+    logFailure(error);
+    throw error;
+  });
 }
 
 function wrapClient(client: PoolClient): PoolClient {

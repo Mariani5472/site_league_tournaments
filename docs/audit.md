@@ -280,6 +280,8 @@ API
 
 ## Middlewares, erros e observabilidade
 
+**Status de observabilidade:** correlation ID validado/gerado na entrada HTTP é propagado por contexto assíncrono até logs e sinais Socket.IO. Logs autenticados carregam `userId` e emissões carregam operação e IDs de liga/lobby sem PII textual. Liveness e readiness foram separadas, e `/metrics` expõe volume/duração HTTP, erros por status, sockets ativos e sinais realtime. Semântica e finalidade estão documentadas em `docs/observability.md`.
+
 - `authMiddleware` valida token no Supabase a cada request; correto para revogação, mas adiciona dependência/latência externa em todas as chamadas.
 - `errorMiddleware` padroniza `AppError`, Zod, `23505`, `23503` e `23514` no envelope `{ status, code, message }`, sem expor detalhes do PostgreSQL. Timeout/conexão continuam como `500 INTERNAL_ERROR` observável nos logs.
 - `AppError` exige status explícito; fluxos de domínio conhecidos não usam mais `Error` genérico. O contrato está documentado em `docs/error-contract.md` e coberto pelos testes HTTP.

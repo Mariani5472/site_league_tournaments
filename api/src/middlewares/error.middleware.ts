@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/AppError";
 import { ZodError } from "zod";
+import { observabilityContext } from "../observability/context";
 export function errorMiddleware(error: unknown, request: Request, response: Response, next: NextFunction) {
     if (error instanceof AppError) {
         return response.status(error.statusCode).json({
@@ -40,7 +41,7 @@ export function errorMiddleware(error: unknown, request: Request, response: Resp
             });
         }
     }
-    request.log?.error(error);
+    request.log?.error({ error, ...observabilityContext() }, "unexpected request failure");
     return response.status(500).json({
         status: "error",
         code: "INTERNAL_ERROR",
