@@ -45,7 +45,7 @@ API
 │   ├── auth.middleware.ts
 │   ├── socket.middleware.ts
 │   └── error.middleware.ts
-├── weboscket          (nome atual contém typo)
+├── websocket
 │   ├── socket.ts
 │   ├── socket-handlers.ts
 │   ├── emitter.ts
@@ -308,7 +308,7 @@ API
 
 **Status:** Resolvido — joins/leaves usam wrapper uniforme, ack `{ ok, error }`, fallback `socket:error` e captura de falhas inesperadas sem rejection não tratada.
 
-**Problema:** `matches.socket.ts` existe, mas não é registrado em `socket-handlers.ts`; atualizações de match são emitidas apenas para room da liga.
+**Decisão:** o arquivo vazio `matches.socket.ts` foi removido. Partidas não possuem comandos inbound próprios no transporte; mutations continuam no REST e os services emitem invalidações de match para rooms autorizadas de liga/lobby. `socket-handlers.ts` registra somente handlers inbound reais de liga e lobby.
 
 **Impacto:** arquitetura nominal e comportamento divergem; manutenção pode presumir handler inexistente.
 
@@ -371,7 +371,9 @@ WEB
 
 **Responsabilidade:** composição e navegação. Há estados de loading/erro/vazio nas páginas principais.
 
-**Problemas:** `LeaguePage` dispara queries de membros/lobbies antes de a query da liga confirmar acesso. Settings decide permissão a partir de dados client-side e durante falhas pode redirecionar como se não fosse admin. Parte significativa dos textos contém mojibake no próprio fonte (`NÃ£o`, `capitÃ£o`, etc.). Não há rota/página dedicada de detalhes da partida; votação fica acoplada à lobby.
+**Qualidade textual:** resolvido — fontes do frontend foram verificados como UTF-8 válido e não contêm mais sequências mojibake (`Ã`, `Â`) nem caracteres de substituição.
+
+**Problemas restantes:** `LeaguePage` dispara queries de membros/lobbies antes de a query da liga confirmar acesso. Settings decide permissão a partir de dados client-side e durante falhas pode redirecionar como se não fosse admin. Não há rota/página dedicada de detalhes da partida; votação fica acoplada à lobby.
 
 **Testabilidade:** existe harness determinístico com Router, QueryClient e Auth, além de regressões de rotas protegidas, estados de `LeaguePage`, permissões, lobby/ready/seleção, votação e lifecycle de autenticação/cache. Componentes ainda dependem diretamente de hooks/services, isolados com mocks nos testes de comportamento.
 

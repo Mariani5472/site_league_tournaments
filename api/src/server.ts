@@ -1,7 +1,7 @@
 import "dotenv/config";
 import http from "http";
 import { app } from "./app";
-import { initializeSocket } from "./weboscket/socket";
+import { initializeSocket } from "./websocket/socket";
 import { CaptainElectionWorker } from "./modules/lobbies/captain-election.worker";
 const server = http.createServer(app);
 initializeSocket(server);

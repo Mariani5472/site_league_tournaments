@@ -3,8 +3,8 @@ import { LeagueJoinRequestsRepository } from "./league-join-requests.repository"
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
 import { LeaguesRepository } from "../leagues/leagues.repository";
-import { SocketEmitter } from "../../weboscket/emitter";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SocketEmitter } from "../../websocket/emitter";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
 export class LeagueJoinRequestsService {

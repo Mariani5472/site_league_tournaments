@@ -5,7 +5,7 @@ import { after, before, beforeEach, describe, test } from "node:test";
 import { app } from "../src/app";
 import { db } from "../src/database/connection";
 import { setHttpAuthenticatorForTests } from "../src/middlewares/auth.middleware";
-import { initializeSocket } from "../src/weboscket/socket";
+import { initializeSocket } from "../src/websocket/socket";
 import { AppError } from "../src/utils/AppError";
 
 const ids = Array.from({ length: 6 }, (_, index) =>
