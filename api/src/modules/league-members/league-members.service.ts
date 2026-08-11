@@ -2,12 +2,12 @@ import { AppError } from "../../utils/AppError";
 import { UsersRepository } from "../users/users.repository";
 import { LeagueMembersRepository } from "./league-members.repostitory";
 import { LeaguesRepository } from "../leagues/leagues.repository";
-import { SocketEmitter } from "../../weboscket/emitter";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SocketEmitter } from "../../websocket/emitter";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { db } from "../../database/connection";
 import { CreateLeagueMemberDTO, LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
 import { FindOptions } from "../../@types/shared/FindOptions";
-import { SocketAccess } from "../../weboscket/socket-access";
+import { SocketAccess } from "../../websocket/socket-access";
 export class LeagueMembersService {
     private readonly leagueMembersRepository = new LeagueMembersRepository();
     private readonly leaguesRepository = new LeaguesRepository();

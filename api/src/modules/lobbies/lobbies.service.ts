@@ -1,6 +1,6 @@
 import { AppError } from "../../utils/AppError";
-import { SocketEmitter } from "../../weboscket/emitter";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SocketEmitter } from "../../websocket/emitter";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { LeaguesRepository } from "../leagues/leagues.repository";
 import { LobbiesRepository } from "./lobbies.repository";

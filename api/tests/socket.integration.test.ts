@@ -6,10 +6,10 @@ import { db } from "../src/database/connection";
 import { LeagueMembersService } from "../src/modules/league-members/league-members.service";
 import { LeaguesService } from "../src/modules/leagues/leagues.service";
 import { LobbiesService } from "../src/modules/lobbies/lobbies.service";
-import { SocketActionResult } from "../src/weboscket/socket-action";
-import { SOCKET_EVENTS } from "../src/weboscket/socket-events";
-import { SocketEmitter } from "../src/weboscket/emitter";
-import { getIO, initializeSocket } from "../src/weboscket/socket";
+import { SocketActionResult } from "../src/websocket/socket-action";
+import { SOCKET_EVENTS } from "../src/websocket/socket-events";
+import { SocketEmitter } from "../src/websocket/emitter";
+import { getIO, initializeSocket } from "../src/websocket/socket";
 
 const ids = Array.from({ length: 4 }, (_, index) =>
     `30000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`

@@ -1,9 +1,9 @@
 import { Socket } from "socket.io";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { LobbiesRepository } from "./lobbies.repository";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
-import { SocketAccess } from "../../weboscket/socket-access";
-import { runSocketAction, SocketActionAck, SocketActionError } from "../../weboscket/socket-action";
+import { SocketAccess } from "../../websocket/socket-access";
+import { runSocketAction, SocketActionAck, SocketActionError } from "../../websocket/socket-action";
 export function registerLobbySocket(socket: Socket) {
     const lobbiesRepository = new LobbiesRepository();
     const leagueMembersRepository = new LeagueMembersRepository();

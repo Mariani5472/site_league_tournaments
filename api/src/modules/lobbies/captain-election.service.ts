@@ -1,8 +1,8 @@
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { Clock, systemClock } from "../../utils/Clock";
-import { SocketEmitter } from "../../weboscket/emitter";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SocketEmitter } from "../../websocket/emitter";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { LobbyTeamSelectionRepository } from "./lobby-team-selection.repository";
 
 export type CaptainElectionResult = {

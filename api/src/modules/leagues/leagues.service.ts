@@ -1,13 +1,13 @@
 import { AppError } from "../../utils/AppError";
-import { SocketEmitter } from "../../weboscket/emitter";
-import { SOCKET_EVENTS } from "../../weboscket/socket-events";
+import { SocketEmitter } from "../../websocket/emitter";
+import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { UsersRepository } from "../users/users.repository";
 import { LeaguesRepository } from "./leagues.repository";
 import { CreateLeagueDTO, ListLeaguesParams } from "./leagues.types";
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
-import { SocketAccess } from "../../weboscket/socket-access";
+import { SocketAccess } from "../../websocket/socket-access";
 export class LeaguesService {
     private usersRepository = new UsersRepository();
     private leaguesRepository = new LeaguesRepository();
