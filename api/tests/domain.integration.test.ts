@@ -19,6 +19,8 @@ import { LeagueMembersController } from "../src/modules/league-members/league-me
 import { errorMiddleware } from "../src/middlewares/error.middleware";
 import { SOCKET_EVENTS } from "../src/weboscket/socket-events";
 import { SocketEmitter } from "../src/weboscket/emitter";
+import { CaptainElectionWorker } from "../src/modules/lobbies/captain-election.worker";
+import { Clock } from "../src/utils/Clock";
 const ids = Array.from({ length: 10 }, (_, index) => `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`);
 const leagues = new LeaguesService();
 const members = new LeagueMembersService();
@@ -409,8 +411,17 @@ describe("critical domain flows", { concurrency: false }, () => {
             await lobbies.voteCaptain(lobby.id, league.id, id, ids[0]);
         for (const id of ids.slice(4))
             await lobbies.voteCaptain(lobby.id, league.id, id, ids[1]);
-        await db.query("UPDATE lobbies SET captain_vote_ends_at=current_timestamp-interval '1 second' WHERE id=$1", [lobby.id]);
-        await lobbies.finalizeCaptains(lobby.id, league.id, ids[0]);
+        await db.query(
+            "UPDATE lobbies SET captain_vote_ends_at=$2 WHERE id=$1",
+            [lobby.id, new Date(Date.now() - 1_000)]
+        );
+        const reconnectedView = await lobbies.show(ids[0], lobby.id, league.id);
+        assert.ok(reconnectedView.teamSelection?.draft);
+        assert.equal(reconnectedView.teamSelection?.captainVote, null);
+        await Promise.all([
+            lobbies.finalizeCaptains(lobby.id, league.id, ids[0]),
+            lobbies.finalizeCaptains(lobby.id, league.id, ids[1])
+        ]);
         const state = (await db.query("SELECT draft_captain_1,draft_captain_2 FROM lobbies WHERE id=$1", [lobby.id])).rows[0];
         assert.deepEqual(new Set([state.draftCaptain1, state.draftCaptain2]), new Set([ids[0], ids[1]]));
         const remaining = ids.filter(id => ![state.draftCaptain1, state.draftCaptain2].includes(id));
@@ -421,6 +432,58 @@ describe("critical domain flows", { concurrency: false }, () => {
             await lobbies.draftPick(lobby.id, league.id, captain, target);
         }
         assert.equal((await db.query("SELECT team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0].teamSelectionCompleted, true);
+    });
+    test("server clock finalizes captain election once at the persisted deadline without clients", async () => {
+        class TestClock implements Clock {
+            constructor(private current: Date) {}
+            now() { return new Date(this.current); }
+            advance(milliseconds: number) {
+                this.current = new Date(this.current.getTime() + milliseconds);
+            }
+        }
+
+        const clock = new TestClock(new Date("2030-01-01T12:00:00.000Z"));
+        const controlledLobbies = new LobbiesService(clock);
+        const league = await createLeague(10);
+        for (const id of ids.slice(1))
+            await leagues.join(league.id, id);
+        const lobby = await controlledLobbies.create(league.id, ids[0], { maxPlayers: 10 });
+        for (const id of ids)
+            await controlledLobbies.joinLobby(lobby.id, id, league.id);
+        for (const id of ids.slice(0, 6))
+            await controlledLobbies.voteTeamSelection(lobby.id, league.id, id, "player_picks");
+
+        const persistedDeadline = (await db.query(
+            "SELECT captain_vote_ends_at FROM lobbies WHERE id=$1",
+            [lobby.id]
+        )).rows[0].captainVoteEndsAt as Date;
+        assert.equal(new Date(persistedDeadline).getTime(), clock.now().getTime() + 60_000);
+
+        const beforeDeadline = new CaptainElectionWorker(clock);
+        assert.equal(await beforeDeadline.runOnce(), 0);
+        clock.advance(60_000);
+
+        const results = await Promise.all([
+            new CaptainElectionWorker(clock).runOnce(),
+            new CaptainElectionWorker(clock).runOnce()
+        ]);
+        assert.equal(results.reduce((total, result) => total + result, 0), 1);
+
+        const state = (await db.query(`
+            SELECT draft_captain_1, draft_captain_2, captain_vote_ends_at
+              FROM lobbies WHERE id=$1
+        `, [lobby.id])).rows[0];
+        assert.ok(state.draftCaptain1);
+        assert.ok(state.draftCaptain2);
+        assert.equal(state.captainVoteEndsAt, null);
+        assert.equal(Number((await db.query(
+            "SELECT COUNT(*) total FROM lobby_draft_picks WHERE lobby_id=$1",
+            [lobby.id]
+        )).rows[0].total), 2);
+
+        const reconciled = await controlledLobbies.show(ids[0], lobby.id, league.id);
+        assert.ok(reconciled.teamSelection?.draft);
+        assert.equal(reconciled.teamSelection?.captainVote, null);
     });
     test("nested lobby ids cannot be used through another league", async () => {
         const first = await createLeague(4);
