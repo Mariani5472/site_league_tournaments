@@ -9,11 +9,18 @@ import { db } from "../../database/connection";
 import type { PoolClient } from "pg";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { LobbyTeamSelectionRepository } from "./lobby-team-selection.repository";
+import { Clock, systemClock } from "../../utils/Clock";
+import { CaptainElectionService } from "./captain-election.service";
 export class LobbiesService {
     private lobbiesRepository = new LobbiesRepository();
     private leaguesRepository = new LeaguesRepository();
     private leagueMembersRepository = new LeagueMembersRepository();
     private teamSelectionRepository = new LobbyTeamSelectionRepository();
+    private readonly captainElection: CaptainElectionService;
+
+    constructor(private readonly clock: Clock = systemClock) {
+        this.captainElection = new CaptainElectionService(clock);
+    }
     private async assignTeams(client: PoolClient, lobbyId: string, leagueId: string, mode: "random" | "balanced") {
         const options = { executor: client, lock: "update" } satisfies FindOptions;
         let ids = await this.teamSelectionRepository.playerIds(lobbyId, options);
@@ -70,7 +77,8 @@ export class LobbiesService {
                 if (mode === "random" || mode === "balanced")
                     await this.assignTeams(client, lobbyId, leagueId, mode);
                 else {
-                    await this.teamSelectionRepository.startPlayerPicks(lobbyId, options);
+                    const deadline = new Date(this.clock.now().getTime() + 60_000);
+                    await this.teamSelectionRepository.startPlayerPicks(lobbyId, deadline, options);
                 }
             }
             await client.query("COMMIT");
@@ -120,6 +128,7 @@ export class LobbiesService {
         return this.show(userId, lobbyId, leagueId);
     }
     async voteCaptain(lobbyId: string, leagueId: string, userId: string, candidateId: string) {
+        await this.captainElection.finalizeIfDue(lobbyId, leagueId);
         const client = await db.connect();
         try {
             await client.query("BEGIN");
@@ -127,7 +136,7 @@ export class LobbiesService {
             const lobby = await this.teamSelectionRepository.findLobby(lobbyId, leagueId, options);
             if (!lobby)
                 throw new AppError("Lobby not found", 404);
-            if (lobby.status !== "waiting" || lobby.teamSelectionMode !== "player_picks" || lobby.draftCaptain1 || !lobby.captainVoteEndsAt || new Date(lobby.captainVoteEndsAt) <= new Date())
+            if (lobby.status !== "waiting" || lobby.teamSelectionMode !== "player_picks" || lobby.draftCaptain1 || !lobby.captainVoteEndsAt || new Date(lobby.captainVoteEndsAt) <= this.clock.now())
                 throw new AppError("Captain voting is not active", 409);
             const ids = await this.teamSelectionRepository.playerIds(lobbyId, options);
             if (!ids.includes(userId))
@@ -148,40 +157,19 @@ export class LobbiesService {
         return this.show(userId, lobbyId, leagueId);
     }
     async finalizeCaptains(lobbyId: string, leagueId: string, userId: string) {
-        const client = await db.connect();
-        try {
-            await client.query("BEGIN");
-            const options = { executor: client, lock: "update" } satisfies FindOptions;
-            const lobby = await this.teamSelectionRepository.findLobby(lobbyId, leagueId, options);
-            if (!lobby)
-                throw new AppError("Lobby not found", 404);
-            if (lobby.draftCaptain1 && lobby.draftCaptain2) {
-                await client.query("COMMIT");
-                return this.show(userId, lobbyId, leagueId);
-            }
-            if (lobby.status !== "waiting" || lobby.teamSelectionMode !== "player_picks" || !lobby.captainVoteEndsAt || new Date(lobby.captainVoteEndsAt) > new Date())
-                throw new AppError("Captain voting has not ended", 409);
-            const member = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId, options);
-            if (!member)
-                throw new AppError("Only lobby players can finalize the vote", 403);
-            const winners = await this.teamSelectionRepository.captainWinners(lobbyId, options);
-            if (winners.length !== 2)
-                throw new AppError("Lobby must have 10 players", 409);
-            const [captain1, captain2] = winners;
-            await this.teamSelectionRepository.initializeDraft(lobbyId, captain1, captain2, options);
-            await client.query("COMMIT");
-        }
-        catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        }
-        finally {
-            client.release();
-        }
-        SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.LOBBY_UPDATE, { leagueId: leagueId, lobbyId: lobbyId });
+        const lobby = await this.teamSelectionRepository.findLobby(lobbyId, leagueId);
+        if (!lobby)
+            throw new AppError("Lobby not found", 404);
+        const member = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId);
+        if (!member)
+            throw new AppError("Only lobby players can finalize the vote", 403);
+        if (!lobby.draftCaptain1 && (!lobby.captainVoteEndsAt || new Date(lobby.captainVoteEndsAt) > this.clock.now()))
+            throw new AppError("Captain voting has not ended", 409);
+        await this.captainElection.finalizeIfDue(lobbyId, leagueId);
         return this.show(userId, lobbyId, leagueId);
     }
     async draftPick(lobbyId: string, leagueId: string, userId: string, targetUserId: string) {
+        await this.captainElection.finalizeIfDue(lobbyId, leagueId);
         const sequence = [1, 2, 2, 1, 1, 2, 2, 1];
         const client = await db.connect();
         try {
@@ -259,7 +247,7 @@ export class LobbiesService {
         if (!league) {
             throw new AppError("League not found", 404);
         }
-        const lobby = await this.lobbiesRepository.findById(lobbyId);
+        let lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
             throw new AppError("Lobby not found", 404);
         }
@@ -269,6 +257,10 @@ export class LobbiesService {
         const access = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
         if (!access)
             throw new AppError("Not a league member", 403);
+        await this.captainElection.finalizeIfDue(lobbyId, leagueId);
+        lobby = await this.lobbiesRepository.findById(lobbyId);
+        if (!lobby)
+            throw new AppError("Lobby not found", 404);
         const players = await this.lobbiesRepository.getLobbyPlayers(lobbyId);
         const teamA = players.filter(player => player.teamNumber === 1);
         const teamB = players.filter(player => player.teamNumber === 2);

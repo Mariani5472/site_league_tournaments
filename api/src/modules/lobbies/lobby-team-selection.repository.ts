@@ -4,6 +4,15 @@ import { QueryOptions } from "../../@types/shared/QueryOptions";
 import { Lobby } from "./lobbies.types";
 
 export class LobbyTeamSelectionRepository {
+    async findLobbyById(lobbyId: string, options: FindOptions = {}) {
+        const { executor = db, lock } = options;
+        const result = await executor.query<Lobby>(`
+            SELECT * FROM lobbies WHERE id = $1
+            ${lock === "update" ? "FOR UPDATE" : ""}
+        `, [lobbyId]);
+        return result.rows[0] ?? null;
+    }
+
     async findLobby(lobbyId: string, leagueId: string, options: FindOptions = {}) {
         const { executor = db, lock } = options;
         const result = await executor.query<Lobby>(`
@@ -65,12 +74,12 @@ export class LobbyTeamSelectionRepository {
         return Number(result.rows[0].total);
     }
 
-    async startPlayerPicks(lobbyId: string, options: QueryOptions = {}) {
+    async startPlayerPicks(lobbyId: string, deadline: Date, options: QueryOptions = {}) {
         const { executor = db } = options;
         await executor.query(`UPDATE lobbies SET team_selection_mode='player_picks',
             team_selection_completed=false, draft_captain_1=NULL,draft_captain_2=NULL,
-            draft_pick_index=0, captain_vote_ends_at=current_timestamp + interval '60 seconds'
-            WHERE id=$1`, [lobbyId]);
+            draft_pick_index=0, captain_vote_ends_at=$2
+            WHERE id=$1`, [lobbyId, deadline]);
         await executor.query("DELETE FROM lobby_draft_picks WHERE lobby_id=$1", [lobbyId]);
         await executor.query("DELETE FROM lobby_captain_votes WHERE lobby_id=$1", [lobbyId]);
         await executor.query("UPDATE lobby_players SET is_ready=false WHERE lobby_id=$1", [lobbyId]);
@@ -109,6 +118,21 @@ export class LobbyTeamSelectionRepository {
             LEFT JOIN lobby_captain_votes cv ON cv.lobby_id=lp.lobby_id AND cv.candidate_id=lp.user_id
             WHERE lp.lobby_id=$1 GROUP BY lp.user_id ORDER BY votes DESC, random() LIMIT 2`, [lobbyId]);
         return result.rows.map(row => row.userId);
+    }
+
+    async findDueCaptainElections(now: Date, limit: number): Promise<string[]> {
+        const result = await db.query<{ id: string }>(`
+            SELECT id FROM lobbies
+            WHERE status = 'waiting'
+              AND team_selection_mode = 'player_picks'
+              AND draft_captain_1 IS NULL
+              AND draft_captain_2 IS NULL
+              AND captain_vote_ends_at IS NOT NULL
+              AND captain_vote_ends_at <= $1
+            ORDER BY captain_vote_ends_at, id
+            LIMIT $2
+        `, [now, limit]);
+        return result.rows.map(row => row.id);
     }
 
     async initializeDraft(lobbyId: string, captain1: string, captain2: string, options: QueryOptions = {}) {

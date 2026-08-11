@@ -238,7 +238,7 @@ API
 
 **Decisão:** finalização lazy no primeiro read/mutation ou job agendado no backend; servidor continua sendo relógio autoritativo.
 
-**Status:** Pending — médio.
+**Status:** Resolvido — deadline persistido calculado pelo backend, finalização lazy em reads/mutações e worker periódico recuperável. A transição usa transação e lock `FOR UPDATE`, é idempotente sob múltiplas instâncias e emite eventos apenas após commit. Decisão documentada em `docs/adr/0003-server-authoritative-captain-election-deadline.md`.
 
 **Testabilidade:** `LobbiesService` ainda concentra SQL, relógio, aleatoriedade, autorização, projeção e eventos. `Math.random`, `new Date` e repositories concretos dificultam testes determinísticos/unitários. A suíte cobre concorrência principal, random, draft, duas saídas simultâneas, leave versus start e rollback da saída; ainda faltam trocas/ready simultâneos, cancel versus start, votos concorrentes de método/consenso e timeout real.
 
@@ -418,7 +418,7 @@ Os testes de integração cobrem políticas de entrada, capacidade/concorrência
 - Casos HTTP menos frequentes, como todos os filtros de query, payload acima do limite e CORS por origem.
 - Cadastro admin concorrente/capacidade/múltiplos owners.
 - Leave/cancel/change-team/ready concorrentes e rollback intermediário.
-- Relógio de capitães e ausência de clientes.
+- Relógio de capitães e ausência de clientes: coberto com clock injetável, worker sem clientes, concorrência no deadline e reconciliação lazy em read.
 - Riot concorrente e indisponibilidade externa.
 - Frontend inteiro: componentes, hooks, navegação, cache entre usuários e acessibilidade.
 - Migração incremental versus baseline Supabase e upgrade de banco com dados reais no CI.
