@@ -254,6 +254,9 @@ describe("HTTP API contracts", { concurrency: false }, () => {
             method: "POST", userId: ids[0], body: { maxPlayers: 1 }
         })).status, 400);
         assert.equal((await request(`/leagues/${league.id}/lobbies`, {
+            method: "POST", userId: ids[0], body: { maxPlayers: 3 }
+        })).status, 400);
+        assert.equal((await request(`/leagues/${league.id}/lobbies`, {
             method: "POST", userId: ids[1], body: { maxPlayers: 2 }
         })).status, 403);
 

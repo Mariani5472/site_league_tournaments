@@ -123,7 +123,7 @@ API
 
 **Problemas:** não existe constraint `UNIQUE(user_id)` em `riot_accounts`; a proteção é somente check-then-insert no service e sofre race. Erros de conta duplicada usam `Error`, resultando em HTTP 500 em vez de conflito de domínio. Dependência opcional aumenta superfície e quantidade de estados.
 
-**Status:** Pending — médio, baixo impacto enquanto integração estiver desabilitada.
+**Status:** Resolvido — índice único em `riot_accounts.user_id`; duplicidades legadas são normalizadas deterministicamente pela migration. Violações concorrentes são traduzidas de `23505` para `409`.
 
 ### Leagues
 
@@ -250,7 +250,9 @@ API
 
 **Invariantes confirmadas:** somente participante vota; maioria absoluta; um voto por participante; voto pode mudar antes do fim; `UPDATE ... WHERE status='in_game'` impede dupla finalização; resultado e status da lobby são gravados na transação.
 
-**Problemas:** o banco não possui check para `matches.status`; a validade depende do código. `show` carrega detalhes antes de autorizar membership, sem vazamento na resposta, mas com trabalho desnecessário. `any` em `finished` e retornos SQL sem tipos reduzem garantia estática. Não existe mecanismo para partida abandonada sem voto/admin.
+**Problemas resolvidos:** `matches.status` agora possui check para `in_game`, `finished` e `cancelled`.
+
+**Problemas restantes:** `show` carrega detalhes antes de autorizar membership, sem vazamento na resposta, mas com trabalho desnecessário. `any` em `finished` e retornos SQL sem tipos reduzem garantia estática. Não existe mecanismo para partida abandonada sem voto/admin.
 
 **Testabilidade:** fluxos críticos estão bem cobertos em integração; faltam testes HTTP/schema, rollback induzido e grandes volumes de standings.
 
@@ -272,7 +274,7 @@ API
 
 **Impacto:** invariantes podem ser violadas fora do caminho feliz da aplicação.
 
-**Status:** Pending — médio/alto conforme item.
+**Status:** Resolvido — migration incremental adiciona unicidade de Riot, status de partida, time do draft e limite par de lobby entre 2 e 10. Dados recuperáveis são normalizados e ambiguidades fazem a migration falhar com segurança. Justificativas e limites deliberadamente não adicionados estão no ADR 0004.
 
 **Operação:** pool não declara timeout, limite ou política SSL no código; depende integralmente da connection string/PG defaults. Healthcheck valida banco, o que é adequado, mas uma indisponibilidade do Supabase derruba health da API.
 
