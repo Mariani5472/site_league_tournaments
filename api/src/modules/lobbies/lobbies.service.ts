@@ -224,7 +224,7 @@ export class LobbiesService {
             throw new AppError("User not found", 401);
         }
         if (!leagueId) {
-            throw new AppError("League not found", 401);
+            throw new AppError("League id is required", 400);
         }
         const league = await this.leaguesRepository.findById(leagueId);
         if (!league) {
@@ -253,7 +253,7 @@ export class LobbiesService {
             throw new AppError("Lobby not found", 401);
         }
         if (!leagueId) {
-            throw new AppError("League not found", 401);
+            throw new AppError("League not found", 404);
         }
         const league = await this.leaguesRepository.findById(leagueId);
         if (!league) {
@@ -377,7 +377,7 @@ export class LobbiesService {
         }
         const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
         if (!member) {
-            throw new AppError("Not a league member");
+            throw new AppError("Not a league member", 403);
         }
         if (!["owner", "admin"].includes(member.role)) {
             throw new AppError("Only owners and admins can create lobbies", 403);
@@ -537,14 +537,14 @@ export class LobbiesService {
             throw new AppError("User not found", 401);
         }
         if (!lobbyId) {
-            throw new AppError("Lobby no found", 401);
+            throw new AppError("Lobby id is required", 400);
         }
         if (!leagueId) {
-            throw new AppError("League no found", 401);
+            throw new AppError("League id is required", 400);
         }
         const lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
-            throw new AppError("Lobby not found");
+            throw new AppError("Lobby not found", 404);
         }
         if (lobby.leagueId !== leagueId)
             throw new AppError("Lobby not found", 404);
@@ -553,11 +553,11 @@ export class LobbiesService {
         }
         const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
         if (!member) {
-            throw new AppError("Not a league member");
+            throw new AppError("Not a league member", 403);
         }
         const allowedRoles = ["owner", "admin"];
         if (!allowedRoles.includes(member.role)) {
-            throw new AppError("Insufficient permissions");
+            throw new AppError("Insufficient permissions", 403);
         }
         await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
         SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
@@ -573,11 +573,11 @@ export class LobbiesService {
             throw new AppError("User not found", 401);
         }
         if (!lobbyId) {
-            throw new AppError("Lobby no found", 401);
+            throw new AppError("Lobby id is required", 400);
         }
         const lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
-            throw new AppError("Lobby not found");
+            throw new AppError("Lobby not found", 404);
         }
         if (lobby.leagueId !== leagueId)
             throw new AppError("Lobby not found", 404);
@@ -585,11 +585,11 @@ export class LobbiesService {
             throw new AppError("Lobby is not accepting changes", 409);
         }
         if (teamNumber && ![1, 2].includes(teamNumber)) {
-            throw new AppError("Invalid team");
+            throw new AppError("Invalid team", 400);
         }
         const player = await this.lobbiesRepository.findPlayerInLobby(lobby.id, userId);
         if (!player) {
-            throw new AppError("Player not found", 401);
+            throw new AppError("Player not found", 404);
         }
         const players = await this.lobbiesRepository.getLobbyPlayers(lobby.id);
         if (Number(lobby.maxPlayers) === 10 && players.length === 10) {
@@ -630,11 +630,11 @@ export class LobbiesService {
             throw new AppError("User not found", 401);
         }
         if (!lobbyId) {
-            throw new AppError("Lobby not found", 401);
+            throw new AppError("Lobby id is required", 400);
         }
         const lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
-            throw new AppError("Lobby not found");
+            throw new AppError("Lobby not found", 404);
         }
         if (lobby.leagueId !== leagueId)
             throw new AppError("Lobby not found", 404);
@@ -643,7 +643,7 @@ export class LobbiesService {
         }
         const player = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId);
         if (!player) {
-            throw new AppError("Player not found");
+            throw new AppError("Player not found", 404);
         }
         if (player.isReady) {
             throw new AppError("Player is already ready", 409);
@@ -667,11 +667,11 @@ export class LobbiesService {
             throw new AppError("User not found", 401);
         }
         if (!lobbyId) {
-            throw new AppError("Lobby not found", 401);
+            throw new AppError("Lobby id is required", 400);
         }
         const lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
-            throw new AppError("Lobby not found");
+            throw new AppError("Lobby not found", 404);
         }
         if (Number(lobby.maxPlayers) === 10 && !lobby.teamSelectionCompleted) {
             throw new AppError("Team selection must be completed before ready", 409);
@@ -683,7 +683,7 @@ export class LobbiesService {
         }
         const player = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId);
         if (!player) {
-            throw new AppError("Player not found");
+            throw new AppError("Player not found", 404);
         }
         if (!player.isReady) {
             throw new AppError("Player is already not ready", 409);

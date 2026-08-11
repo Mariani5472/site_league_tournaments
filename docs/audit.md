@@ -279,8 +279,8 @@ API
 ## Middlewares, erros e observabilidade
 
 - `authMiddleware` valida token no Supabase a cada request; correto para revogação, mas adiciona dependência/latência externa em todas as chamadas.
-- `errorMiddleware` padroniza `AppError`, Zod e unique violation; outras violações esperáveis (`23503`, `23514`, timeout/conexão) viram 500 genérico.
-- Há muitos `throw new AppError(...)` sem status explícito e alguns `throw new Error(...)`; respostas semelhantes variam entre 400/401/403/500.
+- `errorMiddleware` padroniza `AppError`, Zod, `23505`, `23503` e `23514` no envelope `{ status, code, message }`, sem expor detalhes do PostgreSQL. Timeout/conexão continuam como `500 INTERNAL_ERROR` observável nos logs.
+- `AppError` exige status explícito; fluxos de domínio conhecidos não usam mais `Error` genérico. O contrato está documentado em `docs/error-contract.md` e coberto pelos testes HTTP.
 - Pino remove Authorization/cookie e registra erros inesperados. Não há correlation id propagado para eventos Socket.IO nem métricas de domínio.
 - Não há rate limiting em login indireto, sync, endpoints de voto ou socket reconnect.
 

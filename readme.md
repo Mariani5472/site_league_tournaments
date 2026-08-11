@@ -45,6 +45,8 @@ Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perf
 
 Os módulos da API seguem controller → service → repository. As regras e autorização ficam no service; repositories usam queries parametrizadas. REST é a fonte da verdade e Socket.IO apenas sinaliza invalidações nas rooms `league:{id}` e `lobby:{id}`.
 
+O contrato público de falhas, incluindo códigos HTTP e tradução segura de erros PostgreSQL, está documentado em [docs/error-contract.md](docs/error-contract.md).
+
 Owners e admins criam e iniciam lobbies. A lobby precisa estar cheia, com times equilibrados e todos prontos. O início e o snapshot de `match_players` ocorrem na mesma transação. Depois da partida, apenas os participantes podem votar nos times 1 ou 2; um voto pode ser alterado até o encerramento.
 
 Cada liga possui exatamente um owner canônico. A promoção de outro membro para owner transfere a propriedade em uma transação, atualiza `leagues.owner_id` e transforma o owner anterior em admin. O owner não pode ser removido antes dessa transferência.

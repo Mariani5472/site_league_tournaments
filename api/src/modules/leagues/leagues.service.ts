@@ -160,10 +160,10 @@ export class LeaguesService {
         }
         const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
         if (!member) {
-            throw new AppError("Not a league member");
+            throw new AppError("Not a league member", 403);
         }
         if (member.role !== "owner") {
-            throw new AppError("Only owner can delete league");
+            throw new AppError("Only owner can delete league", 403);
         }
         await this.leaguesRepository.remove(leagueId);
         SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_DELETE, {
