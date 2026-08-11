@@ -1,9 +1,10 @@
-name: API tests
+name: Application tests
 
 on:
   pull_request:
     paths:
       - "api/**"
+      - "web/**"
       - ".github/workflows/api-tests.yml"
   push:
     branches: [main, firstbranch]
@@ -48,3 +49,23 @@ jobs:
         run: npm run typecheck
       - name: Domain, HTTP and Socket.IO integration tests
         run: npm run test:integration
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Frontend behavior tests
+        run: npm test
+      - name: Frontend build
+        run: npm run build
+      - name: Frontend lint
+        run: npm run lint

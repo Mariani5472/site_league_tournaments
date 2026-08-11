@@ -373,7 +373,7 @@ WEB
 
 **Problemas:** `LeaguePage` dispara queries de membros/lobbies antes de a query da liga confirmar acesso. Settings decide permissão a partir de dados client-side e durante falhas pode redirecionar como se não fosse admin. Parte significativa dos textos contém mojibake no próprio fonte (`NÃ£o`, `capitÃ£o`, etc.). Não há rota/página dedicada de detalhes da partida; votação fica acoplada à lobby.
 
-**Testabilidade:** páginas dependem diretamente de router, QueryClient, Auth e socket; não há harness/testes de UI.
+**Testabilidade:** existe harness determinístico com Router, QueryClient e Auth, além de regressões de rotas protegidas, estados de `LeaguePage`, permissões, lobby/ready/seleção, votação e lifecycle de autenticação/cache. Componentes ainda dependem diretamente de hooks/services, isolados com mocks nos testes de comportamento.
 
 ### Components
 
@@ -426,7 +426,7 @@ Os testes de integração cobrem políticas de entrada, capacidade/concorrência
 - Leave/cancel/change-team/ready concorrentes e rollback intermediário.
 - Relógio de capitães e ausência de clientes: coberto com clock injetável, worker sem clientes, concorrência no deadline e reconciliação lazy em read.
 - Riot concorrente e indisponibilidade externa.
-- Frontend inteiro: componentes, hooks, navegação, cache entre usuários e acessibilidade.
+- Frontend: a base crítica está coberta e roda no CI; ainda faltam acessibilidade abrangente, navegação mobile e fluxos secundários de formulários/settings.
 - Migração incremental versus baseline Supabase e upgrade de banco com dados reais no CI.
 
 ### Causas de baixa testabilidade
