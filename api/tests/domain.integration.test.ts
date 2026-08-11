@@ -493,6 +493,43 @@ describe("critical domain flows", { concurrency: false }, () => {
         await assert.rejects(() => lobbies.joinLobby(lobby.id, ids[1], second.id));
         await assert.rejects(() => db.query("INSERT INTO matches (lobby_id, league_id, status) VALUES ($1, $2, 'in_game')", [lobby.id, second.id]));
     });
+    test("database rejects invalid Riot, match, draft and lobby states", async () => {
+        const league = await createLeague(10);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 2 });
+
+        await db.query(`
+            INSERT INTO riot_accounts (user_id, game_name, tag_line, puuid, region)
+            VALUES ($1, 'PlayerOne', 'BR1', 'puuid-one', 'br1')
+        `, [ids[0]]);
+        await assert.rejects(
+            () => db.query(`
+                INSERT INTO riot_accounts (user_id, game_name, tag_line, puuid, region)
+                VALUES ($1, 'PlayerTwo', 'BR2', 'puuid-two', 'br1')
+            `, [ids[0]]),
+            (error: NodeJS.ErrnoException) => error.code === "23505"
+        );
+        await assert.rejects(
+            () => db.query(
+                "INSERT INTO matches (lobby_id, league_id, status) VALUES ($1, $2, 'unknown')",
+                [lobby.id, league.id]
+            ),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+        await assert.rejects(
+            () => db.query(`
+                INSERT INTO lobby_draft_picks (lobby_id, user_id, team_number, pick_number)
+                VALUES ($1, $2, 3, 0)
+            `, [lobby.id, ids[0]]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+        await assert.rejects(
+            () => db.query(`
+                INSERT INTO lobbies (league_id, status, max_players, created_by)
+                VALUES ($1, 'cancelled', 3, $2)
+            `, [league.id, ids[0]]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+    });
     test("start snapshots once; voting changes until absolute majority and finalizes once", async () => {
         const league = await createLeague(6);
         for (const id of ids.slice(1, 4))

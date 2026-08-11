@@ -28,6 +28,9 @@ create table public.riot_accounts (
   linked_at timestamp default current_timestamp
 );
 
+create unique index riot_accounts_user_id_unique
+  on public.riot_accounts (user_id);
+
 create table public.leagues (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid not null references public.users(id) on delete cascade,
@@ -64,7 +67,8 @@ create table public.lobbies (
   id uuid primary key default gen_random_uuid(),
   league_id uuid not null references public.leagues(id) on delete cascade,
   status varchar not null default 'waiting' constraint lobbies_status_check check (status in ('waiting', 'in_game', 'finished', 'cancelled')),
-  max_players integer not null,
+  max_players integer not null constraint lobbies_max_players_check
+    check (max_players between 2 and 10 and max_players % 2 = 0),
   created_by uuid not null references public.users(id),
   created_at timestamp default current_timestamp,
   team_selection_mode varchar(20) constraint lobbies_team_selection_mode_check check (team_selection_mode is null or team_selection_mode in ('random', 'balanced', 'player_picks')),
@@ -94,7 +98,8 @@ create table public.matches (
   id uuid primary key default gen_random_uuid(),
   lobby_id uuid not null references public.lobbies(id) on delete cascade,
   league_id uuid not null references public.leagues(id) on delete cascade,
-  status varchar not null default 'in_game',
+  status varchar not null default 'in_game' constraint matches_status_check
+    check (status in ('in_game', 'finished', 'cancelled')),
   started_at timestamp,
   finished_at timestamp,
   created_at timestamp default current_timestamp,
@@ -158,7 +163,8 @@ create table public.lobby_draft_picks (
   id uuid primary key default gen_random_uuid(),
   lobby_id uuid not null references public.lobbies(id) on delete cascade,
   user_id uuid not null references public.users(id) on delete cascade,
-  team_number integer not null,
+  team_number integer not null constraint lobby_draft_picks_team_check
+    check (team_number in (1, 2)),
   pick_number integer not null,
   created_at timestamp not null default current_timestamp,
   constraint unique_lobby_draft_player unique (lobby_id, user_id),
