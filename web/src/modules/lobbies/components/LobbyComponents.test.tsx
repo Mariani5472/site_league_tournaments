@@ -6,6 +6,14 @@ import { LobbyActions } from "./LobbyActions";
 import { TeamSelection } from "./TeamSelection";
 import type { LobbyDetails } from "../types/lobby.types";
 
+vi.mock("../services/lobbies.service", () => ({
+    confirmTeamSelection: vi.fn(),
+    draftPick: vi.fn(),
+    finalizeCaptains: vi.fn(),
+    voteCaptain: vi.fn(),
+    voteTeamSelection: vi.fn(),
+}));
+
 function completedLobby(): LobbyDetails {
     return {
         id: "lobby-1", leagueId: "league-1", matchId: null, status: "waiting",
