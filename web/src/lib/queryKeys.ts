@@ -9,6 +9,7 @@ export const queryKeys = {
     },
     leagues: {
         all: ["leagues"] as const,
+        discoverAll: ["leagues", "discover"] as const,
         discover: (search = "") => ["leagues", "discover", search] as const,
         mine: ["leagues", "mine"] as const,
         detail: (leagueId: string) => ["leagues", "detail", leagueId] as const,

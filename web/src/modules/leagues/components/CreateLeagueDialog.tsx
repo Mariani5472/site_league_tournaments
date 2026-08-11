@@ -21,9 +21,8 @@ export function CreateLeagueDialog({ children }: {
     const mutation = useMutation({
         mutationFn: createLeague,
         onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.leagues.all
-            });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.mine });
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.discoverAll });
             toast.success("League created successfully");
             setOpen(false);
             setName("");

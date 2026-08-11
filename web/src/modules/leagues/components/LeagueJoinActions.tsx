@@ -11,7 +11,7 @@ export function LeagueJoinActions({ league }: Props) {
     const queryClient = useQueryClient();
     const refreshLeagues = () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.leagues.mine });
-        queryClient.invalidateQueries({ queryKey: queryKeys.leagues.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.leagues.discoverAll });
         queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(league.id) });
     };
     const joinMutation = useMutation({
