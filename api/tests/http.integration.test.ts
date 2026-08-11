@@ -37,6 +37,8 @@ before(async () => {
 beforeEach(async () => {
     await db.query("DROP TRIGGER IF EXISTS force_http_500 ON users");
     await db.query("DROP FUNCTION IF EXISTS force_http_500()");
+    await db.query("DROP TRIGGER IF EXISTS force_http_check ON users");
+    await db.query("DROP FUNCTION IF EXISTS force_http_check()");
     await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, standings, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
     await seedUsers();
 });
@@ -97,7 +99,9 @@ describe("HTTP API contracts", { concurrency: false }, () => {
     });
 
     test("authentication middleware returns 401 for missing, malformed and invalid tokens", async () => {
-        assert.equal((await request("/profile")).status, 401);
+        const missing = await request("/profile");
+        assert.equal(missing.status, 401);
+        assert.equal((await missing.json() as { code: string }).code, "UNAUTHENTICATED");
 
         const address = server.address();
         assert.ok(address && typeof address !== "string");
@@ -105,7 +109,9 @@ describe("HTTP API contracts", { concurrency: false }, () => {
             headers: { authorization: "Basic value" }
         });
         assert.equal(malformed.status, 401);
-        assert.equal((await request("/profile", { token: "invalid" })).status, 401);
+        const invalid = await request("/profile", { token: "invalid" });
+        assert.equal(invalid.status, 401);
+        assert.equal((await invalid.json() as { code: string }).code, "UNAUTHENTICATED");
     });
 
     test("auth sync and profile expose their successful contracts", async () => {
@@ -122,23 +128,70 @@ describe("HTTP API contracts", { concurrency: false }, () => {
     });
 
     test("profile schemas and expected SQL errors map to 400, 409 and 500", async () => {
-        assert.equal((await request("/profile", {
+        const validation = await request("/profile", {
             method: "PATCH", userId: ids[0], body: { nickname: "x", unknown: true }
-        })).status, 400);
-        assert.equal((await request(`/profile/${randomUUID()}`, { userId: ids[0] })).status, 409);
-        assert.equal((await request("/profile", {
+        });
+        assert.equal(validation.status, 400);
+        assert.equal((await validation.json() as { code: string }).code, "VALIDATION_ERROR");
+        const missingProfile = await request(`/profile/${randomUUID()}`, { userId: ids[0] });
+        assert.equal(missingProfile.status, 404);
+        assert.equal((await missingProfile.json() as { code: string }).code, "NOT_FOUND");
+        const duplicate = await request("/profile", {
             method: "PATCH", userId: ids[0], body: { nickname: "http-user2" }
-        })).status, 409);
+        });
+        assert.equal(duplicate.status, 409);
+        assert.equal((await duplicate.json() as { code: string }).code, "CONFLICT");
 
         await db.query("CREATE FUNCTION force_http_500() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'forced'; END; $$ LANGUAGE plpgsql");
         await db.query("CREATE TRIGGER force_http_500 BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION force_http_500()");
         try {
-            assert.equal((await request("/profile", {
+            const response = await request("/profile", {
                 method: "PATCH", userId: ids[0], body: { nickname: "valid-name" }
-            })).status, 500);
+            });
+            const body = await response.text();
+            assert.equal(response.status, 500);
+            assert.equal(JSON.parse(body).code, "INTERNAL_ERROR");
+            assert.equal(body.includes("forced"), false);
+            assert.equal(body.toLowerCase().includes("stack"), false);
         } finally {
             await db.query("DROP TRIGGER force_http_500 ON users");
             await db.query("DROP FUNCTION force_http_500()");
+        }
+    });
+
+    test("PostgreSQL 23503 and 23514 use safe public error contracts", async () => {
+        const foreignKey = await request("/leagues", {
+            method: "POST",
+            userId: randomUUID(),
+            body: {
+                name: "Missing owner", visibility: "private",
+                joinPolicy: "request", maxPlayers: 4
+            }
+        });
+        const foreignKeyBody = await foreignKey.text();
+        assert.equal(foreignKey.status, 409);
+        assert.equal(JSON.parse(foreignKeyBody).code, "CONFLICT");
+        assert.equal(foreignKeyBody.includes("violates foreign key"), false);
+
+        await db.query(`
+            CREATE FUNCTION force_http_check() RETURNS trigger AS $$
+            BEGIN
+              RAISE EXCEPTION 'private check detail' USING ERRCODE = '23514';
+            END;
+            $$ LANGUAGE plpgsql
+        `);
+        await db.query("CREATE TRIGGER force_http_check BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION force_http_check()");
+        try {
+            const check = await request("/profile", {
+                method: "PATCH", userId: ids[0], body: { nickname: "valid-check-name" }
+            });
+            const checkBody = await check.text();
+            assert.equal(check.status, 400);
+            assert.equal(JSON.parse(checkBody).code, "BAD_REQUEST");
+            assert.equal(checkBody.includes("private check detail"), false);
+        } finally {
+            await db.query("DROP TRIGGER force_http_check ON users");
+            await db.query("DROP FUNCTION force_http_check()");
         }
     });
 
@@ -149,7 +202,9 @@ describe("HTTP API contracts", { concurrency: false }, () => {
             method: "POST", userId: ids[0], body: { name: "x" }
         })).status, 400);
         assert.equal((await request("/leagues/not-a-uuid", { userId: ids[0] })).status, 400);
-        assert.equal((await request(`/leagues/${randomUUID()}`, { userId: ids[0] })).status, 404);
+        const missing = await request(`/leagues/${randomUUID()}`, { userId: ids[0] });
+        assert.equal(missing.status, 404);
+        assert.equal((await missing.json() as { code: string }).code, "NOT_FOUND");
     });
 
     test("private league and member endpoints enforce authorization without data leakage", async () => {
@@ -160,6 +215,7 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         const membersResponse = await request(`/leagues/${league.id}/members`, { userId: ids[1] });
         const body = await membersResponse.text();
         assert.equal(membersResponse.status, 403);
+        assert.equal(JSON.parse(body).code, "FORBIDDEN");
         assert.equal(body.includes(ids[0]), false);
         assert.equal(body.includes("avatar"), false);
     });

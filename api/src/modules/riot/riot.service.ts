@@ -23,11 +23,11 @@ export class RiotService {
         const account = await riotClient.getAccountByRiotId(params.gameName, params.tagLine);
         const existingPuuid = await this.riotRepository.findByPuuid(account.puuid);
         if (existingPuuid) {
-            throw new Error("Riot account already linked");
+            throw new AppError("Riot account already linked", 409);
         }
         const existingUser = await this.riotRepository.findByUserId(params.userId);
         if (existingUser) {
-            throw new Error("User already linked a Riot account");
+            throw new AppError("User already linked a Riot account", 409);
         }
         const riotAccount = await this.riotRepository.create({
             userId: params.userId,
@@ -41,7 +41,7 @@ export class RiotService {
     async unlinkAccount(userId: string) {
         const account = await this.riotRepository.findByUserId(userId);
         if (!account) {
-            throw new Error("No Riot account linked");
+            throw new AppError("No Riot account linked", 404);
         }
         await this.riotRepository.deleteByUserId(userId);
     }

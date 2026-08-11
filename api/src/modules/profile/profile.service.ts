@@ -5,7 +5,7 @@ export class ProfileService {
     async show(userId: string) {
         const profile = await this.profileRepository.findById(userId);
         if (!profile) {
-            throw new AppError("Profile not found", 409);
+            throw new AppError("Profile not found", 404);
         }
         return profile;
     }
