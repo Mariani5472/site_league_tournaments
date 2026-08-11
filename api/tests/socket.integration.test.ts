@@ -192,11 +192,13 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
         const reconnect = await connect(ids[0]);
         try {
             assert.equal((await emitAck(reconnect, SOCKET_EVENTS.LEAGUE_JOIN, league.id)).ok, true);
-            const invalidation = new Promise<{ leagueId: string }>(resolve => {
+            const invalidation = new Promise<{ leagueId: string; _meta: { correlationId: string } }>(resolve => {
                 reconnect.once(SOCKET_EVENTS.LEAGUE_UPDATE, resolve);
             });
             SocketEmitter.emitToLeague(league.id, SOCKET_EVENTS.LEAGUE_UPDATE, { leagueId: league.id });
-            assert.deepEqual(await invalidation, { leagueId: league.id });
+            const payload = await invalidation;
+            assert.equal(payload.leagueId, league.id);
+            assert.match(payload._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
         } finally {
             reconnect.disconnect();
         }
