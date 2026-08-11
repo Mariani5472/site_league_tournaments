@@ -383,11 +383,13 @@ WEB
 
 **Pontos positivos:** query keys estão centralizadas e incluem league/lobby IDs; interceptor normaliza mensagem; sockets invalidam queries em vez de replicar estado.
 
-**Problemas:** invalidações amplas como `queryKeys.leagues.all` escondem dependências e podem gerar refetch excessivo. Alguns fluxos dependem de polling (match a cada 15 s) apesar de eventos. Não há cancelamento/timeout Axios explícito. A conexão socket é singleton com lifecycle fora do React. Joins agora possuem ack e, após reconnect autorizado, os hooks invalidam as queries relacionadas para reconciliar eventos perdidos.
+**Status da sessão/realtime:** resolvido. `AuthProvider` possui a inscrição Supabase e executa unsubscribe no cleanup; `SessionLifecycle` desconecta o socket, cancela queries e limpa o cache antes de logout/troca de identidade; `SocketSessionOwner` controla credenciais, connect e reconnect. As invalidações pelo prefixo raiz de ligas foram substituídas por keys específicas. Joins possuem ack e, após reconnect autorizado, os hooks invalidam as queries relacionadas para reconciliar eventos perdidos.
+
+**Problemas restantes:** alguns fluxos dependem de polling (match a cada 15 s) apesar de eventos. Não há cancelamento/timeout Axios explícito.
 
 ### Estado/query
 
-Não há store global além de AuthContext; estado servidor está corretamente no TanStack Query. Entretanto, não há política global documentada para `staleTime`, retry, logout/limpeza do cache ou isolamento de dados ao trocar de usuário no mesmo navegador. Isso pode exibir dados do usuário anterior até refetch se o cache não for limpo no logout.
+Não há store global além de AuthContext; estado servidor está corretamente no TanStack Query. A política global de `staleTime`, retry, reconnect, logout e troca de usuário está implementada no `AppProviders`/`SessionLifecycle` e documentada em `docs/frontend-session-query-realtime.md`. Testes cobrem logout, troca de conta e reconnect do socket.
 
 ## Matriz consolidada de invariantes
 
@@ -429,7 +431,7 @@ Os testes de integração cobrem políticas de entrada, capacidade/concorrência
 - SQL transacional está misturado a regra de domínio e emissão de eventos.
 - `LobbiesService` tem responsabilidades demais.
 - Tempo e aleatoriedade globais não são injetáveis.
-- Socket singleton e listener global.
+- Socket continua sendo uma única conexão compartilhada, mas agora possui owner explícito; o listener global sem unsubscribe foi removido.
 - Componentes grandes misturam renderização, timer, mutation e política.
 
 ## Decisões recomendadas para a próxima fase
