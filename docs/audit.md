@@ -228,9 +228,9 @@ API
 
 **Impacto:** a semântica de “ready” muda conforme o modo; consenso sobre times vira implicitamente consentimento para iniciar no aleatório.
 
-**Decisão:** documentar essa equivalência ou separar `teams_accepted` de `is_ready` e manter ready explícito.
+**Decisão:** `team_selection_completed` representa times aceitos/concluídos; `is_ready` é sempre uma ação individual explícita, em random, balanced e player picks.
 
-**Status:** Pending — produto/domínio.
+**Status:** Resolvido — todos os métodos deixam os jogadores unready após formar/aceitar times. Backend exige ready individual antes do start; frontend explica a etapa e mostra a contagem. Decisão documentada no ADR 0005 e coberta por testes dos três métodos.
 
 **Problema:** encerramento da votação de capitães depende de um cliente chamar `finalizeCaptains` após o cronômetro.
 

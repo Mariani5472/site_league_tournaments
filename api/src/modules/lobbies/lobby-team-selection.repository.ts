@@ -101,7 +101,7 @@ export class LobbyTeamSelectionRepository {
     async acceptRandomTeams(lobbyId: string, options: QueryOptions = {}) {
         const { executor = db } = options;
         await executor.query("UPDATE lobbies SET team_selection_completed=true WHERE id=$1", [lobbyId]);
-        await executor.query("UPDATE lobby_players SET is_ready=true WHERE lobby_id=$1", [lobbyId]);
+        await executor.query("UPDATE lobby_players SET is_ready=false WHERE lobby_id=$1", [lobbyId]);
     }
 
     async saveCaptainVote(lobbyId: string, voterId: string, candidateId: string, options: QueryOptions = {}) {

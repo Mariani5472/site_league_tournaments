@@ -396,7 +396,34 @@ describe("critical domain flows", { concurrency: false }, () => {
             await lobbies.confirmRandomTeams(lobby.id, league.id, id, "accept");
         const accepted = (await db.query("SELECT team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0];
         assert.equal(accepted.teamSelectionCompleted, true);
-        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready", [lobby.id])).rows[0].total), 10);
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready", [lobby.id])).rows[0].total), 0);
+        await lobbies.setReady(lobby.id, ids[0], league.id);
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready", [lobby.id])).rows[0].total), 1);
+        await lobbies.setUnready(lobby.id, ids[0], league.id);
+        assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready", [lobby.id])).rows[0].total), 0);
+    });
+    test("balanced team completion still requires explicit ready from every player", async () => {
+        const league = await createLeague(10);
+        for (const id of ids.slice(1))
+            await leagues.join(league.id, id);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 10 });
+        for (const id of ids)
+            await lobbies.joinLobby(lobby.id, id, league.id);
+        for (const id of ids.slice(0, 6))
+            await lobbies.voteTeamSelection(lobby.id, league.id, id, "balanced");
+
+        const selected = (await db.query(
+            "SELECT team_selection_completed FROM lobbies WHERE id=$1",
+            [lobby.id]
+        )).rows[0];
+        assert.equal(selected.teamSelectionCompleted, true);
+        assert.equal(Number((await db.query(
+            "SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready",
+            [lobby.id]
+        )).rows[0].total), 0);
+
+        await lobbies.setReady(lobby.id, ids[0], league.id);
+        assert.equal((await lobbies.show(ids[0], lobby.id, league.id)).readyCount, 1);
     });
     test("player picks follows the 1-2-2 snake draft and only the active captain can pick", async () => {
         const league = await createLeague(10);
@@ -432,6 +459,12 @@ describe("critical domain flows", { concurrency: false }, () => {
             await lobbies.draftPick(lobby.id, league.id, captain, target);
         }
         assert.equal((await db.query("SELECT team_selection_completed FROM lobbies WHERE id=$1", [lobby.id])).rows[0].teamSelectionCompleted, true);
+        assert.equal(Number((await db.query(
+            "SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1 AND is_ready",
+            [lobby.id]
+        )).rows[0].total), 0);
+        await lobbies.setReady(lobby.id, state.draftCaptain1, league.id);
+        assert.equal((await lobbies.show(state.draftCaptain1, lobby.id, league.id)).readyCount, 1);
     });
     test("server clock finalizes captain election once at the persisted deadline without clients", async () => {
         class TestClock implements Clock {
