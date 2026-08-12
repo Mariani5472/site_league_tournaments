@@ -22,6 +22,8 @@ Requisitos: Docker Desktop com Compose e um projeto Supabase para autenticação
 
 As migrations incrementais em `api/migrations` são a fonte canônica do schema. Consulte [docs/migrations.md](docs/migrations.md) para criação de mudanças, banco novo, upgrade e verificação da baseline Supabase.
 
+Bancos Supabase legados que possuem tabelas mas não possuem `public.pgmigrations` não devem receber `migrate:up` diretamente. O procedimento de comparação e adoção transacional do histórico também está em [docs/migrations.md](docs/migrations.md#adoção-segura-de-banco-legado-sem-pgmigrations).
+
 Releases de staging e produção aplicam migrations antes do deploy, bloqueiam a liberação em caso de falha e registram o SHA implantado. Configuração, operação e rollback estão em [docs/release-and-rollback.md](docs/release-and-rollback.md).
 
 O Compose é exclusivo para desenvolvimento local. Ele sobrescreve explicitamente qualquer `DATABASE_URL` presente em `api/.env` com `postgresql://admin:admin@postgres:5432/lol_tournament`. Portanto, a API e comandos como `docker compose exec api npm run migrate:up` sempre usam o serviço `postgres`; uma URL remota deixada por engano em `api/.env` não é usada pelo container.
