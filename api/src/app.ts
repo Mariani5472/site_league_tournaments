@@ -10,7 +10,9 @@ import { correlationMiddleware, observabilityContext } from "./observability/con
 import { logger } from "./observability/logger";
 import { httpMetricsMiddleware, prometheusMetrics } from "./observability/metrics";
 import { trackHttpOperation } from "./lifecycle/http-operations";
+import { createHttpRateLimitMiddleware } from "./rate-limit/http-rate-limit";
 export const app = express();
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? (process.env.NODE_ENV === "production" ? 1 : 0)));
 app.use(trackHttpOperation);
 app.use(correlationMiddleware);
 app.use(pinoHttp({
@@ -19,6 +21,7 @@ app.use(pinoHttp({
     customProps: () => observabilityContext() ?? {}
 }));
 app.use(httpMetricsMiddleware);
+app.use(createHttpRateLimitMiddleware());
 app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(helmet());
 app.use(express.json({ limit: "100kb" }));

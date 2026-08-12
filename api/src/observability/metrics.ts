@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 const requests = new Map<string, number>();
 const durations = new Map<string, { count: number; sum: number }>();
 const realtimeEvents = new Map<string, number>();
+const rateLimitRejections = new Map<string, number>();
 let activeSockets = 0;
 
 function increment(map: Map<string, number>, key: string) {
@@ -25,6 +26,9 @@ export function httpMetricsMiddleware(request: Request, response: Response, next
 export function recordSocketConnected() { activeSockets += 1; }
 export function recordSocketDisconnected() { activeSockets = Math.max(0, activeSockets - 1); }
 export function recordRealtimeEvent(event: string) { increment(realtimeEvents, event); }
+export function recordRateLimitRejection(surface: "http_ip" | "http_user" | "socket_connection" | "socket_event") {
+    increment(rateLimitRejections, surface);
+}
 
 export function prometheusMetrics() {
     const lines = [
@@ -46,6 +50,9 @@ export function prometheusMetrics() {
         "# HELP realtime_events_total Realtime domain signals emitted by event.",
         "# TYPE realtime_events_total counter",
         ...Array.from(realtimeEvents, ([event, value]) => `realtime_events_total{event="${event}"} ${value}`),
+        "# HELP rate_limit_rejections_total Rejected operations by bounded surface.",
+        "# TYPE rate_limit_rejections_total counter",
+        ...Array.from(rateLimitRejections, ([surface, value]) => `rate_limit_rejections_total{surface="${surface}"} ${value}`),
     ];
     return `${lines.join("\n")}\n`;
 }

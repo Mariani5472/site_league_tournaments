@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { AppError } from "../utils/AppError";
 import { UserIdentity } from "../modules/users/users.types";
 import { enrichObservabilityContext } from "../observability/context";
+import { enforceHttpUserRateLimit } from "../rate-limit/http-rate-limit";
 
 export type HttpAuthenticator = (token: string) => Promise<UserIdentity>;
 
@@ -34,6 +35,7 @@ export async function authMiddleware(request: Request, response: Response, next:
     if (scheme !== "Bearer" || !token)
         throw new AppError("Invalid authorization header", 401);
     request.user = await authenticate(token);
+    if (!enforceHttpUserRateLimit(request, response)) return;
     enrichObservabilityContext({ userId: request.user.id });
     request.log = request.log.child({ requestId: request.requestId, userId: request.user.id });
     return next();
