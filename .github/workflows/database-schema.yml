@@ -37,6 +37,7 @@ jobs:
       PGPASSWORD: postgres
       CANONICAL_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_canonical
       BASELINE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_baseline
+      UPGRADE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_upgrade
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,6 +50,7 @@ jobs:
         run: |
           createdb schema_canonical
           createdb schema_baseline
+          createdb schema_upgrade
       - name: Apply canonical incremental migrations
         run: npm run migrate:up
         env:
@@ -57,6 +59,24 @@ jobs:
         run: npm run migrate:up
         env:
           DATABASE_URL: ${{ env.CANONICAL_DATABASE_URL }}
+      - name: Build previous release schema
+        shell: bash
+        run: |
+          previous=$(find migrations -maxdepth 1 -type f -name '*.js' -printf '%f\n' | sort | tail -n 2 | head -n 1 | sed 's/\.js$//')
+          test -n "$previous"
+          npx node-pg-migrate up --to "$previous"
+        env:
+          DATABASE_URL: ${{ env.UPGRADE_DATABASE_URL }}
+      - name: Verify upgrade to current release
+        run: npm run migrate:up
+        env:
+          DATABASE_URL: ${{ env.UPGRADE_DATABASE_URL }}
+      - name: Verify latest migration rollback and reapply
+        run: |
+          npm run migrate:down
+          npm run migrate:up
+        env:
+          DATABASE_URL: ${{ env.UPGRADE_DATABASE_URL }}
       - name: Apply legacy Supabase baseline
         run: psql "$BASELINE_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260805210000_initial_schema.sql
       - name: Detect structural divergence
