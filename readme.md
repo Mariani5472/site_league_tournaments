@@ -8,33 +8,35 @@ Plataforma para criar ligas e organizar partidas de League of Legends entre amig
 - Web: React, TypeScript, Vite, React Router, TanStack Query, Shadcn/UI e Socket.IO Client.
 - Infra: Docker Compose, PostgreSQL e Adminer.
 
-## Configuração
+## Ambientes e configuração
+
+### Desenvolvimento local (Docker Compose)
 
 Requisitos: Docker Desktop com Compose e um projeto Supabase para autenticação.
 
 1. Copie `api/.env.example` para `api/.env` e `web/.env.example` para `web/.env`.
-2. Preencha URL e chave publicável do Supabase. Credenciais Riot não são necessárias.
+2. Preencha URL e chave publicável do Supabase. Credenciais Riot não são necessárias. Não use `api/.env.production.example` neste fluxo.
 3. Execute `docker compose up --build`.
 4. Em outro terminal, execute `docker compose exec api npm run migrate:up`.
 5. Abra `http://localhost:5173`. Adminer fica em `http://localhost:8080`.
 
 As migrations incrementais em `api/migrations` são a fonte canônica do schema. Consulte [docs/migrations.md](docs/migrations.md) para criação de mudanças, banco novo, upgrade e verificação da baseline Supabase.
 
-O banco local usa `admin/admin`, database `lol_tournament`, host `postgres` dentro do Compose.
+O Compose é exclusivo para desenvolvimento local. Ele sobrescreve explicitamente qualquer `DATABASE_URL` presente em `api/.env` com `postgresql://admin:admin@postgres:5432/lol_tournament`. Portanto, a API e comandos como `docker compose exec api npm run migrate:up` sempre usam o serviço `postgres`; uma URL remota deixada por engano em `api/.env` não é usada pelo container.
 
-## Desenvolvimento e validação
+### Testes
 
 Na pasta `api`: `npm run typecheck`, `npm run build` e `npm run migrate:up`.
 
-Os testes críticos usam um PostgreSQL isolado. Crie um banco de teste, configure `DATABASE_URL` para ele, aplique as migrations e execute `npm run test:integration`. O comando executa testes de domínio, contratos HTTP com a aplicação Express real e transporte Socket.IO real. Nunca o aponte para produção, pois cada cenário limpa as tabelas. O workflow `api-tests.yml` reproduz esse processo no CI.
+Os testes críticos usam um PostgreSQL isolado, diferente dos bancos local e de produção. Crie um banco descartável, configure `DATABASE_URL` no ambiente do processo de teste, aplique as migrations e execute `npm run test:integration`. O comando executa testes de domínio, contratos HTTP com a aplicação Express real e transporte Socket.IO real. Nunca o aponte para produção, pois cada cenário limpa as tabelas. O workflow `api-tests.yml` usa `api_test` em um PostgreSQL efêmero e reproduz esse processo no CI.
 
 Na pasta `web`: `npm run lint` e `npm run build`.
 
 Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perfis locais idempotentes. Esses UUIDs não criam identidades no Supabase; para testar login completo, use contas de desenvolvimento correspondentes no projeto de autenticação.
 
-## Produção e operação
+### Produção e operação
 
-- Defina `NODE_ENV=production`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` e `LOG_LEVEL`. Em produção, a API se recusa a iniciar sem `CORS_ORIGINS`.
+- Não use `docker-compose.yml` em produção. Use `api/.env.production.example` apenas como referência e injete `NODE_ENV=production`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` e `LOG_LEVEL` pela plataforma de deploy ou gerenciador de segredos. O `render.yaml`, por exemplo, declara `DATABASE_URL` como valor externo (`sync: false`) e não fixa host local. Em produção, a API se recusa a iniciar sem `CORS_ORIGINS`.
 - `CORS_ORIGINS` aceita origens exatas separadas por vírgula e é compartilhado pelo Express e Socket.IO. Não use `*` com autenticação.
 - Logs HTTP são estruturados e removem `Authorization` e cookies. Use `LOG_LEVEL=info` normalmente e `warn` quando a plataforma de observabilidade já registrar acessos.
 - `/health` verifica API e PostgreSQL. O Compose também possui healthchecks para PostgreSQL, API, web e Adminer.
