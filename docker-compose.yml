@@ -40,6 +40,7 @@ services:
       context: ./api
       target: development
     container_name: lol_api
+    stop_grace_period: 30s
     ports:
       - "3000:3000"
     env_file:
