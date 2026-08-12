@@ -6,6 +6,7 @@ services:
     rootDir: api
     dockerfilePath: ./Dockerfile
     autoDeploy: false
+    maxShutdownDelaySeconds: 30
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

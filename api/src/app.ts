@@ -9,7 +9,9 @@ import { db } from "./database/connection";
 import { correlationMiddleware, observabilityContext } from "./observability/context";
 import { logger } from "./observability/logger";
 import { httpMetricsMiddleware, prometheusMetrics } from "./observability/metrics";
+import { trackHttpOperation } from "./lifecycle/http-operations";
 export const app = express();
+app.use(trackHttpOperation);
 app.use(correlationMiddleware);
 app.use(pinoHttp({
     logger,

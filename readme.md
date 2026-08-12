@@ -42,6 +42,7 @@ Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perf
 - `CORS_ORIGINS` aceita origens exatas separadas por vírgula e é compartilhado pelo Express e Socket.IO. Não use `*` com autenticação.
 - Logs HTTP são estruturados e removem `Authorization` e cookies. Use `LOG_LEVEL=info` normalmente e `warn` quando a plataforma de observabilidade já registrar acessos.
 - `/health` verifica API e PostgreSQL. O Compose também possui healthchecks para PostgreSQL, API, web e Adminer.
+- Em `SIGTERM`/`SIGINT`, a API interrompe o worker, fecha HTTP e Socket.IO, aguarda operações em andamento e encerra o pool PostgreSQL. `SHUTDOWN_TIMEOUT_MS` define o limite interno (25 segundos por padrão); Compose e Render concedem 30 segundos antes do encerramento externo. Reproduza a verificação isolada com `docker compose run --rm api npx tsx --test tests/shutdown.test.ts`.
 - Faça backup com `pg_dump -Fc` e restaure primeiro em outro banco com `pg_restore`; valide migrations, contagens e acesso antes de substituir qualquer banco.
 - Segredos não devem entrar no repositório. A chave Supabase usada aqui é publicável; operações administrativas exigiriam uma chave separada e nunca devem ser expostas ao frontend.
 

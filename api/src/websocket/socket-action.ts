@@ -13,24 +13,38 @@ export class SocketActionError extends Error {
     }
 }
 
+const activeSocketActions = new Set<Promise<void>>();
+
+export async function drainSocketActions() {
+    await Promise.allSettled([...activeSocketActions]);
+}
+
 export async function runSocketAction(
     socket: Socket,
     ack: SocketActionAck | undefined,
     action: () => Promise<void> | void
 ) {
-    let result: SocketActionResult;
-    try {
-        await action();
-        result = { ok: true };
-    } catch (error) {
-        result = error instanceof SocketActionError
-            ? { ok: false, error: { code: error.code, message: error.message } }
-            : { ok: false, error: { code: "INTERNAL_ERROR", message: "Realtime operation failed" } };
-    }
+    const operation = (async () => {
+        let result: SocketActionResult;
+        try {
+            await action();
+            result = { ok: true };
+        } catch (error) {
+            result = error instanceof SocketActionError
+                ? { ok: false, error: { code: error.code, message: error.message } }
+                : { ok: false, error: { code: "INTERNAL_ERROR", message: "Realtime operation failed" } };
+        }
 
-    if (typeof ack === "function") {
-        ack(result);
-    } else if (!result.ok) {
-        socket.emit(SOCKET_EVENTS.ERROR, result.error);
+        if (typeof ack === "function") {
+            ack(result);
+        } else if (!result.ok) {
+            socket.emit(SOCKET_EVENTS.ERROR, result.error);
+        }
+    })();
+    activeSocketActions.add(operation);
+    try {
+        await operation;
+    } finally {
+        activeSocketActions.delete(operation);
     }
 }
