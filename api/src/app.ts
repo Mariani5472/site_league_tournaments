@@ -11,6 +11,7 @@ import { logger } from "./observability/logger";
 import { httpMetricsMiddleware, prometheusMetrics } from "./observability/metrics";
 import { trackHttpOperation } from "./lifecycle/http-operations";
 import { createHttpRateLimitMiddleware } from "./rate-limit/http-rate-limit";
+import { createMetricsAuthMiddleware } from "./security/metrics-auth";
 export const app = express();
 app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? (process.env.NODE_ENV === "production" ? 1 : 0)));
 app.use(trackHttpOperation);
@@ -39,7 +40,7 @@ const readiness = async (_request: express.Request, response: express.Response) 
 };
 app.get("/health/ready", readiness);
 app.get("/health", readiness);
-app.get("/metrics", (_request, response) => {
+app.get("/metrics", createMetricsAuthMiddleware(), (_request, response) => {
     response.type("text/plain; version=0.0.4").send(prometheusMetrics());
 });
 app.use(routes);
