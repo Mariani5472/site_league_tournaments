@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_ref:
+        description: Commit SHA or tag to deploy
+        required: true
+        default: main
+      target:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options: [staging, production]
+      release_kind:
+        description: Normal release or application rollback
+        required: true
+        type: choice
+        options: [release, rollback]
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: release-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Migrate and deploy ${{ inputs.target }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_ref }}
+      - name: Resolve immutable release version
+        id: version
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - name: Install migration runner
+        working-directory: api
+        run: npm ci
+      - name: Apply canonical migrations
+        working-directory: api
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run migrate:up
+      - name: Trigger immutable Render deploy
+        id: deploy
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+        shell: bash
+        run: |
+          response=$(curl --fail-with-body --silent --show-error --get \
+            --data-urlencode "ref=$RELEASE_SHA" "$DEPLOY_HOOK_URL")
+          deploy_id=$(jq -er '.id' <<< "$response")
+          echo "id=$deploy_id" >> "$GITHUB_OUTPUT"
+      - name: Wait for Render deployment
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+          DEPLOY_ID: ${{ steps.deploy.outputs.id }}
+        shell: bash
+        run: |
+          for attempt in {1..120}; do
+            status=$(curl --fail-with-body --silent --show-error \
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              -H "Accept: application/json" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/$DEPLOY_ID" \
+              | jq -er '.status')
+            echo "Render deploy $DEPLOY_ID: $status"
+            case "$status" in
+              live) exit 0 ;;
+              build_failed|update_failed|canceled|deactivated) exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "Timed out waiting for Render deploy $DEPLOY_ID" >&2
+          exit 1
+      - name: Verify readiness
+        env:
+          HEALTH_URL: ${{ vars.HEALTH_URL }}
+        run: curl --fail-with-body --silent --show-error --retry 6 --retry-all-errors --retry-delay 10 "$HEALTH_URL/health"
+      - name: Register deployed version
+        uses: actions/github-script@v7
+        env:
+          RELEASE_SHA: ${{ steps.version.outputs.sha }}
+          DEPLOY_ID: ${{ steps.deploy.outputs.id }}
+          RELEASE_KIND: ${{ inputs.release_kind }}
+          TARGET: ${{ inputs.target }}
+          ENVIRONMENT_URL: ${{ vars.HEALTH_URL }}
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.RELEASE_SHA,
+              environment: process.env.TARGET,
+              auto_merge: false,
+              required_contexts: [],
+              description: `${process.env.RELEASE_KIND}: Render ${process.env.DEPLOY_ID}`,
+              transient_environment: false,
+              production_environment: false
+            });
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'success',
+              environment: process.env.TARGET,
+              environment_url: process.env.ENVIRONMENT_URL || undefined,
+              description: `Live as Render deploy ${process.env.DEPLOY_ID}`
+            });
