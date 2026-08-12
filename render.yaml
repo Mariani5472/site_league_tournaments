@@ -3,6 +3,9 @@ services:
     name: ligas-api
     runtime: docker
     plan: free
+    # Socket grants/revocations are process-local. Do not increase this value
+    # or enable autoscaling before implementing distributed revocation.
+    numInstances: 1
     rootDir: api
     dockerfilePath: ./Dockerfile
     autoDeploy: false
@@ -13,6 +16,10 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
+      - key: INSTANCE_COUNT
+        value: 1
+      - key: REALTIME_REVOCATION_MODE
+        value: local
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL

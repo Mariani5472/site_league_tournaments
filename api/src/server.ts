@@ -7,6 +7,8 @@ import { db } from "./database/connection";
 import { drainSocketActions } from "./websocket/socket-action";
 import { createGracefulShutdown } from "./lifecycle/graceful-shutdown";
 import { drainHttpOperations } from "./lifecycle/http-operations";
+import { validateTopology } from "./config/topology";
+validateTopology();
 const server = http.createServer(app);
 const io = initializeSocket(server);
 const captainElectionWorker = new CaptainElectionWorker();
