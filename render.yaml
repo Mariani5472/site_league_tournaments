@@ -28,3 +28,5 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      - key: METRICS_TOKEN
+        sync: false

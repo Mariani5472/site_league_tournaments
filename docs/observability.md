@@ -20,7 +20,15 @@ Liveness deve reiniciar processos travados. Readiness deve retirar temporariamen
 
 ## Métricas
 
-`GET /metrics` expõe formato Prometheus:
+`GET /metrics` expõe formato Prometheus e é protegido em produção. Configure `METRICS_TOKEN` como segredo longo e aleatório; o scraper deve enviar `Authorization: Bearer <METRICS_TOKEN>`. Acesso anônimo ou com token incorreto recebe `401`. A API recusa inicialização em produção sem esse segredo. Em desenvolvimento, o endpoint permanece anônimo apenas quando `METRICS_TOKEN` não está definido; definir o token ativa a mesma proteção localmente.
+
+Os endpoints públicos seguem uma política separada:
+
+- `GET /health/live` permanece anônimo e não consulta dependências;
+- `GET /health/ready` e o alias `GET /health` permanecem anônimos para healthchecks da plataforma e consultam PostgreSQL;
+- nenhum endpoint de health retorna métricas, configuração ou credenciais.
+
+As métricas disponíveis incluem:
 
 - `http_requests_total`: volume e erros por método/status;
 - `http_request_duration_seconds_sum/count`: duração média e degradação por método;
