@@ -1,76 +1,18 @@
-import { Pool, type PoolClient, type QueryResult } from "pg";
+import { Pool } from "pg";
 import { observabilityContext } from "../observability/context";
 import { logger } from "../observability/logger";
+import { instrumentPool } from "./instrumentation";
 
-function camelCaseKey(key: string) {
-  return key.replace(/_([a-z0-9])/g, (_, character: string) => character.toUpperCase());
-}
-
-function camelCaseValue(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(camelCaseValue);
-  if (value === null || typeof value !== "object" || value instanceof Date || Buffer.isBuffer(value)) return value;
-
-  return Object.fromEntries(
-    Object.entries(value).map(([key, nestedValue]) => [camelCaseKey(key), camelCaseValue(nestedValue)])
-  );
-}
-
-function camelCaseResult<T extends QueryResult>(result: T): T {
-  result.rows = result.rows.map(row => camelCaseValue(row)) as T["rows"];
-  return result;
-}
-
-function executeCamelCaseQuery(query: (...args: any[]) => any, args: any[]) {
-  const startedAt = performance.now();
-  const logFailure = (error: unknown) => logger.error({
+const logFailure = (error: unknown, startedAt: number) => logger.error({
     databaseError: error instanceof Error
       ? { name: error.name, message: error.message, code: "code" in error ? error.code : undefined }
       : { name: "UnknownError" },
     ...observabilityContext(),
     operation: "database.query",
     durationMs: Math.round(performance.now() - startedAt)
-  }, "database query failed");
-  let callbackIndex = -1;
-  for (let index = args.length - 1; index >= 0; index -= 1) {
-    if (typeof args[index] === "function") {
-      callbackIndex = index;
-      break;
-    }
-  }
+}, "database query failed");
 
-  if (callbackIndex === args.length - 1) {
-    const callback = args[callbackIndex];
-    args[callbackIndex] = (error: Error | null, result?: QueryResult) => {
-      if (error) logFailure(error);
-      callback(error, result ? camelCaseResult(result) : result);
-    };
-    return query(...args);
-  }
-
-  return Promise.resolve(query(...args)).then(camelCaseResult).catch(error => {
-    logFailure(error);
-    throw error;
-  });
-}
-
-function wrapClient(client: PoolClient): PoolClient {
-  const query = client.query.bind(client);
-  client.query = ((...args: any[]) => executeCamelCaseQuery(query, args)) as PoolClient["query"];
-  return client;
-}
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-const query = pool.query.bind(pool);
-pool.query = ((...args: any[]) => executeCamelCaseQuery(query, args)) as Pool["query"];
-
-const connect = pool.connect.bind(pool);
-pool.connect = ((callback?: (...args: any[]) => void) => {
-  if (callback) {
-    return (connect as any)((error: Error | undefined, client: PoolClient, release: () => void) =>
-      callback(error, client ? wrapClient(client) : client, release));
-  }
-
-  return (connect as any)().then(wrapClient);
-}) as Pool["connect"];
-
-export const db: Pool = pool;
+export const db: Pool = instrumentPool(
+  new Pool({ connectionString: process.env.DATABASE_URL }),
+  logFailure
+);
