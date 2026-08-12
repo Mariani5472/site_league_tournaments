@@ -5,8 +5,9 @@ import { createSocketAuthMiddleware, SocketAuthenticator } from "../middlewares/
 import { corsOrigin } from "../config/runtime";
 import { logger } from "../observability/logger";
 import { recordSocketConnected, recordSocketDisconnected } from "../observability/metrics";
+import { createSocketRateLimiters, SocketRateLimitOptions } from "../rate-limit/socket-rate-limit";
 let io: Server;
-export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthenticator) {
+export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthenticator, rateLimitOptions?: SocketRateLimitOptions) {
     io = new Server(server, {
         maxHttpBufferSize: 100000,
         cors: {
@@ -14,8 +15,11 @@ export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthen
             credentials: true,
         }
     });
+    const rateLimiters = createSocketRateLimiters(rateLimitOptions);
+    io.use(rateLimiters.connection);
     io.use(createSocketAuthMiddleware(authenticate));
     io.on("connection", socket => {
+        rateLimiters.events(socket);
         recordSocketConnected();
         logger.info({ operation: "socket.connect", userId: socket.data.user.id, socketId: socket.id }, "socket connected");
         socket.once("disconnect", reason => {
