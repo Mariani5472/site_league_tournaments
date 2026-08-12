@@ -6,6 +6,7 @@ on:
       - "api/migrations/**"
       - "api/supabase/migrations/**"
       - "api/scripts/compare-database-schemas.mjs"
+      - "api/scripts/adopt-migration-history.mjs"
       - "api/package*.json"
       - ".github/workflows/database-schema.yml"
   push:
@@ -38,6 +39,7 @@ jobs:
       CANONICAL_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_canonical
       BASELINE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_baseline
       UPGRADE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_upgrade
+      LEGACY_REFERENCE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/schema_legacy_reference
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,6 +53,7 @@ jobs:
           createdb schema_canonical
           createdb schema_baseline
           createdb schema_upgrade
+          createdb schema_legacy_reference
       - name: Apply canonical incremental migrations
         run: npm run migrate:up
         env:
@@ -60,13 +63,30 @@ jobs:
         env:
           DATABASE_URL: ${{ env.CANONICAL_DATABASE_URL }}
       - name: Build previous release schema
+        id: previous
         shell: bash
         run: |
           previous=$(find migrations -maxdepth 1 -type f -name '*.js' -printf '%f\n' | sort | tail -n 2 | head -n 1 | sed 's/\.js$//')
           test -n "$previous"
-          npx node-pg-migrate up --to "$previous"
+          echo "name=$previous" >> "$GITHUB_OUTPUT"
+          npm run migrate:up
+          npm run migrate:down
+        env:
+          DATABASE_URL: ${{ env.LEGACY_REFERENCE_DATABASE_URL }}
+      - name: Restore representative legacy schema without migration history
+        run: |
+          pg_dump "$LEGACY_REFERENCE_DATABASE_URL" --schema-only --no-owner --no-privileges \
+            --exclude-table=public.pgmigrations | psql "$UPGRADE_DATABASE_URL" -v ON_ERROR_STOP=1
+      - name: Verify legacy schema before adopting history
+        run: npm run schema:compare -- "$LEGACY_REFERENCE_DATABASE_URL" "$UPGRADE_DATABASE_URL"
+      - name: Adopt legacy migration history without replay
+        run: npm run migrate:adopt -- "${{ steps.previous.outputs.name }}"
         env:
           DATABASE_URL: ${{ env.UPGRADE_DATABASE_URL }}
+          REFERENCE_DATABASE_URL: ${{ env.LEGACY_REFERENCE_DATABASE_URL }}
+      - name: Verify adopted cutoff
+        run: |
+          test "$(psql "$UPGRADE_DATABASE_URL" -Atc 'SELECT name FROM public.pgmigrations ORDER BY id DESC LIMIT 1')" = "${{ steps.previous.outputs.name }}"
       - name: Verify upgrade to current release
         run: npm run migrate:up
         env:
@@ -81,3 +101,14 @@ jobs:
         run: psql "$BASELINE_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260805210000_initial_schema.sql
       - name: Detect structural divergence
         run: npm run schema:compare -- "$CANONICAL_DATABASE_URL" "$BASELINE_DATABASE_URL"
+      - name: Adopt current Supabase baseline history
+        shell: bash
+        run: |
+          head=$(find migrations -maxdepth 1 -type f -name '*.js' -printf '%f\n' | sort | tail -n 1 | sed 's/\.js$//')
+          npm run migrate:adopt -- "$head"
+          npm run migrate:up
+        env:
+          DATABASE_URL: ${{ env.BASELINE_DATABASE_URL }}
+          REFERENCE_DATABASE_URL: ${{ env.CANONICAL_DATABASE_URL }}
+      - name: Compare adopted upgrade with clean install
+        run: npm run schema:compare -- "$CANONICAL_DATABASE_URL" "$UPGRADE_DATABASE_URL"

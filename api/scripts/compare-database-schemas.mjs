@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const [canonicalUrl, baselineUrl] = process.argv.slice(2);
 
-if (!canonicalUrl || !baselineUrl) {
+if (fileURLToPath(import.meta.url) === path.resolve(process.argv[1] ?? "") && (!canonicalUrl || !baselineUrl)) {
   console.error("Usage: npm run schema:compare -- <canonical-database-url> <baseline-database-url>");
   process.exit(2);
 }
 
 const normalize = value => typeof value === "string"
   ? value.replaceAll("extensions.gen_random_uuid()", "gen_random_uuid()")
+      .replace(/::(?:character varying|text)(?:\[\])?/g, "")
       .replace(/\s+/g, " ")
       .replace(/\(\s+/g, "(")
       .replace(/\s+\)/g, ")")
@@ -24,7 +27,7 @@ async function rows(client, query) {
   ));
 }
 
-async function describe(databaseUrl) {
+export async function describeDatabase(databaseUrl) {
   const client = new pg.Client({ connectionString: databaseUrl });
   await client.connect();
 
@@ -95,14 +98,20 @@ async function describe(databaseUrl) {
   }
 }
 
-try {
+export async function compareDatabaseSchemas(canonicalUrl, baselineUrl) {
   const [canonical, baseline] = await Promise.all([
-    describe(canonicalUrl), describe(baselineUrl)
+    describeDatabase(canonicalUrl), describeDatabase(baselineUrl)
   ]);
   assert.deepEqual(baseline, canonical);
-  console.log("Canonical migrations and Supabase baseline are structurally equivalent.");
-} catch (error) {
-  console.error("Schema divergence detected between canonical migrations and Supabase baseline.");
-  console.error(error);
-  process.exit(1);
+}
+
+if (fileURLToPath(import.meta.url) === path.resolve(process.argv[1] ?? "")) {
+  try {
+    await compareDatabaseSchemas(canonicalUrl, baselineUrl);
+    console.log("Canonical migrations and Supabase baseline are structurally equivalent.");
+  } catch (error) {
+    console.error("Schema divergence detected between canonical migrations and Supabase baseline.");
+    console.error(error);
+    process.exit(1);
+  }
 }
