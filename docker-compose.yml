@@ -44,6 +44,9 @@ services:
       - "3000:3000"
     env_file:
       - ./api/.env
+    environment:
+      DATABASE_URL: postgresql://admin:admin@postgres:5432/lol_tournament
+      NODE_ENV: development
     volumes:
       - ./api:/app
       - /app/node_modules
