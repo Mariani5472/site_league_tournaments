@@ -48,6 +48,7 @@ Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perf
 - Limites de abuso são aplicados por IP e usuário em HTTP e por IP/evento no Socket.IO. `/health`, `/health/live` e `/health/ready` são isentos; rejeições retornam `RATE_LIMITED`, são logadas sem identificadores e incrementam `rate_limit_rejections_total`. Os limites são configurados pelas variáveis `HTTP_*_RATE_LIMIT` e `SOCKET_*_RATE_LIMIT` dos templates de ambiente.
 - A API é deliberadamente single-instance porque grants e revogações Socket.IO são locais ao processo. O Blueprint fixa uma instância e o bootstrap bloqueia escala horizontal incompatível. Consulte [docs/single-instance-realtime.md](docs/single-instance-realtime.md) antes de alterar instâncias ou autoscaling.
 - `/metrics` exige `Authorization: Bearer <METRICS_TOKEN>` em produção; o segredo é obrigatório no backend e deve ser entregue somente ao scraper. Health/live, health/ready e o alias health continuam públicos. Consulte [docs/observability.md](docs/observability.md).
+- Eventos Socket inbound validam UUID e tamanho antes de acessar repositories. Payload inválido ou acima de `SOCKET_EVENT_PAYLOAD_MAX_BYTES` recebe ack `VALIDATION_ERROR`.
 - Faça backup com `pg_dump -Fc` e restaure primeiro em outro banco com `pg_restore`; valide migrations, contagens e acesso antes de substituir qualquer banco.
 - Segredos não devem entrar no repositório. A chave Supabase usada aqui é publicável; operações administrativas exigiriam uma chave separada e nunca devem ser expostas ao frontend.
 
