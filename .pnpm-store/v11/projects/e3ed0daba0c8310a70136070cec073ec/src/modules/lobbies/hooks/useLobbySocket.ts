@@ -4,11 +4,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/services/socket";
 import { SOCKET_EVENTS } from "@/services/socket-events";
 import { queryKeys } from "@/lib/queryKeys";
+type JoinAck = { ok: true } | { ok: false; error: { code: string; message: string } };
 export function useLobbySocket(leagueId: string, lobbyId: string) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     useEffect(() => {
-        const joinLobby = () => socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId);
+        const joinLobby = () => socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId, (ack: JoinAck) => {
+            if (!ack.ok)
+                return;
+            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.lobbies.detail(leagueId, lobbyId) });
+        });
         const handleLobbyUpdate = (payload: {
             lobbyId: string;
             leagueId: string;

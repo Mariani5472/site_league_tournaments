@@ -28,7 +28,7 @@ export function LobbyActions({ currentPlayer, join, leave, ready, unready, delet
 
       {currentPlayer && (<>
           <Button variant="secondary" disabled={!isWaiting || isLoading || teamSelectionLocked} onClick={currentPlayer.isReady ? unready : ready}>
-            {currentPlayer.isReady ? "Unready" : "Ready"}
+            {currentPlayer.isReady ? "Cancelar prontidão" : "Confirmar prontidão"}
           </Button>
 
           <Button variant="outline" disabled={!isWaiting || isLoading || teamSelectionLocked} onClick={switchTeam}>

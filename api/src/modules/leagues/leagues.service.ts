@@ -8,6 +8,7 @@ import { CreateLeagueDTO, ListLeaguesParams } from "./leagues.types";
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { SocketAccess } from "../../websocket/socket-access";
+import { CursorParams } from "../../@types/shared/CursorPage";
 export class LeaguesService {
     private usersRepository = new UsersRepository();
     private leaguesRepository = new LeaguesRepository();
@@ -31,7 +32,7 @@ export class LeaguesService {
         }
         return this.leaguesRepository.listMine(user.id);
     }
-    async discover(userId: string, search?: string) {
+    async discover(userId: string, params: CursorParams & { search?: string }) {
         if (!userId) {
             throw new AppError("User not found", 401);
         }
@@ -39,7 +40,7 @@ export class LeaguesService {
         if (!user) {
             throw new AppError("User not found", 401);
         }
-        return this.leaguesRepository.discover(user.id, search);
+        return this.leaguesRepository.discover(user.id, params);
     }
     async show(leagueId: string | undefined, userId: string) {
         if (!leagueId) {

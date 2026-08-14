@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { MatchesService } from "./matches.service";
-import { leagueMatchesParamsSchema, matchParamsSchema, resolveMatchBodySchema, voteMatchBodySchema } from "./matches.schemas";
+import { leagueMatchesParamsSchema, listMatchesQuerySchema, matchParamsSchema, resolveMatchBodySchema, voteMatchBodySchema } from "./matches.schemas";
 
 export class MatchesController {
     private readonly matchesService = new MatchesService();
@@ -27,7 +27,7 @@ export class MatchesController {
 
     async list(request: Request, response: Response) {
         const { leagueId } = leagueMatchesParamsSchema.parse(request.params);
-        const matches = await this.matchesService.list(leagueId, request.user.id);
+        const matches = await this.matchesService.list(leagueId, request.user.id, listMatchesQuerySchema.parse(request.query));
         return response.json(matches);
     }
 

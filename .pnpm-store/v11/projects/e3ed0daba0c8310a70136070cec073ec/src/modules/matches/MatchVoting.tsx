@@ -5,14 +5,27 @@ import { Input } from "@/components/ui/input";
 import { getMatch, resolveMatch, voteMatch } from "./services";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
+import { useSocketConnected } from "@/hooks/useSocketConnected";
 export function MatchVoting({ matchId, canResolve }: {
     matchId: string;
     canResolve: boolean;
 }) {
     const client = useQueryClient();
+    const socketConnected = useSocketConnected();
     const [reason, setReason] = useState("");
-    const match = useQuery({ queryKey: queryKeys.matches.detail(matchId), queryFn: () => getMatch(matchId), refetchInterval: 15000 });
-    const refresh = () => { client.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) }); client.invalidateQueries({ queryKey: queryKeys.leagues.all }); };
+    const match = useQuery({
+        queryKey: queryKeys.matches.detail(matchId),
+        queryFn: () => getMatch(matchId),
+        refetchInterval: socketConnected ? false : 15_000,
+        refetchOnWindowFocus: true,
+    });
+    const refresh = (updatedMatch: typeof match.data) => {
+        client.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
+        if (updatedMatch?.leagueId) {
+            client.invalidateQueries({ queryKey: queryKeys.leagues.matches(updatedMatch.leagueId) });
+            client.invalidateQueries({ queryKey: queryKeys.leagues.standings(updatedMatch.leagueId) });
+        }
+    };
     const vote = useMutation({ mutationFn: (team: number) => voteMatch(matchId, team), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
     const resolve = useMutation({ mutationFn: (team: number) => resolveMatch(matchId, team, reason), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
     if (match.isLoading)

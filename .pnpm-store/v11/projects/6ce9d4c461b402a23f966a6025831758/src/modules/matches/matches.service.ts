@@ -5,6 +5,7 @@ import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
 import { MatchesRepository } from "./matches.repository";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
+import { CursorParams } from "../../@types/shared/CursorPage";
 export class MatchesService {
     private repository = new MatchesRepository();
     private members = new LeagueMembersRepository();
@@ -14,9 +15,9 @@ export class MatchesService {
             throw new AppError("Not a league member", 403);
         return member;
     }
-    async list(leagueId: string, userId: string) {
+    async list(leagueId: string, userId: string, pagination: CursorParams) {
         await this.requireLeagueAccess(leagueId, userId);
-        return this.repository.listByLeague(leagueId);
+        return this.repository.listByLeague(leagueId, pagination);
     }
     async standings(leagueId: string, userId: string) {
         await this.requireLeagueAccess(leagueId, userId);

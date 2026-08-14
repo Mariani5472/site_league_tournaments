@@ -13,8 +13,7 @@ export class LeaguesController {
         return response.json(leagues);
     }
     async discover(request: Request, response: Response) {
-        const { search } = discoverLeaguesQuerySchema.parse(request.query);
-        const leagues = await this.leaguesService.discover(request.user.id, search);
+        const leagues = await this.leaguesService.discover(request.user.id, discoverLeaguesQuerySchema.parse(request.query));
         return response.json(leagues);
     }
     async show(request: Request, response: Response) {

@@ -5,7 +5,7 @@ import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 export function ProtectedLayout() {
-    const { user, loading, signOut } = useAuth();
+    const { user, loading, signOut, error } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const navigate = useNavigate();
     if (loading) {
@@ -32,8 +32,14 @@ export function ProtectedLayout() {
           </div>
           
           <div className="flex items-center gap-4">
+            {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
             <span className="hidden text-sm text-muted-foreground sm:inline">{user.email}</span>
-            <Button type="button" variant="outline" size="sm" onClick={async () => { await signOut(); navigate("/", { replace: true }); }}>
+            <Button type="button" variant="outline" size="sm" disabled={loading} onClick={async () => {
+              try {
+                await signOut();
+                navigate("/", { replace: true });
+              } catch { /* AuthProvider keeps the session and exposes the blocking error. */ }
+            }}>
               <LogOut className="h-4 w-4"/>
               <span className="hidden sm:inline">Logout</span>
             </Button>

@@ -27,6 +27,8 @@ export type LeagueJoinRequest = {
 export type ListLeagueJoinRequestsParams = {
     status?: string[];
     search?: string;
+    cursor?: string;
+    limit: number;
 };
 export type LeagueJoinRequestsDTO = {
     leagueId: string;

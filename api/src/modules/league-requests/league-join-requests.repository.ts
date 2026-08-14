@@ -2,6 +2,7 @@ import { db } from "../../database/connection";
 import { LeagueJoinRequest, LeagueJoinRequestsDTO, ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
+import { toCursorPage } from "../../@types/shared/CursorPage";
 export class LeagueJoinRequestsRepository {
     async list(leagueId: string, params: ListLeagueJoinRequestsParams) {
         const values: unknown[] = [];
@@ -31,12 +32,14 @@ export class LeagueJoinRequestsRepository {
             values.push(`%${params.search}%`);
             where.push(`u.nickname ILIKE $${values.length}`);
         }
+        if (params.cursor) { values.push(params.cursor); where.push(`ljr.id < $${values.length}`); }
         if (where.length) {
             query += ` WHERE ${where.join(" AND ")}`;
         }
-        query += ` ORDER BY ljr.created_at ASC`;
-        const result = await db.query<LeagueJoinRequest[]>(query, values);
-        return result.rows;
+        values.push(params.limit + 1);
+        query += ` ORDER BY ljr.id DESC LIMIT $${values.length}`;
+        const result = await db.query<LeagueJoinRequest>(query, values);
+        return toCursorPage(result.rows, params.limit);
     }
     async findById(requestId: string, leagueId?: string, options: FindOptions = {}) {
         const { executor = db, lock } = options;

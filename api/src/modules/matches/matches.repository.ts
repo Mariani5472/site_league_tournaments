@@ -1,6 +1,7 @@
 import { PoolClient } from "pg";
 import { db } from "../../database/connection";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
+import { CursorParams, toCursorPage } from "../../@types/shared/CursorPage";
 export class MatchesRepository {
     async findForUpdate(matchId: string, options: QueryOptions = {}) {
         const { executor = db } = options;
@@ -34,7 +35,7 @@ export class MatchesRepository {
         const result = await executor.query("SELECT COUNT(*)::int total FROM match_players WHERE match_id = $1", [matchId]);
         return Number(result.rows[0].total);
     }
-    async listByLeague(leagueId: string) {
+    async listByLeague(leagueId: string, pagination: CursorParams) {
         const result = await db.query(`
       SELECT m.*,
         COALESCE(json_agg(json_build_object(
@@ -45,9 +46,9 @@ export class MatchesRepository {
       FROM matches m
       LEFT JOIN match_players mp ON mp.match_id = m.id
       LEFT JOIN users u ON u.id = mp.user_id
-      WHERE m.league_id = $1
-      GROUP BY m.id ORDER BY m.created_at DESC`, [leagueId]);
-        return result.rows;
+      WHERE m.league_id = $1 AND ($2::uuid IS NULL OR m.id < $2)
+      GROUP BY m.id ORDER BY m.id DESC LIMIT $3`, [leagueId, pagination.cursor ?? null, pagination.limit + 1]);
+        return toCursorPage(result.rows, pagination.limit);
     }
     async details(matchId: string, userId: string) {
         const result = await db.query(`

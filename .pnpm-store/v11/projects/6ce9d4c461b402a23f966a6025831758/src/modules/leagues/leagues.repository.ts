@@ -2,6 +2,7 @@ import { db } from "../../database/connection";
 import { CreateLeagueDTO, League, ListLeaguesParams } from "./leagues.types";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
+import { CursorParams, toCursorPage } from "../../@types/shared/CursorPage";
 export class LeaguesRepository {
     async list(params: ListLeaguesParams) {
         const values: unknown[] = [];
@@ -32,7 +33,7 @@ export class LeaguesRepository {
         const result = await db.query<League>(query, values);
         return result.rows;
     }
-    async discover(userId: string, search?: string) {
+    async discover(userId: string, params: CursorParams & { search?: string }) {
         const query = `
     SELECT
       l.*,
@@ -51,6 +52,7 @@ export class LeaguesRepository {
         WHERE user_members.league_id = l.id
           AND user_members.user_id = $1
       )
+      AND ($3::uuid IS NULL OR l.id < $3)
 
       AND (
         $2::text IS NULL
@@ -60,13 +62,13 @@ export class LeaguesRepository {
 
     GROUP BY l.id
 
-    ORDER BY l.created_at DESC
+    ORDER BY l.id DESC LIMIT $4
   `;
         const result = await db.query<League>(query, [
             userId,
-            search || null,
+            params.search || null, params.cursor ?? null, params.limit + 1,
         ]);
-        return result.rows;
+        return toCursorPage(result.rows, params.limit);
     }
     async listMine(userId: string) {
         const query = `
