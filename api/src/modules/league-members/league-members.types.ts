@@ -13,6 +13,8 @@ export type LeagueMemberIdentity = {
     role?: string[];
     leagueId?: string[];
     nickname?: string[];
+    cursor?: string;
+    limit: number;
 };
 export type CreateLeagueMemberDTO = {
     role: Exclude<LeagueMember['role'], 'owner'>;

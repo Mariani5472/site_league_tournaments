@@ -2,8 +2,9 @@ import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
 import { LeagueMember, LeagueMemberIdentity, UpdateLeagueMemberDTO } from "./league-members.types";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
+import { toCursorPage } from "../../@types/shared/CursorPage";
 export class LeagueMembersRepository {
-    async list(leagueId: string, params: LeagueMemberIdentity): Promise<LeagueMember[]> {
+    async list(leagueId: string, params: LeagueMemberIdentity) {
         const values: unknown[] = [];
         const where: string[] = [];
         let query = `
@@ -32,12 +33,14 @@ export class LeagueMembersRepository {
             values.push(params.role);
             where.push(`lm.role = ANY($${values.length})`);
         }
+        if (params.cursor) { values.push(params.cursor); where.push(`lm.id < $${values.length}`); }
         if (where.length) {
             query += ` WHERE ${where.join(" AND ")}`;
         }
-        query += ` ORDER BY u.nickname DESC`;
+        values.push(params.limit + 1);
+        query += ` ORDER BY lm.id DESC LIMIT $${values.length}`;
         const result = await db.query<LeagueMember>(query, values);
-        return result.rows;
+        return toCursorPage(result.rows, params.limit);
     }
     async count(leagueId: string, options: QueryOptions = {}): Promise<number> {
         const { executor = db } = options;

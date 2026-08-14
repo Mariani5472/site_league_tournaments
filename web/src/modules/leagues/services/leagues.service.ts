@@ -4,6 +4,7 @@ import type { LeagueMember } from "../types/member";
 import type { LeagueRequest } from "../types/request";
 import type { CreateLeagueInput } from "../types/createInput";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
+type CursorPage<T> = { items: T[]; nextCursor: string | null };
 export async function getMineLeagues() {
     const { data } = await api.get<League[]>(`/leagues/mine`);
     return data;
@@ -13,20 +14,20 @@ export async function getDiscoverLeagues(search?: string) {
     if (search) {
         params.set("search", search);
     }
-    const { data } = await api.get<League[]>(`/leagues/discover?${params.toString()}`);
-    return data;
+    const { data } = await api.get<CursorPage<League>>(`/leagues/discover?${params.toString()}`);
+    return data.items;
 }
 export async function getLeague(leagueId: string) {
     const { data } = await api.get<League>(`/leagues/${leagueId}`);
     return data;
 }
 export async function getLeagueMembers(leagueId: string) {
-    const { data } = await api.get<LeagueMember[]>(`/leagues/${leagueId}/members`);
-    return data;
+    const { data } = await api.get<CursorPage<LeagueMember>>(`/leagues/${leagueId}/members`);
+    return data.items;
 }
 export async function getLeagueRequests(leagueId: string) {
-    const { data } = await api.get<LeagueRequest[]>(`/leagues/${leagueId}/requests`);
-    return data;
+    const { data } = await api.get<CursorPage<LeagueRequest>>(`/leagues/${leagueId}/requests`);
+    return data.items;
 }
 export async function joinLeague(leagueId: string) {
     const { data } = await api.post(`/leagues/${leagueId}/join`);

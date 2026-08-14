@@ -117,11 +117,15 @@ describe("critical domain flows", { concurrency: false }, () => {
     test("private league members endpoint allows an existing member", async () => {
         const league = await createLeague(10, "open", "private");
         const response = await listMembersOverHttp(league.id, ids[0]);
-        const body = await response.json() as Array<{ userId: string }>;
+        const body = await response.json() as {
+            items: Array<{ userId: string }>;
+            nextCursor: string | null;
+        };
 
         assert.equal(response.status, 200);
-        assert.equal(body.length, 1);
-        assert.equal(body[0].userId, ids[0]);
+        assert.equal(body.items.length, 1);
+        assert.equal(body.items[0].userId, ids[0]);
+        assert.equal(body.nextCursor, null);
     });
 
     test("private league members endpoint rejects outsiders without leaking member data", async () => {

@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { cursorPaginationSchema } from "../../schemas/pagination.schemas";
 export const leagueParamsSchema = z.object({ leagueId: z.uuid() });
 export const listLeaguesQuerySchema = z.object({
     membership: z.union([z.string(), z.array(z.string())]).optional().transform(value => value ? [value].flat() : undefined),
     visibility: z.enum(["public", "private"]).optional(),
     search: z.string().trim().optional(),
 });
-export const discoverLeaguesQuerySchema = z.object({ search: z.string().trim().optional() });
+export const discoverLeaguesQuerySchema = cursorPaginationSchema.extend({ search: z.string().trim().optional() });
 export const createLeagueSchema = z.object({
     name: z
         .string()
