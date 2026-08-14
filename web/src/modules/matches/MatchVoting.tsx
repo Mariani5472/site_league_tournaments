@@ -5,13 +5,20 @@ import { Input } from "@/components/ui/input";
 import { getMatch, resolveMatch, voteMatch } from "./services";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
+import { useSocketConnected } from "@/hooks/useSocketConnected";
 export function MatchVoting({ matchId, canResolve }: {
     matchId: string;
     canResolve: boolean;
 }) {
     const client = useQueryClient();
+    const socketConnected = useSocketConnected();
     const [reason, setReason] = useState("");
-    const match = useQuery({ queryKey: queryKeys.matches.detail(matchId), queryFn: () => getMatch(matchId), refetchInterval: 15000 });
+    const match = useQuery({
+        queryKey: queryKeys.matches.detail(matchId),
+        queryFn: () => getMatch(matchId),
+        refetchInterval: socketConnected ? false : 15_000,
+        refetchOnWindowFocus: true,
+    });
     const refresh = (updatedMatch: typeof match.data) => {
         client.invalidateQueries({ queryKey: queryKeys.matches.detail(matchId) });
         if (updatedMatch?.leagueId) {

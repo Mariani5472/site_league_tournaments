@@ -18,6 +18,7 @@ export function useLeagueSocket(leagueId: string) {
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.requests(leagueId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.matches(leagueId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.standings(leagueId) });
+            queryClient.invalidateQueries({ queryKey: queryKeys.matches.all });
         };
         const joinLeague = () => socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId, (ack: JoinAck) => {
             if (ack.ok)

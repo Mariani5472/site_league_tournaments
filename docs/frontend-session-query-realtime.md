@@ -37,3 +37,5 @@ Queries particulares podem sobrescrever esses valores quando documentarem a raz�
 Eventos Socket.IO invalidam somente as query keys do recurso/liga indicada no payload. Mutations invalidam detail e coleções afetadas. O prefixo raiz `queryKeys.leagues.all` não deve ser usado para mutations comuns; limpeza ampla fica reservada à troca/logout da sessão.
 
 No reconnect, hooks ativos entram novamente nas rooms e invalidam suas projeções para reconciliar eventos que possam ter ocorrido durante a desconexão.
+
+`MatchVoting` não faz polling enquanto o Socket.IO está conectado: eventos `match:vote` e `match:finished` invalidam o detalhe imediatamente, e o reconnect invalida todos os matches ativos. Durante desconexão do Socket.IO, a query usa polling de 15 segundos como fallback temporário. Voltar o foco à janela também refaz a query do match, independentemente do estado realtime.
