@@ -135,7 +135,7 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
         }
     });
 
-    test("database errors inside async handlers are acknowledged without unhandled rejection", async () => {
+    test("invalid UUID is rejected at the Socket boundary without unhandled rejection", async () => {
         const socket = await connect(ids[0]);
         const rejections: unknown[] = [];
         const onUnhandled = (reason: unknown) => rejections.push(reason);
@@ -144,7 +144,7 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
             const result = await emitAck(socket, SOCKET_EVENTS.LEAGUE_JOIN, "not-a-uuid");
             assert.deepEqual(result, {
                 ok: false,
-                error: { code: "INTERNAL_ERROR", message: "Realtime operation failed" }
+                error: { code: "VALIDATION_ERROR", message: "Invalid realtime payload" }
             });
             await new Promise(resolve => setTimeout(resolve, 20));
             assert.deepEqual(rejections, []);
