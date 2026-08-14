@@ -371,7 +371,7 @@ WEB
 
 **Responsabilidade:** composição e navegação. Há estados de loading/erro/vazio nas páginas principais.
 
-**Qualidade textual:** resolvido — fontes do frontend foram verificados como UTF-8 válido e não contêm mais sequências mojibake (`Ã`, `Â`) nem caracteres de substituição.
+**Qualidade textual:** resolvido — fontes do frontend foram verificadas como UTF-8 válido e não contêm sequências mojibake nem caracteres de substituição.
 
 **Problemas restantes:** `LeaguePage` dispara queries de membros/lobbies antes de a query da liga confirmar acesso. Settings decide permissão a partir de dados client-side e durante falhas pode redirecionar como se não fosse admin. Não há rota/página dedicada de detalhes da partida; votação fica acoplada à lobby.
 

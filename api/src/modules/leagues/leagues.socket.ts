@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { SOCKET_EVENTS } from "../../websocket/socket-events";
-import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
+import { LeagueMembersRepository } from "../league-members/league-members.repository";
 import { SocketAccess } from "../../websocket/socket-access";
 import { runValidatedSocketAction, SocketActionAck, SocketActionError } from "../../websocket/socket-action";
 import { leagueJoinPayloadSchema, leagueLeavePayloadSchema } from "../../websocket/socket-schemas";
