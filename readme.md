@@ -1,6 +1,43 @@
-# FPL_LOL
+# Ligas — partidas 5x5 entre amigos
 
-Plataforma para criar ligas e organizar partidas de League of Legends entre amigos. A plataforma gerencia lobby, times, confirmação do resultado, histórico e classificação; a partida é jogada fora do sistema e não depende da API de partidas da Riot.
+[![Application tests](https://github.com/Mariani5472/site_league_tournaments/actions/workflows/api-tests.yml/badge.svg?branch=main)](https://github.com/Mariani5472/site_league_tournaments/actions/workflows/api-tests.yml)
+[![Database schema](https://github.com/Mariani5472/site_league_tournaments/actions/workflows/database-schema.yml/badge.svg?branch=main)](https://github.com/Mariani5472/site_league_tournaments/actions/workflows/database-schema.yml)
+
+Plataforma full stack para criar ligas e organizar partidas de League of Legends entre amigos: entrada pública ou moderada, lobby 5x5, times, ready check, votação do resultado, histórico e classificação. A partida acontece fora do sistema e nenhum fluxo principal depende da API da Riot.
+
+[Ver o produto](#demo-e-visuais) · [Executar localmente](#desenvolvimento-local-docker-compose) · [Acompanhar a CI](https://github.com/Mariani5472/site_league_tournaments/actions) · [Decisões arquiteturais](docs/adr)
+
+## Por que este projeto é tecnicamente interessante
+
+- **Concorrência tratada no banco:** locks e transações protegem última vaga, aprovação de solicitações, eleição de capitães, draft, snapshot e finalização idempotente.
+- **Realtime com fonte de verdade explícita:** REST entrega estado; Socket.IO autentica rooms e sinaliza invalidações, com validação de payload, correlation ID e fallback de reconexão.
+- **Schema evolutivo verificável:** migrations incrementais, adoção segura de bancos legados, rollback da última versão e comparação automática com a baseline Supabase.
+- **Operação preparada:** readiness separado de liveness, pool PostgreSQL limitado, timeouts, rate limit, métricas de baixa cardinalidade e graceful shutdown.
+- **Testes de comportamento:** a CI executa PostgreSQL real, aplicação Express e clientes Socket.IO reais, além dos testes React e do budget de bundle.
+
+## Demo e visuais
+
+> A demo pública ainda não está publicada. A aplicação completa pode ser executada pelo [setup Docker Compose](#desenvolvimento-local-docker-compose); a imagem abaixo foi capturada dessa execução local.
+
+![Landing page da plataforma Ligas](docs/assets/landing-page.png)
+
+Fluxo principal: criar ou entrar em uma liga → montar lobby → confirmar jogadores → jogar → votar no resultado → atualizar histórico e classificação.
+
+## Arquitetura em um minuto
+
+```mermaid
+flowchart LR
+    Web["React + TanStack Query"] -->|"REST: estado e comandos"| API["Express API"]
+    Web <-->|"Socket.IO: invalidações"| Realtime["Realtime autenticado"]
+    API --> Services["Services de domínio"]
+    Realtime --> Services
+    Services --> Repositories["Repositories SQL"]
+    Repositories --> PostgreSQL[(PostgreSQL)]
+    API --> Auth["Supabase Auth"]
+    Worker["Worker de deadlines"] --> Services
+```
+
+Controllers cuidam do transporte, services concentram autorização e regras, e repositories executam SQL parametrizado. PostgreSQL mantém invariantes e coordena concorrência; eventos realtime nunca substituem a leitura canônica.
 
 ## Stack
 
