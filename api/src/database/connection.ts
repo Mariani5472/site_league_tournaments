@@ -2,6 +2,8 @@ import { Pool } from "pg";
 import { observabilityContext } from "../observability/context";
 import { logger } from "../observability/logger";
 import { instrumentPool } from "./instrumentation";
+import { createPoolConfig } from "./pool-config";
+import { recordDatabasePoolError, registerDatabasePoolMetrics } from "../observability/metrics";
 
 const logFailure = (error: unknown, startedAt: number) => logger.error({
     databaseError: error instanceof Error
@@ -12,7 +14,22 @@ const logFailure = (error: unknown, startedAt: number) => logger.error({
     durationMs: Math.round(performance.now() - startedAt)
 }, "database query failed");
 
-export const db: Pool = instrumentPool(
-  new Pool({ connectionString: process.env.DATABASE_URL }),
-  logFailure
-);
+const pool = new Pool(createPoolConfig());
+
+registerDatabasePoolMetrics(() => ({
+  total: pool.totalCount,
+  idle: pool.idleCount,
+  waiting: pool.waitingCount,
+  max: pool.options.max
+}));
+
+pool.on("error", error => {
+  recordDatabasePoolError();
+  logger.error({
+    operation: "database.pool",
+    errorType: error.name,
+    errorCode: "code" in error ? error.code : undefined
+  }, "database pool background error");
+});
+
+export const db: Pool = instrumentPool(pool, logFailure);

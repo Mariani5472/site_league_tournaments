@@ -13,7 +13,7 @@ Todo sinal Socket.IO emitido pelo backend recebe `_meta.correlationId`. Assim, o
 ## Health
 
 - `GET /health/live`: liveness; confirma que o processo Express responde e não consulta dependências.
-- `GET /health/ready`: readiness; retorna sucesso somente quando o PostgreSQL responde.
+- `GET /health/ready`: readiness; retorna sucesso somente quando o PostgreSQL responde. Indisponibilidade ou timeout retorna `503` com `status=not_ready` e `reason=database_unavailable`, sem detalhes internos.
 - `GET /health`: alias compatível de readiness para deploys existentes.
 
 Liveness deve reiniciar processos travados. Readiness deve retirar temporariamente a instância do tráfego sem provocar restart durante uma indisponibilidade do banco.
@@ -34,5 +34,12 @@ As métricas disponíveis incluem:
 - `http_request_duration_seconds_sum/count`: duração média e degradação por método;
 - `socket_connections_active`: conexões realtime autenticadas atuais;
 - `realtime_events_total`: volume dos principais sinais de domínio por evento.
+- `database_pool_connections`: conexões totais, ociosas e aguardando checkout; `waiting` maior que zero evidencia saturação;
+- `database_pool_max_connections`: capacidade configurada do processo;
+- `database_pool_errors_total`: erros de background emitidos pelo pool.
 
-Labels são limitadas a método, status e nomes de eventos definidos pela aplicação, evitando cardinalidade por usuário/UUID. IDs ficam somente nos logs correlacionados.
+Os estados do pool são um conjunto fixo (`total`, `idle`, `waiting`). As demais labels são limitadas a método, status e nomes de eventos definidos pela aplicação, evitando cardinalidade por usuário/UUID. IDs ficam somente nos logs correlacionados.
+
+## Pool PostgreSQL
+
+Configure `DB_POOL_MAX`, `DB_CONNECTION_TIMEOUT_MS`, `DB_IDLE_TIMEOUT_MS` e `DB_STATEMENT_TIMEOUT_MS` em milissegundos. Valores ausentes ou inválidos usam defaults seguros: desenvolvimento `10/5000/30000/15000`; produção `5/5000/10000/10000`. A capacidade deve ser dividida entre todas as instâncias e permanecer abaixo da cota do provedor, reservando conexões para migrations e operação. Timeouts aparecem nos logs de query sem SQL/parâmetros; erros de clientes ociosos incrementam `database_pool_errors_total`.

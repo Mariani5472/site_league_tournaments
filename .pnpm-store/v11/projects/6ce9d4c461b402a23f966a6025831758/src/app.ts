@@ -12,6 +12,7 @@ import { httpMetricsMiddleware, prometheusMetrics } from "./observability/metric
 import { trackHttpOperation } from "./lifecycle/http-operations";
 import { createHttpRateLimitMiddleware } from "./rate-limit/http-rate-limit";
 import { createMetricsAuthMiddleware } from "./security/metrics-auth";
+import { createReadinessHandler } from "./health/readiness";
 export const app = express();
 app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? (process.env.NODE_ENV === "production" ? 1 : 0)));
 app.use(trackHttpOperation);
@@ -29,15 +30,7 @@ app.use(express.json({ limit: "100kb" }));
 app.get("/health/live", (_request, response) => {
     response.json({ status: "ok" });
 });
-const readiness = async (_request: express.Request, response: express.Response) => {
-    try {
-        await db.query("SELECT 1");
-        response.json({ status: "ok" });
-    } catch (error) {
-        _request.log.error({ error, ...observabilityContext() }, "readiness database check failed");
-        response.status(503).json({ status: "not_ready" });
-    }
-};
+const readiness = createReadinessHandler(db);
 app.get("/health/ready", readiness);
 app.get("/health", readiness);
 app.get("/metrics", createMetricsAuthMiddleware(), (_request, response) => {
