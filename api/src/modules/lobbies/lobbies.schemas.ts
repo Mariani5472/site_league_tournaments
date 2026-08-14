@@ -8,7 +8,7 @@ export const createLobbyBodySchema = z.object({
 }).strict();
 
 export const changeLobbyTeamBodySchema = z.object({
-    teamNumber: z.number().int().min(1).max(2),
+    teamNumber: z.number().int().min(1).max(2).optional(),
 }).strict();
 
 export const teamSelectionVoteBodySchema = z.object({
