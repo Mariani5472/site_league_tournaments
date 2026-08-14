@@ -4,6 +4,7 @@ import { recordRateLimitRejection } from "../observability/metrics";
 import type { SocketActionAck } from "../websocket/socket-action";
 import { SOCKET_EVENTS } from "../websocket/socket-events";
 import { FixedWindowRateLimiter, positiveInteger } from "./fixed-window";
+import { correlationId } from "../observability/context";
 
 export type SocketRateLimitOptions = {
     connectionLimit?: number;
@@ -37,9 +38,20 @@ export function createSocketRateLimiters(options: SocketRateLimitOptions = {}) {
                 const eventBucket = knownEvents.has(event) ? event : "unknown";
                 const decision = events.consume(`${socket.data.user.id}|${eventBucket}`);
                 if (decision.allowed) return next();
+                const requestId = correlationId(undefined);
                 recordRateLimitRejection("socket_event");
-                logger.warn({ operation: "rate_limit.reject", surface: "socket_event" }, "socket event rate limited");
-                const result = { ok: false as const, error: { code: "RATE_LIMITED", message: "Too many realtime operations" } };
+                logger.warn({
+                    requestId,
+                    operation: eventBucket,
+                    userId: socket.data.user.id,
+                    socketId: socket.id,
+                    surface: "socket_event"
+                }, "socket event rate limited");
+                const result = {
+                    ok: false as const,
+                    error: { code: "RATE_LIMITED", message: "Too many realtime operations" },
+                    _meta: { correlationId: requestId }
+                };
                 const ack = args.at(-1) as SocketActionAck | undefined;
                 if (typeof ack === "function") ack(result);
                 else socket.emit(SOCKET_EVENTS.ERROR, result.error);

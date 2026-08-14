@@ -15,7 +15,7 @@ export function registerLobbySocket(socket: Socket, dependencies: LobbySocketDep
     const lobbiesRepository = dependencies.lobbiesRepository ?? new LobbiesRepository();
     const leagueMembersRepository = dependencies.leagueMembersRepository ?? new LeagueMembersRepository();
     socket.on(SOCKET_EVENTS.LOBBY_JOIN, (payload: unknown, ack?: SocketActionAck) => {
-        void runValidatedSocketAction(socket, ack, lobbyJoinPayloadSchema, payload, async lobbyId => {
+        void runValidatedSocketAction(socket, SOCKET_EVENTS.LOBBY_JOIN, ack, lobbyJoinPayloadSchema, payload, async lobbyId => {
             const lobby = await lobbiesRepository.findById(lobbyId);
             if (!lobby) {
                 throw new SocketActionError("NOT_FOUND", "Lobby not found");
@@ -28,7 +28,7 @@ export function registerLobbySocket(socket: Socket, dependencies: LobbySocketDep
         });
     });
     socket.on(SOCKET_EVENTS.LOBBY_LEAVE, (payload: unknown, ack?: SocketActionAck) => {
-        void runValidatedSocketAction(socket, ack, lobbyLeavePayloadSchema, payload,
+        void runValidatedSocketAction(socket, SOCKET_EVENTS.LOBBY_LEAVE, ack, lobbyLeavePayloadSchema, payload,
             lobbyId => SocketAccess.leaveLobby(socket, lobbyId));
     });
 }

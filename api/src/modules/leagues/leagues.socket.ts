@@ -12,7 +12,7 @@ type LeagueSocketDependencies = {
 export function registerLeagueSocket(socket: Socket, dependencies: LeagueSocketDependencies = {}) {
     const leagueMembersRepository = dependencies.leagueMembersRepository ?? new LeagueMembersRepository();
     socket.on(SOCKET_EVENTS.LEAGUE_JOIN, (payload: unknown, ack?: SocketActionAck) => {
-        void runValidatedSocketAction(socket, ack, leagueJoinPayloadSchema, payload, async leagueId => {
+        void runValidatedSocketAction(socket, SOCKET_EVENTS.LEAGUE_JOIN, ack, leagueJoinPayloadSchema, payload, async leagueId => {
             const hasAccess = await leagueMembersRepository.findByLeagueAndUser(leagueId, socket.data.user.id);
             if (!hasAccess) {
                 throw new SocketActionError("FORBIDDEN", "League membership required");
@@ -21,7 +21,7 @@ export function registerLeagueSocket(socket: Socket, dependencies: LeagueSocketD
         });
     });
     socket.on(SOCKET_EVENTS.LEAGUE_LEAVE, (payload: unknown, ack?: SocketActionAck) => {
-        void runValidatedSocketAction(socket, ack, leagueLeavePayloadSchema, payload,
+        void runValidatedSocketAction(socket, SOCKET_EVENTS.LEAGUE_LEAVE, ack, leagueLeavePayloadSchema, payload,
             leagueId => SocketAccess.leaveLeague(socket, leagueId));
     });
 }

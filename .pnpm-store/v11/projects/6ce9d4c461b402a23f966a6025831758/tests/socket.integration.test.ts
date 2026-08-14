@@ -121,13 +121,18 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
         const owner = await connect(ids[0]);
         const outsider = await connect(ids[1]);
         try {
-            assert.deepEqual(await emitAck(owner, SOCKET_EVENTS.LEAGUE_JOIN, league.id), { ok: true });
-            assert.deepEqual(await emitAck(owner, SOCKET_EVENTS.LOBBY_JOIN, lobby.id), { ok: true });
+            const leagueJoined = await emitAck(owner, SOCKET_EVENTS.LEAGUE_JOIN, league.id);
+            const lobbyJoined = await emitAck(owner, SOCKET_EVENTS.LOBBY_JOIN, lobby.id);
+            assert.equal(leagueJoined.ok, true);
+            assert.equal(lobbyJoined.ok, true);
+            assert.match(leagueJoined._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
+            assert.match(lobbyJoined._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
             assert.equal((await emitAck(outsider, SOCKET_EVENTS.LEAGUE_JOIN, league.id)).ok, false);
             const lobbyDenied = await emitAck(outsider, SOCKET_EVENTS.LOBBY_JOIN, lobby.id);
             assert.deepEqual(lobbyDenied, {
                 ok: false,
-                error: { code: "FORBIDDEN", message: "League membership required" }
+                error: { code: "FORBIDDEN", message: "League membership required" },
+                _meta: lobbyDenied._meta
             });
         } finally {
             owner.disconnect();
@@ -144,8 +149,10 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
             const result = await emitAck(socket, SOCKET_EVENTS.LEAGUE_JOIN, "not-a-uuid");
             assert.deepEqual(result, {
                 ok: false,
-                error: { code: "VALIDATION_ERROR", message: "Invalid realtime payload" }
+                error: { code: "VALIDATION_ERROR", message: "Invalid realtime payload" },
+                _meta: result._meta
             });
+            assert.match(result._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
             await new Promise(resolve => setTimeout(resolve, 20));
             assert.deepEqual(rejections, []);
         } finally {
