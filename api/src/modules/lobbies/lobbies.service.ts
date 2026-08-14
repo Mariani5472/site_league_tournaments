@@ -1,7 +1,7 @@
 import { AppError } from "../../utils/AppError";
 import { SocketEmitter } from "../../websocket/emitter";
 import { SOCKET_EVENTS } from "../../websocket/socket-events";
-import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
+import { LeagueMembersRepository } from "../league-members/league-members.repository";
 import { LeaguesRepository } from "../leagues/leagues.repository";
 import { LobbiesRepository } from "./lobbies.repository";
 import { CreateLobbyDTO } from "./lobbies.types";

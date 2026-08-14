@@ -54,7 +54,7 @@ Esta classificação foi refeita a partir da implementação e dos testes atuais
 | Lifecycle/cache frontend implícito | RESOLVIDO | `SessionLifecycle`, `SocketSessionOwner`, unsubscribe do Supabase, defaults globais e query keys; testes de logout/troca/reconnect | `signOut` limpa estado antes de confirmar logout Supabase; polling de match permanece. |
 | Ausência de testes HTTP/Socket/frontend | RESOLVIDO | 48 cenários API (33 domínio, 10 HTTP, 5 Socket) e 17 testes frontend; jobs CI separados | Frontend usa mocks extensos e não cobre formulários, acessibilidade, viewport ou fluxo browser completo. |
 | Riot era dependência obrigatória | RESOLVIDO | Cliente é criado apenas no fluxo configurado; API sobe sem env Riot; frontend consulta configuração e oculta vínculo | Código opcional amplia superfície de manutenção e não tem testes dedicados. |
-| Typo `weboscket`, mojibake e socket morto | PARCIAL | Diretório atual é `websocket` e arquivo de match vazio foi removido | `.gitignore` ainda contém mojibake e existe typo `league-members.repostitory.ts`. |
+| Typos de diretório/arquivo, mojibake e socket morto | RESOLVIDO | Diretório e repository usam grafia correta, comentários estão em UTF-8 e o arquivo de match vazio foi removido | Manter a busca automatizada por caracteres corrompidos e nomes inconsistentes. |
 | Observabilidade insuficiente | PARCIAL | Pino, ALS, requestId, DB error log, métricas e live/ready estão implementados e documentados | `/metrics` público, contexto Socket incompleto, wrapper DB empilha, worker/server usam console e métricas são por processo. |
 
 ## 3. Arquitetura atual
@@ -68,7 +68,7 @@ As regras críticas estão majoritariamente no backend e reforçadas por índice
 Inconsistências concretas:
 
 - `LobbiesService` tem 693 linhas e coordena membership, ready, seleção aleatória/balanceada, eleição e draft. O problema não é estético: mudanças em um protocolo exigem entender todos os outros e tornam testes unitários difíceis.
-- `league-members.repostitory.ts` tem typo; alguns repositories usam `SELECT *`, fragilizando projeções quando o schema cresce.
+- Alguns repositories usam `SELECT *`, fragilizando projeções quando o schema cresce.
 - A transformação camelCase é global e recursiva em qualquer JSON retornado; isso deve ser contrato explícito, pois pode alterar chaves de payload JSON que não representem colunas.
 - Services instanciam dependências por default em construtores, com alguma injeção para testes. Não há container, e ele não é necessário no tamanho atual.
 - Não foi localizada dependência circular relevante. Acoplamentos cross-module (lobby→member, match→lobby/member e revogação→SocketAccess) seguem necessidades concretas do domínio.
@@ -278,7 +278,7 @@ Load test de maior valor: 50–200 usuários tentando join/ready/vote em lobbies
 
 A árvore é compreensível, lockfiles existem e `.env`/`dist`/`node_modules` são ignorados. Contudo, `.pnpm-store/v11/projects/...` está versionada com uma cópia completa do frontend, configs e lockfile. Isso infla o repo, duplica código em buscas e pode confundir scanners/review. A regra atual ignora apenas três arquivos de banco da store, não o diretório.
 
-Há mojibake em comentários do `.gitignore`, typo `league-members.repostitory.ts`, packages chamados genericamente `app`, comentário TODO sem ticket e `console.log` em UI/seed/server. O diretório websocket foi corrigido. Não foram observados `node_modules`, builds ou `.env` versionados pela consulta realizada. A tabela `standings` e arquivos Supabase auxiliares merecem confirmação de uso para remover dead schema/code somente em ticket próprio.
+Os comentários do `.gitignore`, o nome do repository de membros e os nomes dos packages foram corrigidos. Ainda existem comentário TODO sem ticket e `console.log` em UI/seed/server. Não foram observados `node_modules`, builds ou `.env` versionados pela consulta realizada. A tabela `standings` e arquivos Supabase auxiliares merecem confirmação de uso para remover dead schema/code somente em ticket próprio.
 
 ## 15. Portfólio e empregabilidade
 
@@ -314,7 +314,7 @@ O README explica domínio e decisões, mas como peça de recrutamento começa pe
 | A17 | MÉDIO | DEVOPS | Validar imagem e Compose na CI | CI testa Node diretamente, não artefato/container | Dockerfile ou healthcheck podem quebrar sem sinal | Build/smoke da imagem API e profile Compose isolado | Imagem sobe non-root, readiness passa, migrations aplicam e shutdown funciona |
 | A18 | MÉDIO | PERFORMANCE | Medir standings e concorrência sob carga | Agregação e locks são corretos, mas sem dados de latência | Não há limite operacional conhecido | Cenários k6/artillery e EXPLAIN com dataset representativo | p50/p95, pool/lock errors e plano são registrados; otimização só vira ticket se threshold falhar |
 | A19 | BAIXO | CLEANUP | Remover `.pnpm-store` versionada | Store contém cópia integral do frontend | Repo inchado, buscas duplicadas e apresentação ruim | Ignorar diretório e removê-lo do índice Git | `git ls-files .pnpm-store` vazio; clone+`npm ci` funciona; nenhum arquivo fonte perdido |
-| A20 | BAIXO | CLEANUP | Corrigir naming e mojibake residuais | `repostitory`, comentários corrompidos e packages `app` | Reduz clareza e impressão profissional | Renomear arquivo/imports, salvar UTF-8 e dar nomes aos packages | `rg` não encontra mojibake/typo; build/lint/test passam; lockfiles atualizados |
+| A20 | BAIXO | CLEANUP | Corrigir naming e mojibake residuais | Grafia incorreta no repository, comentários corrompidos e packages genéricos | Reduz clareza e impressão profissional | Renomear arquivo/imports, salvar UTF-8 e dar nomes aos packages | Busca não encontra mojibake/typo; build/lint/test passam; lockfiles atualizados |
 | A21 | BAIXO | DATABASE | Remover ou formalizar tabela standings legada | Schema possui `standings`, enquanto cálculo usa snapshots | Duas aparentes fontes de verdade confundem manutenção | Confirmar ausência de uso e migrar remoção, ou documentar finalidade real | Uma única fonte declarada; migration segura; schema compare e testes verdes |
 | A22 | BAIXO | FRONTEND | Dividir bundle por rotas e registrar budget | App carrega páginas em um chunk inicial | First load maior, sobretudo celular | `React.lazy` por rota e budget simples de bundle | Rotas carregam sob demanda; fallback acessível; tamanho inicial abaixo do budget documentado |
 | A23 | BAIXO | PORTFOLIO | Transformar README em vitrine verificável | README técnico não mostra demo/visual/CI | Recrutador não percebe rapidamente a profundidade | Adicionar demo, screenshots/GIF, diagrama, badges e highlights | Links funcionam; setup continua; seção resume concorrência, testes e decisões em menos de dois minutos |

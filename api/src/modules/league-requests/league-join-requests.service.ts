@@ -1,6 +1,6 @@
 import { AppError } from "../../utils/AppError";
 import { LeagueJoinRequestsRepository } from "./league-join-requests.repository";
-import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
+import { LeagueMembersRepository } from "../league-members/league-members.repository";
 import { ListLeagueJoinRequestsParams } from "../leagues/leagues.types";
 import { LeaguesRepository } from "../leagues/leagues.repository";
 import { SocketEmitter } from "../../websocket/emitter";

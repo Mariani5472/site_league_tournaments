@@ -2,7 +2,7 @@ import { db } from "../../database/connection";
 import { AppError } from "../../utils/AppError";
 import { SocketEmitter } from "../../websocket/emitter";
 import { SOCKET_EVENTS } from "../../websocket/socket-events";
-import { LeagueMembersRepository } from "../league-members/league-members.repostitory";
+import { LeagueMembersRepository } from "../league-members/league-members.repository";
 import { MatchesRepository } from "./matches.repository";
 import { QueryOptions } from "../../@types/shared/QueryOptions";
 import { CursorParams } from "../../@types/shared/CursorPage";
