@@ -5,6 +5,8 @@ import { registerLeagueSocket } from "../src/modules/leagues/leagues.socket";
 import { registerLobbySocket } from "../src/modules/lobbies/lobbies.socket";
 import { drainSocketActions, type SocketActionResult } from "../src/websocket/socket-action";
 import { SOCKET_EVENTS } from "../src/websocket/socket-events";
+import { observabilityContext } from "../src/observability/context";
+import { logger } from "../src/observability/logger";
 
 type Handler = (payload: unknown, ack: (result: SocketActionResult) => void) => void;
 
@@ -12,6 +14,7 @@ function fakeSocket() {
     const handlers = new Map<string, Handler>();
     const socket = {
         data: { user: { id: "30000000-0000-4000-8000-000000000001" } },
+        id: "socket-test-1",
         on(event: string, handler: Handler) { handlers.set(event, handler); return socket; },
         emit() { return true; }
     } as unknown as Socket;
@@ -29,7 +32,7 @@ afterEach(() => {
     delete process.env.SOCKET_EVENT_PAYLOAD_MAX_BYTES;
 });
 
-describe("Socket event payload validation", () => {
+describe("Socket event payload validation", { concurrency: false }, () => {
     it("rejects invalid league and lobby UUIDs before repository queries", async () => {
         let leagueQueries = 0;
         let lobbyQueries = 0;
@@ -49,12 +52,12 @@ describe("Socket event payload validation", () => {
             } as never
         });
 
-        const expected = {
-            ok: false,
-            error: { code: "VALIDATION_ERROR", message: "Invalid realtime payload" }
-        };
-        assert.deepEqual(await invoke(leagueSocket.handlers.get(SOCKET_EVENTS.LEAGUE_JOIN), "not-a-uuid"), expected);
-        assert.deepEqual(await invoke(lobbySocket.handlers.get(SOCKET_EVENTS.LOBBY_JOIN), "not-a-uuid"), expected);
+        const leagueResult = await invoke(leagueSocket.handlers.get(SOCKET_EVENTS.LEAGUE_JOIN), "not-a-uuid");
+        const lobbyResult = await invoke(lobbySocket.handlers.get(SOCKET_EVENTS.LOBBY_JOIN), "not-a-uuid");
+        for (const result of [leagueResult, lobbyResult]) {
+            assert.deepEqual(result.error, { code: "VALIDATION_ERROR", message: "Invalid realtime payload" });
+            assert.match(result._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
+        }
         assert.equal(leagueQueries, 0);
         assert.equal(lobbyQueries, 0);
     });
@@ -69,13 +72,48 @@ describe("Socket event payload validation", () => {
             } as never
         });
 
-        assert.deepEqual(await invoke(
+        const result = await invoke(
             fixture.handlers.get(SOCKET_EVENTS.LEAGUE_JOIN),
             "x".repeat(1_000)
-        ), {
-            ok: false,
-            error: { code: "VALIDATION_ERROR", message: "Invalid realtime payload" }
-        });
+        );
+        assert.deepEqual(result.error, { code: "VALIDATION_ERROR", message: "Invalid realtime payload" });
+        assert.match(result._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
         assert.equal(queries, 0);
+    });
+
+    it("shares the action context between an unexpected failure, its log and ack", async () => {
+        let actionContext: ReturnType<typeof observabilityContext>;
+        let logContext: Record<string, unknown> | undefined;
+        const originalError = logger.error;
+        logger.error = ((context: Record<string, unknown>) => { logContext = context; }) as typeof logger.error;
+        try {
+            const fixture = fakeSocket();
+            registerLeagueSocket(fixture.socket, {
+                leagueMembersRepository: {
+                    findByLeagueAndUser: async () => {
+                        actionContext = observabilityContext();
+                        throw new Error("database details that must not be logged");
+                    }
+                } as never
+            });
+
+            const result = await invoke(
+                fixture.handlers.get(SOCKET_EVENTS.LEAGUE_JOIN),
+                "30000000-0000-4000-8000-000000000002"
+            );
+
+            assert.equal(result.ok, false);
+            assert.equal(result.error.code, "INTERNAL_ERROR");
+            assert.equal(actionContext?.requestId, result._meta.correlationId);
+            assert.equal(logContext?.requestId, result._meta.correlationId);
+            assert.equal(logContext?.operation, SOCKET_EVENTS.LEAGUE_JOIN);
+            assert.equal(logContext?.userId, "30000000-0000-4000-8000-000000000001");
+            assert.equal(logContext?.socketId, "socket-test-1");
+            assert.equal(logContext?.errorType, "Error");
+            assert.equal(JSON.stringify(logContext).includes("database details"), false);
+            assert.equal(JSON.stringify(logContext).includes("token"), false);
+        } finally {
+            logger.error = originalError;
+        }
     });
 });

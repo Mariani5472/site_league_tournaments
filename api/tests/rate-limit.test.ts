@@ -6,6 +6,7 @@ import { io as createClient, type Socket as ClientSocket } from "socket.io-clien
 import { createHttpRateLimitMiddleware } from "../src/rate-limit/http-rate-limit";
 import { prometheusMetrics } from "../src/observability/metrics";
 import { initializeSocket } from "../src/websocket/socket";
+import type { SocketActionResult } from "../src/websocket/socket-action";
 
 const servers: http.Server[] = [];
 const clients: ClientSocket[] = [];
@@ -68,10 +69,13 @@ describe("abuse rate limits", () => {
         const emit = () => new Promise<unknown>(resolve => client.emit("burst:test", resolve));
         assert.deepEqual(await emit(), { ok: true });
         assert.deepEqual(await emit(), { ok: true });
-        assert.deepEqual(await emit(), {
+        const limited = await emit() as SocketActionResult;
+        assert.deepEqual(limited, {
             ok: false,
-            error: { code: "RATE_LIMITED", message: "Too many realtime operations" }
+            error: { code: "RATE_LIMITED", message: "Too many realtime operations" },
+            _meta: limited._meta
         });
+        assert.match(limited._meta.correlationId, /^[A-Za-z0-9._:-]+$/);
         assert.match(prometheusMetrics(), /rate_limit_rejections_total\{surface="socket_event"\}/);
         await io.close();
     });
