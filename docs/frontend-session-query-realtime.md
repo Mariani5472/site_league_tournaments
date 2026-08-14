@@ -4,7 +4,7 @@
 
 `AuthProvider` é o owner da sessão no React. Ele registra um único `onAuthStateChange` durante o mount, cancela a inscrição no cleanup e entrega cada sessão ao `SessionLifecycle`. Não deve existir listener de autenticação em módulos singleton.
 
-Ao fazer logout ou trocar o `user.id`, a ordem obrigatória é:
+Ao trocar o `user.id`, ou depois que o logout Supabase foi confirmado, a ordem obrigatória é:
 
 1. desconectar o Socket.IO e remover suas credenciais;
 2. cancelar queries em andamento;
@@ -12,6 +12,12 @@ Ao fazer logout ou trocar o `user.id`, a ordem obrigatória é:
 4. somente então conectar o socket da nova identidade, quando houver.
 
 A limpeza integral é intencional: atualmente todos os dados consultados dentro da aplicação autenticada podem conter projeções privadas. Dados públicos são refetched depois da troca, em vez de arriscar mistura entre identidades.
+
+## Falha de logout
+
+O logout tenta primeiro revogar globalmente as sessões no Supabase. Se a chamada remota falhar, o cliente executa `signOut({ scope: "local" })` para remover explicitamente a sessão persistida neste navegador. Somente depois dessa confirmação local a UI fica anônima e socket/cache são limpos. Nesse caso, a tela de login avisa que outras sessões podem permanecer ativas. Em um reload, `getSession()` retorna `null`, portanto a aplicação continua anônima.
+
+Se tanto a tentativa global quanto a remoção local falharem, a operação é bloqueante: usuário, socket e cache permanecem autenticados, nenhuma navegação ocorre e a tela solicita nova tentativa. Assim, a UI nunca declara logout enquanto uma sessão persistida ainda pode ser recuperada.
 
 `SocketSessionOwner` é o único responsável por credenciais, connect, disconnect e reconnect. Os hooks de liga/lobby possuem apenas listeners e rooms da tela e continuam obrigados a executar `off` e `leave` no cleanup.
 

@@ -104,15 +104,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     async function signOut() {
         setLoading(true);
+        setError(null);
         try {
+            let remoteError: unknown;
+            try {
+                const result = await mySupabase.auth.signOut();
+                remoteError = result.error;
+            } catch (requestError) {
+                remoteError = requestError;
+            }
+            if (remoteError) {
+                let localError: unknown;
+                try {
+                    const result = await mySupabase.auth.signOut({ scope: "local" });
+                    localError = result.error;
+                } catch (fallbackError) {
+                    localError = fallbackError;
+                }
+                if (localError) {
+                    const blockingError = new Error("Could not sign out. Your session remains active; try again.");
+                    setError(blockingError.message);
+                    throw blockingError;
+                }
+                await acceptSession(null);
+                setError("Signed out on this device, but other sessions may remain active.");
+                return;
+            }
             await acceptSession(null);
-            const { error: signOutError } = await mySupabase.auth.signOut();
-            if (signOutError)
-                throw signOutError;
         }
         finally {
-            setUser(null);
-            setError(null);
             setLoading(false);
         }
     }
