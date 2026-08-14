@@ -36,7 +36,7 @@ function Probe() {
         <span>{auth.loading ? "loading" : auth.user?.id ?? "anonymous"}</span>
         {auth.error && <span role="alert">{auth.error}</span>}
         <button onClick={() => auth.signIn({ email: "a@test.local", password: "secret" })}>Login</button>
-        <button onClick={() => auth.signOut()}>Logout</button>
+        <button onClick={() => { void auth.signOut().catch(() => undefined); }}>Logout</button>
     </div>;
 }
 
@@ -67,6 +67,46 @@ describe("AuthProvider", () => {
         expect(await screen.findByText("anonymous")).toBeVisible();
         expect(queryClient.getQueryData(["profile", "me"])).toBeUndefined();
         expect(mocks.signOut).toHaveBeenCalledOnce();
+    });
+
+    it("falls back to local logout when remote sign out fails and stays anonymous after reload", async () => {
+        mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
+        mocks.signOut.mockImplementation(async (options?: { scope?: string }) => options?.scope === "local"
+            ? { error: null }
+            : { error: new Error("Remote logout unavailable") });
+        const queryClient = testQueryClient();
+        const view = render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        expect(await screen.findByText("user-a")).toBeVisible();
+        queryClient.setQueryData(["profile", "me"], { private: true });
+
+        await userEvent.click(screen.getByRole("button", { name: "Logout" }));
+
+        expect(await screen.findByText("anonymous")).toBeVisible();
+        expect(screen.getByRole("alert")).toHaveTextContent("other sessions may remain active");
+        expect(queryClient.getQueryData(["profile", "me"])).toBeUndefined();
+        expect(mocks.signOut).toHaveBeenNthCalledWith(1);
+        expect(mocks.signOut).toHaveBeenNthCalledWith(2, { scope: "local" });
+
+        view.unmount();
+        mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
+        render(<QueryClientProvider client={testQueryClient()}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        expect(await screen.findByText("anonymous")).toBeVisible();
+    });
+
+    it("keeps UI and cache authenticated when remote and local logout both fail", async () => {
+        mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
+        mocks.signOut.mockResolvedValue({ error: new Error("Logout unavailable") });
+        const queryClient = testQueryClient();
+        render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        expect(await screen.findByText("user-a")).toBeVisible();
+        queryClient.setQueryData(["leagues", "mine"], [{ id: "private-a" }]);
+
+        await userEvent.click(screen.getByRole("button", { name: "Logout" }));
+
+        expect(await screen.findByText("user-a")).toBeVisible();
+        expect(screen.getByRole("alert")).toHaveTextContent("session remains active");
+        expect(queryClient.getQueryData(["leagues", "mine"])).toEqual([{ id: "private-a" }]);
+        expect(mocks.socketApply).not.toHaveBeenLastCalledWith(null);
     });
 
     it("keeps the user unauthenticated when local profile sync fails", async () => {
