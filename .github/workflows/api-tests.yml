@@ -65,7 +65,7 @@ jobs:
       - run: npm ci
       - name: Frontend behavior tests
         run: npm test
-      - name: Frontend build
+      - name: Frontend build and bundle budget
         run: npm run build
       - name: Frontend lint
         run: npm run lint

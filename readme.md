@@ -71,6 +71,8 @@ A maioria absoluta é `floor(participantes / 2) + 1`. Sem maioria, a votação p
 
 A classificação é calculada a partir dos snapshots de partidas finalizadas, ordenada por vitórias, derrotas, aproveitamento e nickname. Assim, o histórico é a fonte da verdade e não há contadores independentes para reconciliar. A decisão está formalizada no [ADR 0005](docs/adr/0005-standings-source-of-truth.md).
 
+As páginas do frontend são divididas por rota e carregadas sob demanda. O build valida automaticamente o [budget de JavaScript inicial](docs/frontend-bundle-budget.md), medido em 168,76 KiB gzip e limitado a 220 KiB gzip.
+
 ## Riot e limitações conhecidas
 
 A tabela de conta Riot foi preservada apenas como metadado opcional de perfil para ambientes que já a utilizavam. Nenhuma liga, lobby, partida, voto ou classificação exige conta ou credencial Riot. Campos antigos de sincronização de partidas são removidos pela migration nova.
