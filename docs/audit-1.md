@@ -18,7 +18,7 @@ Também não existe CD: deploy, migration de produção, rollback e versionament
 O processo não trata `SIGTERM`; servidor HTTP, worker e pool podem ser interrompidos durante operação ou transação.
 O índice de autorização Socket.IO é apenas em memória, portanto a revogação não funciona de forma global ao escalar para mais de uma instância.
 Há dois defeitos novos verificáveis: clientes reutilizados do pool podem receber wrappers de query empilhados e payloads Socket.IO inválidos chegam ao PostgreSQL sem schema.
-O frontend tem boa base de sessão/query, mas ainda usa polling redundante, possui cobertura estreita de formulários/UX e gera bundle inicial grande sem code splitting.
+O frontend tem boa base de sessão/query e agora divide páginas por rota com budget de bundle; a cobertura de formulários/UX ainda é estreita.
 O repositório contém uma `.pnpm-store` inteira versionada, além de mojibake no próprio `.gitignore`, o que prejudica higiene e apresentação.
 Como portfólio, o projeto já comprova nível Pleno forte em backend/full stack, especialmente SQL, concorrência e testes.
 Para produção pública, ainda não está pronto sem corrigir configuração de ambientes, rate limiting, lifecycle do processo e processo de release/backup validado.
@@ -216,7 +216,7 @@ Estados loading/error/empty existem nos fluxos testados de liga e votação. Per
 Problemas concretos:
 
 - `MatchVoting` mantém `refetchInterval: 15000` além das invalidações Socket, criando tráfego permanente por aba/partida.
-- O bundle Vite é monolítico; páginas não usam lazy imports. A medição de build deve ser registrada e code splitting aplicado às rotas se o chunk continuar acima do warning do Vite.
+- As páginas usam lazy imports por rota, com fallback acessível. O build registra 168,76 KiB gzip de JavaScript inicial e aplica budget de 220 KiB gzip na CI.
 - `AuthProvider.signOut` limpa sessão/cache antes de confirmar `supabase.auth.signOut`; se o logout remoto falhar, a UI fica anônima mas um reload pode recuperar a sessão.
 - Testes de LeaguePage/components mockam hooks/services; não provam formulários, erros de mutation, navegação completa ou integração query+router+API.
 - Não há testes de acessibilidade, teclado, viewport mobile/tablet ou browser E2E.
@@ -316,7 +316,7 @@ O README explica domínio e decisões, mas como peça de recrutamento começa pe
 | A19 | BAIXO | CLEANUP | Remover `.pnpm-store` versionada | Store contém cópia integral do frontend | Repo inchado, buscas duplicadas e apresentação ruim | Ignorar diretório e removê-lo do índice Git | `git ls-files .pnpm-store` vazio; clone+`npm ci` funciona; nenhum arquivo fonte perdido |
 | A20 | BAIXO | CLEANUP | Corrigir naming e mojibake residuais | Grafia incorreta no repository, comentários corrompidos e packages genéricos | Reduz clareza e impressão profissional | Renomear arquivo/imports, salvar UTF-8 e dar nomes aos packages | Busca não encontra mojibake/typo; build/lint/test passam; lockfiles atualizados |
 | A21 | RESOLVIDO | DATABASE | Remover tabela standings legada | Nenhum fluxo de runtime usava `standings`; cálculo usa snapshots | Duas aparentes fontes de verdade confundiam manutenção | Migration recusa descarte se houver dados e remove a tabela; ADR 0005 declara a fonte canônica | Migration/rollback, schema compare e testes de integração verdes |
-| A22 | BAIXO | FRONTEND | Dividir bundle por rotas e registrar budget | App carrega páginas em um chunk inicial | First load maior, sobretudo celular | `React.lazy` por rota e budget simples de bundle | Rotas carregam sob demanda; fallback acessível; tamanho inicial abaixo do budget documentado |
+| A22 | RESOLVIDO | FRONTEND | Dividir bundle por rotas e registrar budget | Páginas eram carregadas no chunk inicial | First load maior, sobretudo celular | `React.lazy` por rota, fallback acessível e verificador gzip | Rotas sob demanda; 168,76 KiB gzip medidos contra budget CI de 220 KiB |
 | A23 | BAIXO | PORTFOLIO | Transformar README em vitrine verificável | README técnico não mostra demo/visual/CI | Recrutador não percebe rapidamente a profundidade | Adicionar demo, screenshots/GIF, diagrama, badges e highlights | Links funcionam; setup continua; seção resume concorrência, testes e decisões em menos de dois minutos |
 | A24 | BAIXO | CLEANUP | Revisar código opcional Riot e projeções SELECT * | Feature pouco testada e repositories retornam todas as colunas | Superfície e contratos podem crescer acidentalmente | Decidir manutenção Riot e trocar `SELECT *` em fronteiras sensíveis por projeções | Decisão documentada; testes mínimos da opção escolhida; responses não mudam ao adicionar coluna |
 
@@ -332,7 +332,7 @@ A2, A10, A11, A12, A13, A14, A16 e A17. Elevam release, diagnóstico, manutenç�
 
 ### Portfólio
 
-A19, A20 e A23, seguidos de A22. Primeiro limpe o repositório, depois apresente demo/arquitetura e então otimize a entrega visual com números.
+A23. A limpeza do repositório e a divisão do bundle por rotas já foram concluídas.
 
 ### Futuro / escala
 
