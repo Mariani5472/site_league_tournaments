@@ -63,7 +63,7 @@ before(async () => {
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
 });
 beforeEach(async () => {
-    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, standings, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
+    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
     await seedUsers();
 });
 after(async () => {
@@ -114,6 +114,14 @@ async function waitForRoomSize(room: string, expectedSize: number) {
 }
 
 describe("critical domain flows", { concurrency: false }, () => {
+    test("standings has no independent persistence table", async () => {
+        const result = await db.query<{ tableName: string | null }>(
+            "SELECT to_regclass('public.standings')::text AS table_name"
+        );
+
+        assert.equal(result.rows[0].tableName, null);
+    });
+
     test("private league members endpoint allows an existing member", async () => {
         const league = await createLeague(10, "open", "private");
         const response = await listMembersOverHttp(league.id, ids[0]);

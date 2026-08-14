@@ -69,7 +69,7 @@ Políticas de entrada são exclusivas: ligas públicas `open` aceitam entrada di
 
 A maioria absoluta é `floor(participantes / 2) + 1`. Sem maioria, a votação permanece aberta. Owner ou admin pode resolver uma disputa antes da finalização, obrigatoriamente com justificativa. A finalização bloqueia a partida, grava vencedor/forma/data e marca vitória ou derrota no snapshot em uma única transação. O `UPDATE ... WHERE status = 'in_game'` impede aplicação duplicada.
 
-A classificação é calculada a partir dos snapshots de partidas finalizadas, ordenada por vitórias, derrotas, aproveitamento e nickname. Assim, o histórico é a fonte da verdade e não há contadores independentes para reconciliar.
+A classificação é calculada a partir dos snapshots de partidas finalizadas, ordenada por vitórias, derrotas, aproveitamento e nickname. Assim, o histórico é a fonte da verdade e não há contadores independentes para reconciliar. A decisão está formalizada no [ADR 0005](docs/adr/0005-standings-source-of-truth.md).
 
 ## Riot e limitações conhecidas
 

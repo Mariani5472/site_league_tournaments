@@ -126,16 +126,6 @@ create table public.match_votes (
 
 create index match_votes_match_id_index on public.match_votes (match_id);
 
-create table public.standings (
-  id uuid primary key default gen_random_uuid(),
-  league_id uuid not null references public.leagues(id) on delete cascade,
-  user_id uuid not null references public.users(id) on delete cascade,
-  wins integer not null default 0,
-  losses integer not null default 0,
-  matches_played integer not null default 0,
-  constraint unique_user_standings_per_league unique (league_id, user_id)
-);
-
 create table public.match_players (
   id uuid primary key default gen_random_uuid(),
   match_id uuid not null references public.matches(id) on delete cascade,
@@ -262,7 +252,6 @@ alter table public.lobbies enable row level security;
 alter table public.lobby_players enable row level security;
 alter table public.matches enable row level security;
 alter table public.match_votes enable row level security;
-alter table public.standings enable row level security;
 alter table public.match_players enable row level security;
 alter table public.lobby_team_selection_votes enable row level security;
 alter table public.lobby_draft_picks enable row level security;

@@ -181,7 +181,7 @@ Riscos:
 
 - A equivalência estrutural não prova upgrade de um banco real com histórico anterior. Um Supabase criado por baseline pode não ter a tabela/histórico `pgmigrations`; `node-pg-migrate up` tentará migrations antigas sobre tabelas existentes.
 - Não existe etapa de migration no `render.yaml` ou workflow de release. A fonte canônica está definida, mas o caminho de produção é manual.
-- `standings` existe no schema enquanto o README afirma cálculo por snapshot; se a tabela não for escrita/lida no fluxo atual, é modelo legado que confunde a fonte da verdade.
+- A tabela legada `standings`, sem leituras ou escritas no runtime, foi removida. Partidas finalizadas e `match_players` são a única fonte de verdade, conforme ADR 0005.
 - `SELECT *` aparece em vários repositories, acoplando o contrato retornado a colunas futuras.
 - A transformação camelCase aplicada no driver inteiro, inclusive JSON aninhado, não é verificada por teste de contrato dedicado.
 
@@ -278,7 +278,7 @@ Load test de maior valor: 50–200 usuários tentando join/ready/vote em lobbies
 
 A árvore é compreensível, lockfiles existem e `.env`/`dist`/`node_modules` são ignorados. Contudo, `.pnpm-store/v11/projects/...` está versionada com uma cópia completa do frontend, configs e lockfile. Isso infla o repo, duplica código em buscas e pode confundir scanners/review. A regra atual ignora apenas três arquivos de banco da store, não o diretório.
 
-Os comentários do `.gitignore`, o nome do repository de membros e os nomes dos packages foram corrigidos. Ainda existem comentário TODO sem ticket e `console.log` em UI/seed/server. Não foram observados `node_modules`, builds ou `.env` versionados pela consulta realizada. A tabela `standings` e arquivos Supabase auxiliares merecem confirmação de uso para remover dead schema/code somente em ticket próprio.
+Os comentários do `.gitignore`, o nome do repository de membros e os nomes dos packages foram corrigidos. Ainda existem comentário TODO sem ticket e `console.log` em UI/seed/server. Não foram observados `node_modules`, builds ou `.env` versionados pela consulta realizada. A tabela legada `standings` foi confirmada sem uso e removida no A21.
 
 ## 15. Portfólio e empregabilidade
 
@@ -315,7 +315,7 @@ O README explica domínio e decisões, mas como peça de recrutamento começa pe
 | A18 | MÉDIO | PERFORMANCE | Medir standings e concorrência sob carga | Agregação e locks são corretos, mas sem dados de latência | Não há limite operacional conhecido | Cenários k6/artillery e EXPLAIN com dataset representativo | p50/p95, pool/lock errors e plano são registrados; otimização só vira ticket se threshold falhar |
 | A19 | BAIXO | CLEANUP | Remover `.pnpm-store` versionada | Store contém cópia integral do frontend | Repo inchado, buscas duplicadas e apresentação ruim | Ignorar diretório e removê-lo do índice Git | `git ls-files .pnpm-store` vazio; clone+`npm ci` funciona; nenhum arquivo fonte perdido |
 | A20 | BAIXO | CLEANUP | Corrigir naming e mojibake residuais | Grafia incorreta no repository, comentários corrompidos e packages genéricos | Reduz clareza e impressão profissional | Renomear arquivo/imports, salvar UTF-8 e dar nomes aos packages | Busca não encontra mojibake/typo; build/lint/test passam; lockfiles atualizados |
-| A21 | BAIXO | DATABASE | Remover ou formalizar tabela standings legada | Schema possui `standings`, enquanto cálculo usa snapshots | Duas aparentes fontes de verdade confundem manutenção | Confirmar ausência de uso e migrar remoção, ou documentar finalidade real | Uma única fonte declarada; migration segura; schema compare e testes verdes |
+| A21 | RESOLVIDO | DATABASE | Remover tabela standings legada | Nenhum fluxo de runtime usava `standings`; cálculo usa snapshots | Duas aparentes fontes de verdade confundiam manutenção | Migration recusa descarte se houver dados e remove a tabela; ADR 0005 declara a fonte canônica | Migration/rollback, schema compare e testes de integração verdes |
 | A22 | BAIXO | FRONTEND | Dividir bundle por rotas e registrar budget | App carrega páginas em um chunk inicial | First load maior, sobretudo celular | `React.lazy` por rota e budget simples de bundle | Rotas carregam sob demanda; fallback acessível; tamanho inicial abaixo do budget documentado |
 | A23 | BAIXO | PORTFOLIO | Transformar README em vitrine verificável | README técnico não mostra demo/visual/CI | Recrutador não percebe rapidamente a profundidade | Adicionar demo, screenshots/GIF, diagrama, badges e highlights | Links funcionam; setup continua; seção resume concorrência, testes e decisões em menos de dois minutos |
 | A24 | BAIXO | CLEANUP | Revisar código opcional Riot e projeções SELECT * | Feature pouco testada e repositories retornam todas as colunas | Superfície e contratos podem crescer acidentalmente | Decidir manutenção Riot e trocar `SELECT *` em fronteiras sensíveis por projeções | Decisão documentada; testes mínimos da opção escolhida; responses não mudam ao adicionar coluna |
@@ -336,7 +336,7 @@ A19, A20 e A23, seguidos de A22. Primeiro limpe o repositório, depois apresente
 
 ### Futuro / escala
 
-A15 e A18 quando houver dataset/tráfego representativo; A21 e A24 em uma janela de limpeza de schema. A7 pode ficar documentado como single-instance enquanto essa for uma restrição consciente, mas deixa de ser “futuro” no momento em que houver scale-out.
+A15 e A18 quando houver dataset/tráfego representativo; A24 em uma janela de limpeza de schema. A7 pode ficar documentado como single-instance enquanto essa for uma restrição consciente, mas deixa de ser “futuro” no momento em que houver scale-out.
 
 ## 18. Avaliação profissional
 

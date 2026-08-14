@@ -39,7 +39,7 @@ beforeEach(async () => {
     await db.query("DROP FUNCTION IF EXISTS force_http_500()");
     await db.query("DROP TRIGGER IF EXISTS force_http_check ON users");
     await db.query("DROP FUNCTION IF EXISTS force_http_check()");
-    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, standings, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
+    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
     await seedUsers();
 });
 
