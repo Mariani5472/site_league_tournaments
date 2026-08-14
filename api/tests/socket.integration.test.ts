@@ -30,7 +30,7 @@ before(async () => {
 });
 
 beforeEach(async () => {
-    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, standings, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
+    await db.query("TRUNCATE match_votes, match_players, matches, lobby_players, lobbies, league_join_requests, league_members, leagues, riot_accounts, users RESTART IDENTITY CASCADE");
     for (const [index, id] of ids.entries()) {
         await db.query(
             "INSERT INTO users (id, email, nickname) VALUES ($1, $2, $3)",
