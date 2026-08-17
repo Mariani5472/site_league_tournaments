@@ -325,6 +325,17 @@ describe("critical domain flows", { concurrency: false }, () => {
 
         assert.equal(lobby.createdBy, ids[1]);
     });
+    test("players can toggle ready before the lobby is full", async () => {
+        const league = await createLeague(4);
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 4 });
+        await lobbies.joinLobby(lobby.id, ids[0], league.id);
+
+        await lobbies.setReady(lobby.id, ids[0], league.id);
+        assert.equal((await lobbies.show(ids[0], lobby.id, league.id)).currentPlayer?.isReady, true);
+
+        await lobbies.setUnready(lobby.id, ids[0], league.id);
+        assert.equal((await lobbies.show(ids[0], lobby.id, league.id)).currentPlayer?.isReady, false);
+    });
     test("configured ten-player lobby starts when the final player is ready", async () => {
         const league = await createLeague(10);
         for (const userId of ids.slice(1)) await leagues.join(league.id, userId);

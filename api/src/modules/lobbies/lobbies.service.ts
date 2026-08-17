@@ -493,10 +493,6 @@ export class LobbiesService {
         if (player.isReady) {
             throw new AppError("Player is already ready", 409);
         }
-        const players = await this.lobbiesRepository.getLobbyPlayers(lobby.id);
-        if (players.length !== lobby.maxPlayers) {
-            throw new AppError("Lobby is not full", 409);
-        }
         const updated = await this.lobbiesRepository.updatePlayerReady(lobbyId, userId, true);
         SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
             leagueId: lobby.leagueId,
@@ -526,9 +522,6 @@ export class LobbiesService {
         const lobby = await this.lobbiesRepository.findById(lobbyId);
         if (!lobby) {
             throw new AppError("Lobby not found", 404);
-        }
-        if (Number(lobby.maxPlayers) === 10 && !lobby.teamSelectionCompleted) {
-            throw new AppError("Team selection must be completed before ready", 409);
         }
         if (lobby.leagueId !== leagueId)
             throw new AppError("Lobby not found", 404);
