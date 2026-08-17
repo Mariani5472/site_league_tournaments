@@ -188,7 +188,8 @@ describe("HTTP API contracts", { concurrency: false }, () => {
     test("public player profile exposes only its safe projection and public leagues", async () => {
         const publicLeague = await createLeague(ids[0], { name: "Visible league", visibility: "public" });
         await createLeague(ids[0], { name: "Secret league", visibility: "private" });
-        const response = await request(`/players/${ids[0]}`);
+        assert.equal((await request(`/players/${ids[0]}`)).status, 401);
+        const response = await request(`/players/${ids[0]}`, { userId: ids[1] });
         assert.equal(response.status, 200);
         const text = await response.text();
         const body = JSON.parse(text) as { id: string; publicLeagues: Array<{ id: string }> };

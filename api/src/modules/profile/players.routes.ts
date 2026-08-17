@@ -12,4 +12,4 @@ const discoveryRateLimit = createHttpRateLimitMiddleware({
     surface: "player_search",
 });
 playersRoutes.get("/", authMiddleware, discoveryRateLimit, controller.discover.bind(controller));
-playersRoutes.get("/:userId", controller.showPublic.bind(controller));
+playersRoutes.get("/:userId", authMiddleware, controller.showPublic.bind(controller));
