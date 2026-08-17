@@ -29,7 +29,7 @@ export function PlayerProfileView({
     return (
         <div className="space-y-8">
             <header className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-                <div className="relative aspect-[3/1] min-h-28 max-h-72 bg-gradient-to-br from-primary/30 via-primary/10 to-muted">
+                <div className="relative aspect-[3/1] w-full bg-gradient-to-br from-primary/30 via-primary/10 to-muted">
                     <SafeImage
                         src={profile.bannerUrl}
                         alt={t("profile.bannerAlt")}
@@ -38,8 +38,8 @@ export function PlayerProfileView({
                     <ImageOff className="absolute bottom-4 right-4 h-5 w-5 text-muted-foreground/40" />
                 </div>
                 <div className="relative px-5 pb-6 sm:px-8">
-                    <div className="-mt-10 flex flex-col gap-4 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex min-w-0 items-end gap-4">
+                    <div className="-mt-10 flex flex-col gap-5 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="flex min-w-0 items-end gap-6 sm:gap-8">
                             <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-card bg-primary text-xl font-bold text-primary-foreground sm:h-24 sm:w-24">
                                 <span>{initials}</span>
                                 <SafeImage
@@ -48,7 +48,7 @@ export function PlayerProfileView({
                                     className="absolute inset-0 h-full w-full object-cover"
                                 />
                             </div>
-                            <div className="min-w-0 pb-1">
+                            <div className="min-w-0 pb-2">
                                 <h1 className="truncate text-2xl font-bold sm:text-3xl">
                                     {profile.nickname}
                                 </h1>
