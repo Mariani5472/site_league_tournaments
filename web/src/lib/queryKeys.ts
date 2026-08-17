@@ -1,4 +1,5 @@
 export const queryKeys = {
+    dashboard: ["dashboard"] as const,
     profile: {
         me: ["profile", "me"] as const,
     },

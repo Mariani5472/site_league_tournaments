@@ -5,6 +5,7 @@ import { leaguesRoutes } from "../modules/leagues/leagues.routes";
 import { profileRoutes } from "../modules/profile/profile.routes";
 import { matchesRoutes } from "../modules/matches/matches.routes";
 import { riotRoutes } from "../modules/riot/riot.routes";
+import { dashboardRoutes } from "../modules/dashboard/dashboard.routes";
 export const routes = Router();
 routes.get("/", (_, response) => {
     return response.json({
@@ -17,3 +18,4 @@ routes.use("/profile", profileRoutes);
 routes.use("/riot", riotRoutes);
 routes.use("/leagues", leaguesRoutes);
 routes.use("/matches", matchesRoutes);
+routes.use("/dashboard", dashboardRoutes);
