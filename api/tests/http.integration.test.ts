@@ -175,6 +175,28 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         });
         assert.equal(updated.status, 200);
         assert.equal((await updated.json() as { nickname: string }).nickname, "updated-user");
+
+        const removed = await request("/profile", {
+            method: "PATCH", userId: ids[0],
+            body: { nickname: "updated-user", avatarUrl: null, bannerUrl: null }
+        });
+        const removedBody = await removed.json() as { avatarUrl: string | null; bannerUrl: string | null };
+        assert.equal(removedBody.avatarUrl, null);
+        assert.equal(removedBody.bannerUrl, null);
+    });
+
+    test("public player profile exposes only its safe projection and public leagues", async () => {
+        const publicLeague = await createLeague(ids[0], { name: "Visible league", visibility: "public" });
+        await createLeague(ids[0], { name: "Secret league", visibility: "private" });
+        const response = await request(`/players/${ids[0]}`);
+        assert.equal(response.status, 200);
+        const text = await response.text();
+        const body = JSON.parse(text) as { id: string; publicLeagues: Array<{ id: string }> };
+        assert.equal(body.id, ids[0]);
+        assert.deepEqual(body.publicLeagues.map(league => league.id), [publicLeague.id]);
+        assert.equal(text.includes("email"), false);
+        assert.equal(text.toLowerCase().includes("puuid"), false);
+        assert.equal(text.includes("Secret league"), false);
     });
 
     test("profile schemas and expected SQL errors map to 400, 409 and 500", async () => {

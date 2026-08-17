@@ -11,6 +11,8 @@ export const formatDateTime = (value: string | number | Date) =>
         dateStyle: "short",
         timeStyle: "short",
     }).format(new Date(value));
+export const formatDate = (value: string | number | Date) =>
+    new Intl.DateTimeFormat(defaultLocale, { dateStyle: "long" }).format(new Date(value));
 export const formatList = (values: string[]) =>
     new Intl.ListFormat(defaultLocale, {
         style: "long",

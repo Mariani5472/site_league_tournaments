@@ -18,4 +18,11 @@ export function tp(
     return t(pluralCategory(value) === "one" ? keys.one : keys.other, { ...params, count: value });
 }
 
-export { defaultLocale, formatDateTime, formatList, formatNumber, formatPercent } from "./format";
+export {
+    defaultLocale,
+    formatDate,
+    formatDateTime,
+    formatList,
+    formatNumber,
+    formatPercent,
+} from "./format";

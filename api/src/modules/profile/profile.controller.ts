@@ -4,18 +4,20 @@ import { profileParamsSchema, updateProfileBodySchema } from "./profile.schemas"
 export class ProfileController {
     private profileService = new ProfileService();
     async show(request: Request, response: Response) {
-        const { userId } = profileParamsSchema.parse(request.params);
-        const requesterId = request.user.id;
-        const profile = await this.profileService.show(userId ?? requesterId);
+        const profile = await this.profileService.showPrivate(request.user.id);
         return response.json(profile);
+    }
+    async showPublic(request: Request, response: Response) {
+        const { userId } = profileParamsSchema.parse(request.params);
+        return response.json(await this.profileService.showPublic(userId));
     }
     async update(request: Request, response: Response) {
         const userId = request.user.id;
         const body = updateProfileBodySchema.parse(request.body);
         const profile = await this.profileService.update(userId, {
             nickname: body.nickname,
-            avatarUrl: body.avatarUrl ?? null,
-            bannerUrl: body.bannerUrl ?? null,
+            avatarUrl: body.avatarUrl,
+            bannerUrl: body.bannerUrl,
         });
         return response.json(profile);
     }

@@ -2,6 +2,7 @@ export const queryKeys = {
     dashboard: ["dashboard"] as const,
     profile: {
         me: ["profile", "me"] as const,
+        player: (userId: string) => ["profile", "player", userId] as const,
     },
     riot: {
         config: ["riot", "config"] as const,
