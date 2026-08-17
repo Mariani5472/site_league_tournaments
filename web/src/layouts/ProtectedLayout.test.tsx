@@ -22,7 +22,7 @@ describe("ProtectedLayout", () => {
 
     it("does not render private content while session initialization is loading", () => {
         renderApp(routes(), { route: "/private", auth: { user: null, loading: true } });
-        expect(screen.getByText("Loading...")).toBeVisible();
+        expect(screen.getByText("Carregando…")).toBeVisible();
         expect(screen.queryByText("Private content")).not.toBeInTheDocument();
     });
 

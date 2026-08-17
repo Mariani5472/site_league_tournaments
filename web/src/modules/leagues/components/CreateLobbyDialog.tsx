@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useState, type ReactNode } from "react";
 import { createLobby } from "../services/leagues.service";
 import { queryKeys } from "@/lib/queryKeys";
+import { t } from "@/i18n";
+import { mutationErrorMessage } from "@/services/api-errors";
 interface Props {
     leagueId: string;
     children: ReactNode;
@@ -22,12 +24,12 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.lobbies(leagueId)
             });
-            toast.success("Lobby created!");
+            toast.success(t("league.lobbyCreated"));
             setOpen(false);
             setMaxPlayers(10);
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
+        onError: (error: unknown) => {
+            toast.error(mutationErrorMessage(error));
         }
     });
     function handleSubmit() {
@@ -49,7 +51,7 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
 
           <DialogTitle>
 
-            Create Lobby
+            {t("league.createLobby")}
 
           </DialogTitle>
 
@@ -65,7 +67,7 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
                 text-sm
                 font-medium
               ">
-              Maximum Players
+              {t("league.maxPlayers")}
             </label>
 
             <Input type="number" min={2} max={10} value={maxPlayers} onChange={(e) => setMaxPlayers(Number(e.target.value))}/>
@@ -75,8 +77,8 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
           <Button className="w-full" disabled={mutation.isPending} onClick={handleSubmit}>
 
             {mutation.isPending
-            ? "Creating..."
-            : "Create Lobby"}
+            ? t("league.creating")
+            : t("league.createLobby")}
 
           </Button>
 

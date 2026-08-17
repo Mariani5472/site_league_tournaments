@@ -1,5 +1,6 @@
 import type { LobbyPlayer } from "../types/lobby.types";
 import { PlayerCard } from "./PlayerCard";
+import { t } from "@/i18n";
 interface Props {
     title: string;
     players: LobbyPlayer[];
@@ -32,7 +33,7 @@ export function TeamColumn({ title, players, }: Props) {
               text-muted-foreground
               text-sm
             ">
-            Empty
+            {t("lobby.noPlayers")}
           </p>)}
 
       {players.map(player => (<PlayerCard key={player.userId} player={player}/>))}

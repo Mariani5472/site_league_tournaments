@@ -38,7 +38,7 @@ describe("LeagueSettingsPage authorization", () => {
 
         renderApp(page(), { route: "/leagues/league-1/settings" });
 
-        expect(screen.getByText("Loading...")).toBeVisible();
+        expect(screen.getByText("Carregando…")).toBeVisible();
         expect(screen.queryByText("League page")).not.toBeInTheDocument();
     });
 

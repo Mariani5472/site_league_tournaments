@@ -33,7 +33,7 @@ describe("lobby critical controls", () => {
     it("separates accepted teams from individual readiness", () => {
         renderApp(<TeamSelection lobby={completedLobby()} />);
         expect(screen.getByText(/aceitar os times não confirma/i)).toBeVisible();
-        expect(screen.getByText(/3\/10 jogadores prontos/i)).toBeVisible();
+        expect(screen.getByText(/3 de 10 jogadores prontos/i)).toBeVisible();
     });
 
     it("exposes an explicit ready action only after selection unlocks", async () => {
@@ -49,7 +49,7 @@ describe("lobby critical controls", () => {
         rerender(<LobbyActions {...props} teamSelectionLocked={false} />);
         await userEvent.click(screen.getByRole("button", { name: /confirmar prontidão/i }));
         expect(ready).toHaveBeenCalledOnce();
-        await userEvent.click(screen.getByRole("button", { name: /switch to team/i }));
+        await userEvent.click(screen.getByRole("button", { name: /trocar de time/i }));
         expect(switchTeam).toHaveBeenCalledOnce();
     });
 });

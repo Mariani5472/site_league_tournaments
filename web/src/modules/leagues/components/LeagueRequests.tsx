@@ -4,6 +4,7 @@ import type { LeagueRequest } from "../types/request";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
 import { mutationErrorMessage } from "@/services/api-errors";
+import { t } from "@/i18n";
 type Props = {
     leagueId: string;
     requests: LeagueRequest[];
@@ -19,7 +20,7 @@ export function LeagueRequests({ leagueId, requests }: Props) {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.members(leagueId)
             });
-            toast.success("Player approved");
+            toast.success(t("league.approved"));
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
@@ -29,7 +30,7 @@ export function LeagueRequests({ leagueId, requests }: Props) {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.requests(leagueId)
             });
-            toast.success("Request rejected");
+            toast.success(t("league.rejected"));
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
@@ -44,11 +45,11 @@ export function LeagueRequests({ leagueId, requests }: Props) {
           text-xl
           font-semibold
         ">
-        Join Requests
+        {t("league.requests")}
       </h2>
 
       <div className="space-y-3">
-        {pendingRequests.length === 0 && <p className="text-muted-foreground">Nenhuma solicitação pendente.</p>}
+        {pendingRequests.length === 0 && <p className="text-muted-foreground">{t("league.requestsEmpty")}</p>}
         {pendingRequests.map((request) => (<div key={request.id} className="
               flex
               items-center
@@ -77,7 +78,7 @@ export function LeagueRequests({ leagueId, requests }: Props) {
                   text-sm
                   text-white
                 ">
-                Approve
+                {t("league.approve")}
               </button>
 
               <button disabled={approveMutation.isPending || rejectMutation.isPending} onClick={() => rejectMutation.mutate(request.id)} className="
@@ -88,7 +89,7 @@ export function LeagueRequests({ leagueId, requests }: Props) {
                   text-sm
                   text-white
                 ">
-                Reject
+                {t("league.reject")}
               </button>
             </div>
           </div>))}
