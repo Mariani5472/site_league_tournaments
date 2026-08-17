@@ -229,9 +229,9 @@ export const ptBR = {
     "settings.lobbyCreationPolicy": "Quem pode criar lobbies",
     "settings.lobbyCreationAdmins": "Somente owner e admins",
     "settings.lobbyCreationMembers": "Todos os membros",
-    "settings.autoStartLobby": "Início automático com 10 jogadores",
+    "settings.autoStartLobby": "Início automático com o numero cheio de jogadores",
     "settings.autoStartLobbyDescription":
-        "Inicia a partida quando o lobby de 10 estiver completo, com os times definidos e todos prontos.",
+        "Inicia a partida quando o lobby estiver completo, com os times definidos e todos prontos.",
     "danger.title": "Zona de perigo",
     "danger.impact":
         "Excluir esta liga remove permanentemente o acesso aos membros, solicitações, lobbies e histórico de partidas. Esta ação não pode ser desfeita.",
