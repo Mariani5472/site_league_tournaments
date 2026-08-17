@@ -1,4 +1,5 @@
 import type { RiotAccount } from "@/modules/riot/types/riotAccount";
+import { t } from "@/i18n";
 type Props = {
     riotAccount: RiotAccount | null;
 };
@@ -13,13 +14,13 @@ export function RiotAccountCard({ riotAccount }: Props) {
           text-xl
           font-semibold
         ">
-        Riot Account
+        {t("profile.riot")}
       </h2>
 
       {!riotAccount && (<div className="
             text-muted-foreground
           ">
-          No Riot account linked
+          {t("profile.notLinked")}
         </div>)}
 
       {riotAccount && (<>
@@ -33,7 +34,7 @@ export function RiotAccountCard({ riotAccount }: Props) {
               text-sm
               text-muted-foreground
             ">
-            Linked
+            {t("profile.linkedStatus")}
           </div>
         </>)}
     </div>);

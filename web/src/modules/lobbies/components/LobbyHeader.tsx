@@ -1,4 +1,5 @@
 import type { LobbyDetails } from "../types/lobby.types";
+import { t } from "@/i18n";
 interface Props {
     lobby: LobbyDetails;
 }
@@ -16,13 +17,13 @@ export function LobbyHeader({ lobby, }: Props) {
             text-3xl
             font-bold
           ">
-          Lobby
+          {t("lobby.title")}
         </h1>
 
         <p className="
             text-muted-foreground
           ">
-          Waiting for players...
+          {t("lobby.waiting")}
         </p>
       </div>
 
@@ -33,7 +34,7 @@ export function LobbyHeader({ lobby, }: Props) {
             text-sm
             text-muted-foreground
           ">
-          Players
+          {t("common.players")}
         </span>
         <p className="font-semibold">
           {lobby.playersCount}

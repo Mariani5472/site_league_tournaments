@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Trophy, UserRound } from "lucide-react";
+import { t } from "@/i18n";
 const links = [
-    { to: "/main", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/leagues", label: "Leagues", icon: Trophy },
-    { to: "/profile", label: "Profile", icon: UserRound }
+    { to: "/main", label: t("sidebar.dashboard"), icon: LayoutDashboard },
+    { to: "/leagues", label: t("sidebar.leagues"), icon: Trophy },
+    { to: "/profile", label: t("sidebar.profile"), icon: UserRound }
 ];
 interface SidebarProps {
     isOpen: boolean;
@@ -17,7 +18,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       `}>
       <div className="flex h-16 shrink-0 items-center justify-between border-b px-5">
         <NavLink to="/main" className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">L</span><span>ligas</span></NavLink>
-        <button onClick={onClose} className="rounded-md p-1 hover:bg-muted lg:hidden" aria-label="Fechar menu">
+        <button onClick={onClose} className="rounded-md p-1 hover:bg-muted lg:hidden" aria-label={t("sidebar.close")}>
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
           </svg>

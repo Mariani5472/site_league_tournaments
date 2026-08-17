@@ -10,6 +10,7 @@ import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { LeagueLobbySection } from "../components/LeagueLobbySelection";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
 import { LeagueResults } from "@/modules/matches/LeagueResults";
+import { t } from "@/i18n";
 export function LeaguePage() {
     const { id } = useParams();
     const leagueId = id!;
@@ -21,11 +22,11 @@ export function LeaguePage() {
     const { data: requests, isLoading: loadingRequests, isError: requestsError, refetch: retryRequests, } = useLeagueRequests(leagueId, (roleData.isAdmin || roleData.isOwner));
     if (loadingLeague) {
         return (<div>
-        Carregando liga...
+        {t("async.league")}
       </div>);
     }
     if (leagueError || !league) {
-        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar a liga.</p><button className="underline" onClick={() => retryLeague()}>Tentar novamente</button></div>;
+        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">{t("league.loadError")}</p><button className="underline" onClick={() => retryLeague()}>{t("common.retry")}</button></div>;
     }
     return (<div className="
         space-y-6
@@ -37,11 +38,11 @@ export function LeaguePage() {
           gap-6
           xl:grid-cols-2
         ">
-        {loadingLobbies ? <p className="text-muted-foreground">Carregando lobbies...</p> : lobbiesError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar os lobbies.</p><button className="mt-2 underline" onClick={() => retryLobbies()}>Tentar novamente</button></div> : <LeagueLobbySection leagueId={leagueId} lobbies={lobbies ?? []} isAdmin={roleData.isAdmin}/>}
+        {loadingLobbies ? <p className="text-muted-foreground">{t("async.lobbies")}</p> : lobbiesError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">{t("league.lobbiesError")}</p><button className="mt-2 underline" onClick={() => retryLobbies()}>{t("common.retry")}</button></div> : <LeagueLobbySection leagueId={leagueId} lobbies={lobbies ?? []} isAdmin={roleData.isAdmin}/>}
 
-        {loadingMembers ? <p className="text-muted-foreground">Carregando membros...</p> : membersError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar os membros.</p><button className="mt-2 underline" onClick={() => retryMembers()}>Tentar novamente</button></div> : <LeagueMembers leagueId={leagueId} members={members || []} role={roleData.role} isAdmin={roleData.isAdmin}/>}
+        {loadingMembers ? <p className="text-muted-foreground">{t("async.members")}</p> : membersError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">{t("league.membersError")}</p><button className="mt-2 underline" onClick={() => retryMembers()}>{t("common.retry")}</button></div> : <LeagueMembers leagueId={leagueId} members={members || []} role={roleData.role} isAdmin={roleData.isAdmin}/>}
 
-        {roleData.isAdmin && (loadingRequests ? <p className="text-muted-foreground">Carregando solicitações...</p> : requestsError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">Não foi possível carregar as solicitações.</p><button className="mt-2 underline" onClick={() => retryRequests()}>Tentar novamente</button></div> : (<LeagueRequests leagueId={leagueId} requests={requests || []}/>))}
+        {roleData.isAdmin && (loadingRequests ? <p className="text-muted-foreground">{t("async.requests")}</p> : requestsError ? <div className="rounded-xl border p-6"><p className="text-destructive" role="alert">{t("league.requestsError")}</p><button className="mt-2 underline" onClick={() => retryRequests()}>{t("common.retry")}</button></div> : (<LeagueRequests leagueId={leagueId} requests={requests || []}/>))}
       </div>
       <LeagueResults leagueId={leagueId}/>
     </div>);

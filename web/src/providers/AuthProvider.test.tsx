@@ -82,7 +82,7 @@ describe("AuthProvider", () => {
         await userEvent.click(screen.getByRole("button", { name: "Logout" }));
 
         expect(await screen.findByText("anonymous")).toBeVisible();
-        expect(screen.getByRole("alert")).toHaveTextContent("other sessions may remain active");
+        expect(screen.getByRole("alert")).toHaveTextContent("outras sessões podem continuar ativas");
         expect(queryClient.getQueryData(["profile", "me"])).toBeUndefined();
         expect(mocks.signOut).toHaveBeenNthCalledWith(1);
         expect(mocks.signOut).toHaveBeenNthCalledWith(2, { scope: "local" });
@@ -104,7 +104,7 @@ describe("AuthProvider", () => {
         await userEvent.click(screen.getByRole("button", { name: "Logout" }));
 
         expect(await screen.findByText("user-a")).toBeVisible();
-        expect(screen.getByRole("alert")).toHaveTextContent("session remains active");
+        expect(screen.getByRole("alert")).toHaveTextContent("sessão continua ativa");
         expect(queryClient.getQueryData(["leagues", "mine"])).toEqual([{ id: "private-a" }]);
         expect(mocks.socketApply).not.toHaveBeenLastCalledWith(null);
     });
@@ -114,7 +114,7 @@ describe("AuthProvider", () => {
         mocks.sync.mockRejectedValueOnce(new Error("Profile sync unavailable"));
         render(<QueryClientProvider client={testQueryClient()}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
         expect(await screen.findByText("anonymous")).toBeVisible();
-        expect(screen.getByRole("alert")).toHaveTextContent("Profile sync unavailable");
+        expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível inicializar seu perfil");
         expect(mocks.socketApply).toHaveBeenLastCalledWith(null);
     });
 

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
 import { FallbackRedirect } from "./FallbackRedirect";
+import { t } from "@/i18n";
 
 const LandingPage = lazy(() => import("@/modules/landing/pages/LandingPage").then(module => ({ default: module.LandingPage })));
 const LoginPage = lazy(() => import("@/modules/login/pages/LoginPage").then(module => ({ default: module.LoginPage })));
@@ -14,7 +15,7 @@ const LeagueSettingsPage = lazy(() => import("@/modules/leagues/pages/LeagueSett
 const LobbyPage = lazy(() => import("@/modules/lobbies/pages/LobbyPage").then(module => ({ default: module.LobbyPage })));
 
 export function RouteLoadingFallback() {
-    return <main aria-busy="true" aria-live="polite"><p role="status">Carregando página…</p></main>;
+    return <main aria-busy="true" aria-live="polite"><p role="status">{t("async.page")}</p></main>;
 }
 
 export function AppRoutes() {

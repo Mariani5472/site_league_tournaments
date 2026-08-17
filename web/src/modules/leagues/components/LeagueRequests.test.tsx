@@ -26,8 +26,8 @@ describe("LeagueRequests mutation feedback", () => {
     });
 
     it.each([
-        ["Approve", approveRequest],
-        ["Reject", rejectRequest],
+        ["Aprovar", approveRequest],
+        ["Recusar", rejectRequest],
     ])("shows one visible error when %s fails", async (label, service) => {
         const user = userEvent.setup();
         vi.mocked(service).mockRejectedValue(new ApiError("not allowed", 403, "FORBIDDEN"));
@@ -36,7 +36,7 @@ describe("LeagueRequests mutation feedback", () => {
         await user.click(screen.getByRole("button", { name: label }));
 
         expect(toast.error).toHaveBeenCalledOnce();
-        expect(toast.error).toHaveBeenCalledWith("You do not have permission to perform this action.");
+        expect(toast.error).toHaveBeenCalledWith("Você não tem permissão para realizar esta ação.");
         expect(toast.success).not.toHaveBeenCalled();
     });
 });

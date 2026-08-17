@@ -4,13 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { t } from "@/i18n";
 export function ProtectedLayout() {
     const { user, loading, signOut, error } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const navigate = useNavigate();
     if (loading) {
         return (<div className="flex min-h-screen items-center justify-center">
-        Loading...
+        {t("common.loading")}
       </div>);
     }
     if (!user) {
@@ -24,7 +25,7 @@ export function ProtectedLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/90 px-4 backdrop-blur sm:px-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="rounded-md p-2 hover:bg-muted lg:hidden" aria-label="Abrir menu">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="rounded-md p-2 hover:bg-muted lg:hidden" aria-label={t("sidebar.open")}>
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
@@ -41,7 +42,7 @@ export function ProtectedLayout() {
               } catch { /* AuthProvider keeps the session and exposes the blocking error. */ }
             }}>
               <LogOut className="h-4 w-4"/>
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">{t("auth.logout")}</span>
             </Button>
           </div>
         </header>

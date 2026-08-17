@@ -19,6 +19,8 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useLeagueSocket } from "@/modules/leagues/hooks/useLeagueSocket";
 import { ArrowLeft } from "lucide-react";
 import { TeamSelection } from "../components/TeamSelection";
+import { t } from "@/i18n";
+import { mutationErrorMessage } from "@/services/api-errors";
 export function LobbyPage() {
     const { leagueId, lobbyId } = useParams();
     const { user } = useAuth();
@@ -33,17 +35,17 @@ export function LobbyPage() {
     const start = useMutation({ mutationFn: () => startLobby(leagueId!, lobbyId!), onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.lobbies.detail(leagueId!, lobbyId!) });
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.matches(leagueId!) });
-            toast.success("Match started");
-        }, onError: (error: Error) => toast.error(error.message) });
+            toast.success(t("lobby.started"));
+        }, onError: (error: unknown) => toast.error(mutationErrorMessage(error)) });
     useEffect(() => {
         if (lobby?.status === "cancelled")
             navigate(`/leagues/${leagueId}`, { replace: true });
     }, [leagueId, lobby?.status, navigate]);
     if (isLoading) {
-        return <p className="text-muted-foreground">Carregando lobby...</p>;
+        return <p className="text-muted-foreground">{t("common.loading")}</p>;
     }
     if (isError || !lobby) {
-        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar o lobby.</p><button className="underline" onClick={() => refetch()}>Tentar novamente</button></div>;
+        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">{t("lobby.loadError")}</p><button className="underline" onClick={() => refetch()}>{t("common.retry")}</button></div>;
     }
     const me = lobby.players.find(player => player.userId === user?.id);
     return (<div className="
@@ -52,7 +54,7 @@ export function LobbyPage() {
                 py-8
                 space-y-6
             ">
-            <Button variant="ghost" className="w-fit" onClick={() => navigate(`/leagues/${leagueId}`)}><ArrowLeft className="h-4 w-4"/> Voltar para a liga</Button>
+            <Button variant="ghost" className="w-fit" onClick={() => navigate(`/leagues/${leagueId}`)}><ArrowLeft className="h-4 w-4"/> {t("lobby.back")}</Button>
 
             <LobbyHeader lobby={lobby}/>
             <LobbyStatus lobby={lobby}/>
@@ -62,7 +64,7 @@ export function LobbyPage() {
             <LobbyActions currentPlayer={me} status={lobby.status} canManage={role.isAdmin} teamSelectionLocked={Boolean(lobby.teamSelection?.available && !lobby.teamSelection.completed)} {...actions}/>
 
             {role.isAdmin && lobby.status === "waiting" && (<Button disabled={!lobby.canStart || start.isPending} onClick={() => start.mutate()}>
-                {start.isPending ? "Starting..." : "Start match"}
+                {start.isPending ? t("lobby.starting") : t("lobby.start")}
               </Button>)}
 
             <LobbyTeams lobby={lobby} {...actions}/>

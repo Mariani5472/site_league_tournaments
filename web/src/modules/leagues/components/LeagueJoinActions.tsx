@@ -4,6 +4,8 @@ import { joinLeague, requestLeagueJoin } from "../services/leagues.service";
 import type { League } from "../types/league";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { t } from "@/i18n";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     league: League;
 };
@@ -16,23 +18,23 @@ export function LeagueJoinActions({ league }: Props) {
     };
     const joinMutation = useMutation({
         mutationFn: () => joinLeague(league.id),
-        onSuccess: () => { refreshLeagues(); toast.success("You joined the league"); },
-        onError: (error) => toast.error(error.message || "Failed to enter league")
+        onSuccess: () => { refreshLeagues(); toast.success(t("league.joined")); },
+        onError: (error) => toast.error(mutationErrorMessage(error))
     });
     const requestMutation = useMutation({
         mutationFn: () => requestLeagueJoin(league.id),
-        onSuccess: () => { refreshLeagues(); toast.success("Request sent"); },
-        onError: (error) => toast.error(error.message || "Failed to send request")
+        onSuccess: () => { refreshLeagues(); toast.success(t("league.requestSent")); },
+        onError: (error) => toast.error(mutationErrorMessage(error))
     });
     if (league.joinPolicy === "open") {
         return (<Button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
-        {joinMutation.isPending ? "Joining..." : "Join League"}
+        {joinMutation.isPending ? t("league.joining") : t("league.join")}
       </Button>);
     }
     if (league.joinPolicy === "invite_only") {
-        return <p className="text-sm text-muted-foreground">This league is invite-only.</p>;
+        return <p className="text-sm text-muted-foreground">{t("league.inviteOnly")}</p>;
     }
     return (<Button onClick={() => requestMutation.mutate()} disabled={requestMutation.isPending}>
-      {requestMutation.isPending ? "Sending..." : "Request Join"}
+      {requestMutation.isPending ? t("league.sending") : t("league.requestJoin")}
     </Button>);
 }

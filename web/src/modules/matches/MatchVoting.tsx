@@ -6,6 +6,9 @@ import { getMatch, resolveMatch, voteMatch } from "./services";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { useSocketConnected } from "@/hooks/useSocketConnected";
+import { formatNumber, t } from "@/i18n";
+import { labelResolution } from "@/i18n/labels";
+import { mutationErrorMessage } from "@/services/api-errors";
 export function MatchVoting({ matchId, canResolve }: {
     matchId: string;
     canResolve: boolean;
@@ -26,14 +29,14 @@ export function MatchVoting({ matchId, canResolve }: {
             client.invalidateQueries({ queryKey: queryKeys.leagues.standings(updatedMatch.leagueId) });
         }
     };
-    const vote = useMutation({ mutationFn: (team: number) => voteMatch(matchId, team), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
-    const resolve = useMutation({ mutationFn: (team: number) => resolveMatch(matchId, team, reason), onSuccess: refresh, onError: (e: Error) => toast.error(e.message) });
+    const vote = useMutation({ mutationFn: (team: number) => voteMatch(matchId, team), onSuccess: refresh, onError: (error: unknown) => toast.error(mutationErrorMessage(error)) });
+    const resolve = useMutation({ mutationFn: (team: number) => resolveMatch(matchId, team, reason), onSuccess: refresh, onError: (error: unknown) => toast.error(mutationErrorMessage(error)) });
     if (match.isLoading)
-        return <p className="text-muted-foreground">Carregando partida...</p>;
+        return <p className="text-muted-foreground">{t("async.match")}</p>;
     if (match.isError || !match.data)
-        return <p className="text-destructive" role="alert">Não foi possível carregar a partida.</p>;
+        return <p className="text-destructive" role="alert">{t("match.loadingError")}</p>;
     const data = match.data;
     const needed1 = Math.max(0, (data.majorityRequired ?? 0) - (data.votes?.team1 ?? 0));
     const needed2 = Math.max(0, (data.majorityRequired ?? 0) - (data.votes?.team2 ?? 0));
-    return <section className="rounded-xl border p-4 sm:p-6 space-y-4"><h2 className="text-xl font-semibold">Match result</h2>{data.status === "finished" ? <p className="font-medium">Team {data.winnerTeamNumber} won by {data.resolutionType === "admin" ? "administrative resolution" : "absolute majority"}.</p> : <><p className="text-sm text-muted-foreground">Absolute majority: {data.majorityRequired} votes. Team 1 needs {needed1}; Team 2 needs {needed2}.</p><p className="font-medium">{data.myVote ? `Your current vote: Team ${data.myVote}` : "You have not voted yet."}</p><div className="flex flex-wrap gap-2"><Button variant={data.myVote === 1 ? "default" : "outline"} aria-pressed={data.myVote === 1} disabled={vote.isPending} onClick={() => vote.mutate(1)}>Vote Team 1</Button><Button variant={data.myVote === 2 ? "default" : "outline"} aria-pressed={data.myVote === 2} disabled={vote.isPending} onClick={() => vote.mutate(2)}>Vote Team 2</Button></div>{canResolve && <div className="border-t pt-4 space-y-3"><p className="font-medium">Resolve a contested result</p><Input value={reason} onChange={e => setReason(e.target.value)} placeholder="Required justification"/><div className="flex gap-2"><Button variant="outline" disabled={resolve.isPending || reason.trim().length < 5} onClick={() => resolve.mutate(1)}>Award Team 1</Button><Button variant="outline" disabled={resolve.isPending || reason.trim().length < 5} onClick={() => resolve.mutate(2)}>Award Team 2</Button></div></div>}</>}</section>;
+    return <section className="rounded-xl border p-4 sm:p-6 space-y-4"><h2 className="text-xl font-semibold">{t("match.result")}</h2>{data.status === "finished" ? <p className="font-medium">{t("match.finished", { team: data.winnerTeamNumber ?? "—", resolution: data.resolutionType === "admin" ? labelResolution("admin") : t("enum.resolution.majority") })}</p> : <><p className="text-sm text-muted-foreground">{t("match.majority", { required: formatNumber(data.majorityRequired ?? 0), team1: formatNumber(needed1), team2: formatNumber(needed2) })}</p><p className="font-medium">{data.myVote ? t("match.myVote", { team: data.myVote }) : t("match.notVoted")}</p><div className="flex flex-wrap gap-2">{[1, 2].map(team => <Button key={team} variant={data.myVote === team ? "default" : "outline"} aria-pressed={data.myVote === team} disabled={vote.isPending} onClick={() => vote.mutate(team)}>{t("match.voteTeam", { team })}</Button>)}</div>{canResolve && <div className="border-t pt-4 space-y-3"><p className="font-medium">{t("match.resolve")}</p><Input value={reason} onChange={event => setReason(event.target.value)} placeholder={t("match.justification")}/><div className="flex gap-2">{[1, 2].map(team => <Button key={team} variant="outline" disabled={resolve.isPending || reason.trim().length < 5} onClick={() => resolve.mutate(team)}>{t("match.awardTeam", { team })}</Button>)}</div></div>}</>}</section>;
 }

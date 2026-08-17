@@ -2,6 +2,8 @@ import { Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
+import { t } from "@/i18n";
+import { labelLobbyStatus } from "@/i18n/labels";
 interface Props {
     leagueId: string;
     lobby: Lobby;
@@ -27,14 +29,14 @@ export function LeagueLobbyCard({ leagueId, lobby }: Props) {
               font-semibold
               text-lg
             ">
-            Lobby
+            {t("league.lobby")}
           </h3>
 
           <p className="
               text-sm
               text-muted-foreground
             ">
-            Status: {lobby.status}
+            {t("common.status", { status: labelLobbyStatus(lobby.status) })}
           </p>
         </div>
 
@@ -45,7 +47,7 @@ export function LeagueLobbyCard({ leagueId, lobby }: Props) {
             py-1
             text-xs
           ">
-          {lobby.status}
+          {labelLobbyStatus(lobby.status)}
         </span>
       </div>
 
@@ -66,7 +68,7 @@ export function LeagueLobbyCard({ leagueId, lobby }: Props) {
       </div>
 
       <Button onClick={() => navigate(`/leagues/${leagueId}/lobbies/${lobby.id}`)}>
-        {isWaiting ? "Open Lobby" : "Watch Match"}
+        {isWaiting ? t("league.openLobby") : t("league.watchMatch")}
       </Button>
     </div>);
 }

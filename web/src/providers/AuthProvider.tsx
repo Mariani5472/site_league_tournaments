@@ -7,6 +7,8 @@ import type { User } from "@supabase/supabase-js";
 import type { Session } from "@supabase/supabase-js";
 import { SessionLifecycle } from "@/services/session-lifecycle";
 import { socketSessionOwner } from "@/services/socket";
+import { t } from "@/i18n";
+import { authErrorMessage } from "@/services/api-errors";
 type AuthProviderProps = {
     children: ReactNode;
 };
@@ -47,7 +49,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 lastSessionKey.current = undefined;
                 await sessionLifecycle.transition(null);
                 setUser(null);
-                setError(loadError instanceof Error ? loadError.message : "Could not initialize your profile");
+                setError(authErrorMessage(loadError, "initialize"));
             }
         }
         finally {
@@ -70,7 +72,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         catch (signInError) {
             setUser(null);
-            setError(signInError instanceof Error ? signInError.message : "Could not sign in");
+            setError(authErrorMessage(signInError, "signIn"));
             throw signInError;
         }
         finally {
@@ -89,13 +91,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 throw error;
             }
             if (!signUpData.session) {
-                throw new Error("Check your email to confirm the account before signing in");
+                throw Object.assign(new Error(t("auth.error.confirmEmail")), { code: "email_not_confirmed" });
             }
             await acceptSession(signUpData.session);
         }
         catch (signUpError) {
             setUser(null);
-            setError(signUpError instanceof Error ? signUpError.message : "Could not create account");
+            setError(authErrorMessage(signUpError, "signUp"));
             throw signUpError;
         }
         finally {
@@ -122,12 +124,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     localError = fallbackError;
                 }
                 if (localError) {
-                    const blockingError = new Error("Could not sign out. Your session remains active; try again.");
+                    const blockingError = new Error(t("auth.error.signOut"));
                     setError(blockingError.message);
                     throw blockingError;
                 }
                 await acceptSession(null);
-                setError("Signed out on this device, but other sessions may remain active.");
+                setError(t("auth.error.localSignOut"));
                 return;
             }
             await acceptSession(null);
@@ -148,7 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (!active)
                 return;
             if (sessionError) {
-                setError(sessionError.message);
+                setError(authErrorMessage(sessionError, "initialize"));
                 setLoading(false);
                 return;
             }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { deleteLeague } from "../services/leagues.service";
 import { mutationErrorMessage } from "@/services/api-errors";
+import { t } from "@/i18n";
 type Props = {
     leagueId: string;
     leagueName: string;
@@ -18,7 +19,7 @@ export function DangerZone({ leagueId, leagueName }: Props) {
     const deleteMutation = useMutation({
         mutationFn: () => deleteLeague(leagueId),
         onSuccess: () => {
-            toast.success("League deleted.");
+            toast.success(t("danger.deleted"));
             setOpen(false);
             navigate("/leagues");
         },
@@ -41,7 +42,7 @@ export function DangerZone({ leagueId, leagueName }: Props) {
           font-semibold
           text-red-500
         ">
-        Danger Zone
+        {t("danger.title")}
       </h2>
 
       <p className="
@@ -49,24 +50,22 @@ export function DangerZone({ leagueId, leagueName }: Props) {
           text-sm
           text-muted-foreground
         ">
-        Deleting this league permanently removes access to its memberships, requests,
-        lobbies and match history. This action cannot be undone.
+        {t("danger.impact")}
       </p>
 
       <Dialog open={open} onOpenChange={changeOpen}>
         <DialogTrigger asChild>
-          <Button variant="destructive" className="mt-4">Delete League</Button>
+          <Button variant="destructive" className="mt-4">{t("danger.delete")}</Button>
         </DialogTrigger>
         <DialogContent showCloseButton={!deleteMutation.isPending}>
           <DialogHeader>
-            <DialogTitle>Delete {leagueName}?</DialogTitle>
+            <DialogTitle>{t("danger.confirmTitle", { name: leagueName })}</DialogTitle>
             <DialogDescription>
-              This permanently deletes the league and its associated competition data.
-              Type <strong>{leagueName}</strong> to confirm.
+              {t("danger.confirmDescription", { name: leagueName })}
             </DialogDescription>
           </DialogHeader>
           <Input
-            aria-label="League name confirmation"
+            aria-label={t("danger.confirmLabel")}
             autoComplete="off"
             disabled={deleteMutation.isPending}
             value={confirmation}
@@ -74,14 +73,14 @@ export function DangerZone({ leagueId, leagueName }: Props) {
           />
           <DialogFooter>
             <Button variant="outline" disabled={deleteMutation.isPending} onClick={() => changeOpen(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               disabled={!confirmed || deleteMutation.isPending}
               onClick={() => deleteMutation.mutate()}
             >
-              {deleteMutation.isPending ? "Deleting..." : "Permanently delete league"}
+              {deleteMutation.isPending ? t("danger.deleting") : t("danger.permanent")}
             </Button>
           </DialogFooter>
         </DialogContent>

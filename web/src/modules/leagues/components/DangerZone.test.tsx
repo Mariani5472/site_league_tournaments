@@ -31,21 +31,21 @@ describe("DangerZone", () => {
         }));
         renderApp(subject(), { route: "/leagues/league-1/settings" });
 
-        await user.click(screen.getByRole("button", { name: "Delete League" }));
-        const confirmButton = screen.getByRole("button", { name: /permanently delete league/i });
+        await user.click(screen.getByRole("button", { name: "Excluir liga" }));
+        const confirmButton = screen.getByRole("button", { name: /excluir liga permanentemente/i });
         expect(confirmButton).toBeDisabled();
 
-        await user.type(screen.getByLabelText(/league name confirmation/i), "Wrong name");
+        await user.type(screen.getByLabelText(/confirmação pelo nome da liga/i), "Wrong name");
         expect(confirmButton).toBeDisabled();
         expect(deleteLeague).not.toHaveBeenCalled();
 
-        await user.clear(screen.getByLabelText(/league name confirmation/i));
-        await user.type(screen.getByLabelText(/league name confirmation/i), "Champions");
+        await user.clear(screen.getByLabelText(/confirmação pelo nome da liga/i));
+        await user.type(screen.getByLabelText(/confirmação pelo nome da liga/i), "Champions");
         await user.click(confirmButton);
 
         expect(deleteLeague).toHaveBeenCalledOnce();
         expect(screen.getByRole("dialog")).toBeVisible();
-        expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Excluindo…" })).toBeDisabled();
 
         resolveDelete();
         expect(await screen.findByText("League list")).toBeVisible();
@@ -58,23 +58,23 @@ describe("DangerZone", () => {
         vi.mocked(deleteLeague).mockRejectedValue(new ApiError("internal detail", 500, "INTERNAL_ERROR"));
         renderApp(subject(), { route: "/leagues/league-1/settings" });
 
-        await user.click(screen.getByRole("button", { name: "Delete League" }));
-        await user.type(screen.getByLabelText(/league name confirmation/i), "Champions");
-        await user.click(screen.getByRole("button", { name: /permanently delete league/i }));
+        await user.click(screen.getByRole("button", { name: "Excluir liga" }));
+        await user.type(screen.getByLabelText(/confirmação pelo nome da liga/i), "Champions");
+        await user.click(screen.getByRole("button", { name: /excluir liga permanentemente/i }));
 
         expect(await screen.findByRole("dialog")).toBeVisible();
         expect(toast.error).toHaveBeenCalledOnce();
-        expect(toast.error).toHaveBeenCalledWith("An unexpected server error occurred. Please try again.");
+        expect(toast.error).toHaveBeenCalledWith("Ocorreu um erro inesperado no servidor. Tente novamente.");
         expect(toast.success).not.toHaveBeenCalled();
     });
 });
 
 describe("critical mutation error messages", () => {
     it.each([
-        [403, "forbidden", "You do not have permission to perform this action."],
-        [404, "missing", "The requested resource was not found."],
-        [409, "Transfer ownership first.", "Transfer ownership first."],
-        [500, "database detail", "An unexpected server error occurred. Please try again."],
+        [403, "forbidden", "Você não tem permissão para realizar esta ação."],
+        [404, "missing", "O recurso solicitado não foi encontrado."],
+        [409, "Transfer ownership first.", "Esta ação conflita com o estado atual. Atualize a página e tente novamente."],
+        [500, "database detail", "Ocorreu um erro inesperado no servidor. Tente novamente."],
     ])("maps HTTP %s consistently", (status, detail, expected) => {
         expect(mutationErrorMessage(new ApiError(detail, status))).toBe(expected);
     });

@@ -10,6 +10,8 @@ import { RiotAccountCard } from "../components/riotAccount";
 import { linkRiotAccount, unlinkAccount } from "@/modules/riot/services/riot.service";
 import { queryKeys } from "@/lib/queryKeys";
 import { useRiotConfiguration } from "@/modules/riot/hooks/useRiotConfiguration";
+import { t } from "@/i18n";
+import { mutationErrorMessage } from "@/services/api-errors";
 export function ProfilePage() {
     const queryClient = useQueryClient();
     const profileQuery = useMyProfile();
@@ -28,10 +30,10 @@ export function ProfilePage() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.profile.me
             });
-            toast.success("Profile updated");
+            toast.success(t("profile.updated"));
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
+        onError: (error: unknown) => {
+            toast.error(mutationErrorMessage(error));
         }
     });
     const riotLinkMutation = useMutation({
@@ -40,12 +42,12 @@ export function ProfilePage() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.riot.me
             });
-            toast.success("Riot account linked!");
+            toast.success(t("profile.linked"));
             setGameName("");
             setTagLine("");
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
+        onError: (error: unknown) => {
+            toast.error(mutationErrorMessage(error));
         }
     });
     const riotUnlinkMutation = useMutation({
@@ -54,12 +56,12 @@ export function ProfilePage() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.riot.me
             });
-            toast.success("Riot account unlinked!");
+            toast.success(t("profile.unlinked"));
             setGameName("");
             setTagLine("");
         },
-        onError: (error: Error) => {
-            toast.error(error.message);
+        onError: (error: unknown) => {
+            toast.error(mutationErrorMessage(error));
         }
     });
     useEffect(() => {
@@ -73,10 +75,10 @@ export function ProfilePage() {
         })();
     }, [profile]);
     if (riotLoading || accountLoading || riotConfiguration.isLoading) {
-        return <p className="text-muted-foreground">Carregando perfil...</p>;
+        return <p className="text-muted-foreground">{t("async.profile")}</p>;
     }
     if (profileQuery.isError)
-        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">Não foi possível carregar seu perfil.</p><Button variant="outline" onClick={() => profileQuery.refetch()}>Tentar novamente</Button></div>;
+        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">{t("profile.loadError")}</p><Button variant="outline" onClick={() => profileQuery.refetch()}>{t("common.retry")}</Button></div>;
     function handleSubmit() {
         profileUpdateMutation.mutate({
             nickname,
@@ -86,11 +88,11 @@ export function ProfilePage() {
     }
     function handleLinkRiot() {
         if (!gameName.trim()) {
-            toast.error("Game Name required");
+            toast.error(t("profile.gameNameRequired"));
             return;
         }
         if (!tagLine.trim()) {
-            toast.error("Tag Line required");
+            toast.error(t("profile.tagLineRequired"));
             return;
         }
         riotLinkMutation.mutate({
@@ -101,16 +103,16 @@ export function ProfilePage() {
     return (<div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">
-          Profile
+          {t("profile.title")}
         </h1>
 
-        {bannerUrl && (<img src={bannerUrl} alt="Banner" className="
+        {bannerUrl && (<img src={bannerUrl} alt={t("profile.bannerAlt")} className="
                 w-full
                 h-40
                 rounded-lg
               "/>)}
 
-        {avatarUrl && (<img src={avatarUrl} alt="Avatar" className="
+        {avatarUrl && (<img src={avatarUrl} alt={t("profile.avatarAlt")} className="
                 w-20
                 h-20
                 rounded-lg
@@ -118,59 +120,59 @@ export function ProfilePage() {
               "/>)}
 
         <p className="text-muted-foreground">
-          Manage your account.
+          {t("profile.description")}
         </p>
       </div>
 
       <div className="rounded-xl border p-6 space-y-4">
         <div className="space-y-2">
-          <label>Nickname</label>
+          <label>{t("profile.nickname")}</label>
 
           <Input value={nickname} onChange={(e) => setNickname(e.target.value)}/>
         </div>
 
         <div className="space-y-2">
-          <label>Avatar URL</label>
+          <label>{t("profile.avatarUrl")}</label>
 
           <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)}/>
         </div>
 
         <div className="space-y-2">
-          <label>Banner URL</label>
+          <label>{t("profile.bannerUrl")}</label>
 
           <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)}/>
         </div>
 
         <Button onClick={handleSubmit} disabled={profileUpdateMutation.isPending}>
           {profileUpdateMutation.isPending
-            ? "Saving..."
-            : "Save Changes"}
+            ? t("common.saving")
+            : t("common.save")}
         </Button>
 
         {!riotAccount && riotConfiguration.data?.enabled && (<div className="rounded-xl border p-6 space-y-4">
             <h2 className="text-xl font-semibold">
-              Riot Account
+              {t("profile.riot")}
             </h2>
 
-            <Input placeholder="Game Name" value={gameName} onChange={(e) => setGameName(e.target.value)}/>
+            <Input placeholder={t("profile.gameName")} value={gameName} onChange={(e) => setGameName(e.target.value)}/>
 
-            <Input placeholder="Tag Line" value={tagLine} onChange={(e) => setTagLine(e.target.value)}/>
+            <Input placeholder={t("profile.tagLine")} value={tagLine} onChange={(e) => setTagLine(e.target.value)}/>
 
             <Button onClick={handleLinkRiot} disabled={riotLinkMutation.isPending}>
               {riotLinkMutation.isPending
-                ? "Linking..."
-                : "Link Riot Account"}
+                ? t("profile.linking")
+                : t("profile.link")}
             </Button>
           </div>)}
 
-        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (<p className="text-sm text-muted-foreground">A vinculação com a Riot não está habilitada neste ambiente.</p>)}
+        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (<p className="text-sm text-muted-foreground">{t("profile.riotDisabled")}</p>)}
 
         {riotAccount && (<>
           <RiotAccountCard riotAccount={riotAccount}/>
           <Button onClick={() => riotUnlinkMutation.mutate()} disabled={riotUnlinkMutation.isPending}>
             {riotUnlinkMutation.isPending
-                ? "Unlinking..."
-                : "Unlink Riot Account"}
+                ? t("profile.unlinking")
+                : t("profile.unlink")}
           </Button>
         </>)}
       </div>

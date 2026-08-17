@@ -26,20 +26,20 @@ describe("MatchVoting", () => {
     it("shows loading and then the user's current vote", async () => {
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
         expect(screen.getByText(/carregando partida/i)).toBeVisible();
-        expect(await screen.findByText(/your current vote: team 1/i)).toBeVisible();
-        expect(screen.queryByText(/resolve a contested/i)).not.toBeInTheDocument();
+        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
+        expect(screen.queryByText(/resolver resultado contestado/i)).not.toBeInTheDocument();
     });
 
     it("submits a changed vote through the observable action", async () => {
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
-        await userEvent.click(await screen.findByRole("button", { name: /vote team 2/i }));
+        await userEvent.click(await screen.findByRole("button", { name: /votar no time 2/i }));
         expect(services.voteMatch).toHaveBeenCalledWith("match-1", 2);
     });
 
     it("does not schedule match polling while realtime is connected", async () => {
         const intervals = vi.spyOn(globalThis, "setInterval");
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
-        expect(await screen.findByText(/your current vote: team 1/i)).toBeVisible();
+        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
         expect(intervals).not.toHaveBeenCalledWith(expect.any(Function), 15_000);
     });
 
@@ -47,7 +47,7 @@ describe("MatchVoting", () => {
         realtime.connected = false;
         const intervals = vi.spyOn(globalThis, "setInterval");
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
-        expect(await screen.findByText(/your current vote: team 1/i)).toBeVisible();
+        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
         expect(intervals).toHaveBeenCalledWith(expect.any(Function), 15_000);
     });
 });

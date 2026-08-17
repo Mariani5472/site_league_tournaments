@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { LeagueLobbyCard } from "./LeagueLobbyCard";
 import { CreateLobbyDialog } from "./CreateLobbyDialog";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
+import { t } from "@/i18n";
 interface Props {
     leagueId: string;
     lobbies: Lobby[];
@@ -25,20 +26,20 @@ export function LeagueLobbySection({ leagueId, lobbies, isAdmin }: Props) {
               text-2xl
               font-bold
             ">
-            Lobbies
+            {t("league.lobbies")}
           </h2>
 
           <p className="
               text-muted-foreground
             ">
-            Join an existing lobby or create a new one.
+            {t("league.lobbiesDescription")}
           </p>
         </div>
 
         {isAdmin && (<CreateLobbyDialog leagueId={leagueId}>
             <Button>
               <Plus className="mr-2 h-4 w-4"/>
-              Create Lobby
+              {t("league.createLobby")}
             </Button>
           </CreateLobbyDialog>)}
       </div>
@@ -53,7 +54,7 @@ export function LeagueLobbySection({ leagueId, lobbies, isAdmin }: Props) {
           <p className="
               text-muted-foreground
             ">
-            No lobby created yet.
+            {t("league.lobbiesEmpty")}
           </p>
         </div>) : (<div className="
             grid

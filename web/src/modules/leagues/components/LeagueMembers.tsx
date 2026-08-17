@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/queryKeys";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { mutationErrorMessage } from "@/services/api-errors";
+import { t } from "@/i18n";
+import { labelRole } from "@/i18n/labels";
 type Props = {
     members: LeagueMember[];
     role: "owner" | "admin" | "player" | "spec" | null;
@@ -25,7 +27,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.members(leagueId)
             });
-            toast.success("Role updated");
+            toast.success(t("league.roleUpdated"));
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
@@ -35,7 +37,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.members(leagueId)
             });
-            toast.success("Member removed");
+            toast.success(t("league.memberRemoved"));
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
@@ -49,11 +51,11 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
           text-xl
           font-semibold
         ">
-        Members
+        {t("league.members")}
       </h2>
 
       <div className="space-y-3">
-        {members.length === 0 && <p className="text-muted-foreground">Nenhum membro encontrado.</p>}
+        {members.length === 0 && <p className="text-muted-foreground">{t("league.membersEmpty")}</p>}
         {members.map((member) => {
             const canManage = role && canManageRole(role, member.role);
             return (<div key={member.id} className="
@@ -92,7 +94,7 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                   py-1
                   text-xs
                 ">
-                {member.role}
+                {labelRole(member.role)}
               </span>
 
               {isAdmin && canManage && (<div className="
@@ -109,21 +111,21 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
 
                     <SelectContent>
                       <SelectItem value="admin">
-                        Admin
+                        {labelRole("admin")}
                       </SelectItem>
 
                       <SelectItem value="player">
-                        Player
+                        {labelRole("player")}
                       </SelectItem>
 
                       <SelectItem value="spec">
-                        Spectator
+                        {labelRole("spec")}
                       </SelectItem>
                     </SelectContent>
                   </Select>
 
                   <Button variant="destructive" size="sm" disabled={updateRoleMutation.isPending || kickMutation.isPending} onClick={() => kickMutation.mutate(member.id)}>
-                    Kick
+                    {t("league.removeMember")}
                   </Button>
                 </div>)}
             </div>);

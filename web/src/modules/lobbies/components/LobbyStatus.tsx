@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { LobbyDetails } from "../types/lobby.types";
+import { t } from "@/i18n";
+import { labelLobbyStatus } from "@/i18n/labels";
 interface Props {
     lobby: LobbyDetails;
 }
@@ -16,26 +18,18 @@ export function LobbyStatus({ lobby, }: Props) {
         <h2 className="
             font-semibold
           ">
-          Lobby Status
+          {t("lobby.statusTitle")}
         </h2>
 
         <p className="
             text-muted-foreground
           ">
-          Ready Players
-
-          {" "}
-
-          {lobby.readyCount}
-
-          /
-
-          {lobby.playersCount}
+          {t("lobby.readyCount", { ready: lobby.readyCount, total: lobby.playersCount })}
         </p>
       </div>
 
       <Badge>
-        {lobby.status}
+        {labelLobbyStatus(lobby.status)}
       </Badge>
     </div>);
 }

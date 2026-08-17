@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
+import { t } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { XIcon } from "lucide-react";
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -28,7 +29,7 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
         {showCloseButton && (<DialogPrimitive.Close data-slot="dialog-close" asChild>
             <Button variant="ghost" className="absolute top-2 right-2" size="icon-sm">
               <XIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t("common.cancel")}</span>
             </Button>
           </DialogPrimitive.Close>)}
       </DialogPrimitive.Content>
@@ -43,7 +44,7 @@ function DialogFooter({ className, showCloseButton = false, children, ...props }
     return (<div data-slot="dialog-footer" className={cn("-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end", className)} {...props}>
       {children}
       {showCloseButton && (<DialogPrimitive.Close asChild>
-          <Button variant="outline">Close</Button>
+          <Button variant="outline">{t("common.cancel")}</Button>
         </DialogPrimitive.Close>)}
     </div>);
 }

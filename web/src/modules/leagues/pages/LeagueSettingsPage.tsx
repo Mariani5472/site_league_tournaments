@@ -13,6 +13,9 @@ import { useLeagueRole } from "../hooks/useLeagueRole";
 import { leagueSettingsSchema, type LeagueSettingsForm } from "../utils/leagueSettings.schema";
 import { DangerZone } from "../components/DangerZone";
 import { ArrowLeft, Save } from "lucide-react";
+import { t } from "@/i18n";
+import { labelJoinPolicy, labelVisibility } from "@/i18n/labels";
+import { mutationErrorMessage } from "@/services/api-errors";
 export function LeagueSettingsPage() {
     const { id } = useParams();
     const leagueId = id!;
@@ -52,16 +55,16 @@ export function LeagueSettingsPage() {
     function onSubmit(data: LeagueSettingsForm) {
         mutation.mutate({ leagueId, data }, {
             onSuccess: () => {
-                toast.success("League updated");
+                toast.success(t("settings.updated"));
             },
-            onError: (error: Error) => {
-                toast.error(error.message);
+            onError: (error: unknown) => {
+                toast.error(mutationErrorMessage(error));
             }
         });
     }
     if (isAuthorizationLoading || !league) {
         return (<div>
-        Loading...
+        {t("common.loading")}
       </div>);
     }
     return (<div className="
@@ -69,19 +72,19 @@ export function LeagueSettingsPage() {
         max-w-4xl
         space-y-6
       ">
-      <Button variant="ghost" asChild><Link to={`/leagues/${leagueId}`}><ArrowLeft className="h-4 w-4"/> Voltar para a liga</Link></Button>
+      <Button variant="ghost" asChild><Link to={`/leagues/${leagueId}`}><ArrowLeft className="h-4 w-4"/> {t("settings.back")}</Link></Button>
       <div>
         <h1 className="
             text-3xl
             font-bold
           ">
-          Editar liga
+          {t("settings.title")}
         </h1>
 
         <p className="
             text-muted-foreground
           ">
-          Atualize as informações e regras da sua liga.
+          {t("settings.description")}
         </p>
       </div>
 
@@ -93,7 +96,7 @@ export function LeagueSettingsPage() {
         ">
         <div>
           <label>
-            League Name
+            {t("league.name")}
           </label>
 
           <Input {...register("name")}/>
@@ -101,7 +104,7 @@ export function LeagueSettingsPage() {
 
         <div>
           <label>
-            Description
+            {t("league.descriptionLabel")}
           </label>
 
           <Input {...register("description")}/>
@@ -109,7 +112,7 @@ export function LeagueSettingsPage() {
 
         <div>
           <label>
-            Visibility
+            {t("league.visibility")}
           </label>
 
           <Select value={visibilityValue || ""} onValueChange={(value) => setValue("visibility", value as "public" | "private")}>
@@ -119,11 +122,11 @@ export function LeagueSettingsPage() {
 
             <SelectContent>
               <SelectItem value="public">
-                Public
+                {labelVisibility("public")}
               </SelectItem>
 
               <SelectItem value="private">
-                Private
+                {labelVisibility("private")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -131,7 +134,7 @@ export function LeagueSettingsPage() {
 
         <div>
           <label>
-            Join Policy
+            {t("league.joinPolicy")}
           </label>
 
           <Select value={joinPolicyValue || ""} onValueChange={(value) => setValue("joinPolicy", value as "open" | "request" | "invite_only")}>
@@ -141,15 +144,15 @@ export function LeagueSettingsPage() {
 
             <SelectContent>
               <SelectItem value="open">
-                Open
+                {labelJoinPolicy("open")}
               </SelectItem>
 
               <SelectItem value="request">
-                Request Approval
+                {labelJoinPolicy("request")}
               </SelectItem>
 
               <SelectItem value="invite_only">
-                Invite Only
+                {labelJoinPolicy("invite_only")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -157,7 +160,7 @@ export function LeagueSettingsPage() {
 
         <div>
           <label>
-            Max Players
+            {t("league.maxPlayers")}
           </label>
 
           <Input type="number" {...register("maxPlayers", {
@@ -167,8 +170,8 @@ export function LeagueSettingsPage() {
 
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending
-            ? "Saving..."
-            : <><Save className="h-4 w-4"/> Salvar alterações</>}
+            ? t("common.saving")
+            : <><Save className="h-4 w-4"/> {t("common.save")}</>}
         </Button>
       </form>
 
