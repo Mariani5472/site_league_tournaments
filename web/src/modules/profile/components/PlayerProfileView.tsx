@@ -38,9 +38,9 @@ export function PlayerProfileView({
                     <ImageOff className="absolute bottom-4 right-4 h-5 w-5 text-muted-foreground/40" />
                 </div>
                 <div className="relative px-5 pb-6 sm:px-8">
-                    <div className="-mt-10 flex flex-col gap-5 sm:-mt-12 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="flex min-w-0 items-end gap-6 sm:gap-8">
-                            <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-card bg-primary text-xl font-bold text-primary-foreground sm:h-24 sm:w-24">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex min-w-0 items-start gap-6 sm:gap-8">
+                            <div className="relative -mt-10 grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border-4 border-card bg-primary text-xl font-bold text-primary-foreground sm:-mt-12 sm:h-24 sm:w-24">
                                 <span>{initials}</span>
                                 <SafeImage
                                     src={profile.avatarUrl}
@@ -48,7 +48,7 @@ export function PlayerProfileView({
                                     className="absolute inset-0 h-full w-full object-cover"
                                 />
                             </div>
-                            <div className="min-w-0 pb-2">
+                            <div className="min-w-0 pt-4 sm:pt-5">
                                 <h1 className="truncate text-2xl font-bold sm:text-3xl">
                                     {profile.nickname}
                                 </h1>
@@ -58,7 +58,7 @@ export function PlayerProfileView({
                                 </p>
                             </div>
                         </div>
-                        {editAction}
+                        {editAction && <div className="sm:mt-5">{editAction}</div>}
                     </div>
                 </div>
             </header>
