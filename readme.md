@@ -78,6 +78,10 @@ Use `docker compose exec api npm run seed:dev` para criar uma liga e quatro perf
 ### Produção e operação
 
 - Não use `docker-compose.yml` em produção. Use `api/.env.production.example` apenas como referência e injete `NODE_ENV=production`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` e `LOG_LEVEL` pela plataforma de deploy ou gerenciador de segredos. O `render.yaml`, por exemplo, declara `DATABASE_URL` como valor externo (`sync: false`) e não fixa host local. Em produção, a API se recusa a iniciar sem `CORS_ORIGINS`.
+
+### Autenticação Supabase
+
+A política local versionada em `api/supabase/config.toml` exige senhas com no mínimo 10 caracteres, confirmação de e-mail e permite o retorno de recuperação para `/reset-password`. No projeto Supabase hospedado, aplique a mesma política em **Authentication > Settings > Password security** e inclua `https://<domínio>/reset-password` na lista de Redirect URLs. O frontend valida os mesmos 10 caracteres, mas a regra do provedor é a fronteira de segurança efetiva.
 - `CORS_ORIGINS` aceita origens exatas separadas por vírgula e é compartilhado pelo Express e Socket.IO. Não use `*` com autenticação.
 - Logs HTTP são estruturados e removem `Authorization` e cookies. Use `LOG_LEVEL=info` normalmente e `warn` quando a plataforma de observabilidade já registrar acessos.
 - `/health` verifica API e PostgreSQL. O Compose também possui healthchecks para PostgreSQL, API, web e Adminer.

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AuthContext, type LoginDto } from "../contexts/AuthContext";
+import { AuthContext, type LoginDto, type SignUpResult } from "../contexts/AuthContext";
 import { mySupabase } from "@/lib/supabase/supabase";
 import { api } from "@/services/api";
 import type { User } from "@supabase/supabase-js";
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setLoading(false);
         }
     }
-    async function signUp(data: LoginDto) {
+    async function signUp(data: LoginDto): Promise<SignUpResult> {
         setLoading(true);
         setError(null);
         try {
@@ -91,9 +91,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 throw error;
             }
             if (!signUpData.session) {
-                throw Object.assign(new Error(t("auth.error.confirmEmail")), { code: "email_not_confirmed" });
+                return { status: "confirmation_required", email: data.email };
             }
             await acceptSession(signUpData.session);
+            return { status: "authenticated" };
         }
         catch (signUpError) {
             setUser(null);
@@ -138,6 +139,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setLoading(false);
         }
     }
+    async function requestPasswordReset(email: string) {
+        setLoading(true);
+        setError(null);
+        try {
+            const redirectTo = `${window.location.origin}/reset-password`;
+            const { error: resetError } = await mySupabase.auth.resetPasswordForEmail(email, { redirectTo });
+            if (resetError) throw resetError;
+        } catch (resetError) {
+            setError(t("auth.error.resetRequest"));
+            throw resetError;
+        } finally {
+            setLoading(false);
+        }
+    }
+    async function updatePassword(password: string) {
+        setLoading(true);
+        setError(null);
+        try {
+            const { error: updateError } = await mySupabase.auth.updateUser({ password });
+            if (updateError) throw updateError;
+        } catch (updateError) {
+            setError(t("auth.error.resetPassword"));
+            throw updateError;
+        } finally {
+            setLoading(false);
+        }
+    }
     useEffect(() => {
         let active = true;
         const { data: authListener } = mySupabase.auth.onAuthStateChange((_event, session) => {
@@ -167,6 +195,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             user,
             signIn,
             signUp,
+            requestPasswordReset,
+            updatePassword,
             signOut,
             loading,
             error,

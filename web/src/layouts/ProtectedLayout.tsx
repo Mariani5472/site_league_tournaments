@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
-import { Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { t } from "@/i18n";
@@ -9,13 +9,15 @@ export function ProtectedLayout() {
     const { user, loading, signOut, error } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     if (loading) {
         return (<div className="flex min-h-screen items-center justify-center">
         {t("common.loading")}
       </div>);
     }
     if (!user) {
-        return <Navigate to="/" replace/>;
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace/>;
     }
     return (<div className="flex h-screen w-screen overflow-hidden bg-muted/20 text-foreground">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)}/>

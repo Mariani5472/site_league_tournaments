@@ -7,6 +7,7 @@ import { ProtectedLayout } from "./ProtectedLayout";
 function routes() {
     return <Routes>
         <Route path="/" element={<p>Public landing</p>} />
+        <Route path="/login" element={<p>Login page</p>} />
         <Route element={<ProtectedLayout />}>
             <Route path="/private" element={<p>Private content</p>} />
         </Route>
@@ -14,9 +15,9 @@ function routes() {
 }
 
 describe("ProtectedLayout", () => {
-    it("redirects an unauthenticated user to the public landing", async () => {
+    it("redirects an unauthenticated user to login preserving returnTo", async () => {
         renderApp(routes(), { route: "/private", auth: { user: null } });
-        expect(await screen.findByText("Public landing")).toBeVisible();
+        expect(await screen.findByText("Login page")).toBeVisible();
         expect(screen.queryByText("Private content")).not.toBeInTheDocument();
     });
 
