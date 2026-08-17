@@ -1,161 +1,164 @@
-import { useParams } from "react-router-dom";
-import { useLeague } from "../hooks/useLeague";
-import { useLeagueMembers } from "../hooks/useLeagueMembers";
-import { useLeagueRequests } from "../hooks/useLeagueRequests";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { LoadMoreButton } from "@/components/LoadMoreButton";
+import { t } from "@/i18n";
+import { LeagueResults } from "@/modules/matches/LeagueResults";
 import { LeagueHeader } from "../components/LeagueHeader";
+import { LeagueLobbySection } from "../components/LeagueLobbySelection";
 import { LeagueMembers } from "../components/LeagueMembers";
 import { LeagueRequests } from "../components/LeagueRequests";
-import { useLeagueRole } from "../hooks/useLeagueRole";
+import { useLeague } from "../hooks/useLeague";
 import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
-import { LeagueLobbySection } from "../components/LeagueLobbySelection";
+import { useLeagueMembers } from "../hooks/useLeagueMembers";
+import { useLeagueRequests } from "../hooks/useLeagueRequests";
+import { useLeagueRole } from "../hooks/useLeagueRole";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
-import { LeagueResults } from "@/modules/matches/LeagueResults";
-import { t } from "@/i18n";
-import { LoadMoreButton } from "@/components/LoadMoreButton";
-export function LeaguePage() {
-    const { id } = useParams();
-    const leagueId = id!;
-    const {
-        data: league,
-        isLoading: loadingLeague,
-        isError: leagueError,
-        refetch: retryLeague,
-    } = useLeague(leagueId);
-    useLeagueSocket(leagueId);
-    const {
-        data: members,
-        isLoading: loadingMembers,
-        isError: membersError,
-        refetch: retryMembers,
-        hasNextPage: hasMoreMembers,
-        fetchNextPage: fetchMoreMembers,
-        isFetchingNextPage: loadingMoreMembers,
-        isFetchNextPageError: moreMembersError,
-    } = useLeagueMembers(leagueId);
-    const roleData = useLeagueRole(members || []);
-    const {
-        data: lobbies,
-        isLoading: loadingLobbies,
-        isError: lobbiesError,
-        refetch: retryLobbies,
-    } = useLeagueLobbies(leagueId);
-    const {
-        data: requests,
-        isLoading: loadingRequests,
-        isError: requestsError,
-        refetch: retryRequests,
-        hasNextPage: hasMoreRequests,
-        fetchNextPage: fetchMoreRequests,
-        isFetchingNextPage: loadingMoreRequests,
-        isFetchNextPageError: moreRequestsError,
-    } = useLeagueRequests(leagueId, roleData.isAdmin || roleData.isOwner);
-    if (loadingLeague) {
-        return <div>{t("async.league")}</div>;
-    }
-    if (leagueError || !league) {
-        return (
-            <div className="rounded-xl border p-6 space-y-3">
-                <p className="text-destructive" role="alert">
-                    {t("league.loadError")}
-                </p>
-                <button className="underline" onClick={() => retryLeague()}>
-                    {t("common.retry")}
-                </button>
-            </div>
-        );
-    }
-    return (
-        <div
-            className="
-        space-y-6
-      "
-        >
-            <LeagueHeader
-                league={league}
-                isAdmin={roleData.isAdmin}
-                isOwner={roleData.isOwner}
-                role={roleData.role}
-            />
 
-            <div
-                className="
-          grid
-          gap-6
-          xl:grid-cols-2
-        "
+const tabs = ["overview", "standings", "matches", "lobbies", "members"] as const;
+type Tab = (typeof tabs)[number];
+
+export function LeaguePage() {
+    const { id = "" } = useParams();
+    const [searchParams] = useSearchParams();
+    const requestedTab = searchParams.get("tab");
+    const tab: Tab = tabs.includes(requestedTab as Tab) ? (requestedTab as Tab) : "overview";
+    const league = useLeague(id);
+    useLeagueSocket(id);
+    const members = useLeagueMembers(id);
+    const role = useLeagueRole(members.data ?? []);
+    const lobbies = useLeagueLobbies(id);
+    const requests = useLeagueRequests(id, role.isAdmin || role.isOwner);
+    if (league.isLoading) return <div>{t("async.league")}</div>;
+    if (league.isError || !league.data)
+        return <ErrorState message={t("league.loadError")} retry={league.refetch} />;
+
+    const tabHref = (nextTab: Tab) => {
+        const next = new URLSearchParams(searchParams);
+        next.set("tab", nextTab);
+        return `?${next.toString()}`;
+    };
+    const activeLobby = lobbies.data?.find(
+        item => item.status !== "finished" && item.status !== "cancelled"
+    );
+    const nextAction = activeLobby
+        ? t("league.nextActionLobby")
+        : t("league.nextActionCreateLobby");
+    return (
+        <div className="space-y-6">
+            <LeagueHeader
+                league={league.data}
+                isAdmin={role.isAdmin}
+                isOwner={role.isOwner}
+                role={role.role}
+            />
+            <nav
+                aria-label={t("league.navigation")}
+                className="overflow-x-auto rounded-xl border bg-card p-1"
             >
-                {loadingLobbies ? (
-                    <p className="text-muted-foreground">{t("async.lobbies")}</p>
-                ) : lobbiesError ? (
-                    <div className="rounded-xl border p-6">
-                        <p className="text-destructive" role="alert">
-                            {t("league.lobbiesError")}
-                        </p>
-                        <button className="mt-2 underline" onClick={() => retryLobbies()}>
-                            {t("common.retry")}
-                        </button>
-                    </div>
+                <div className="flex min-w-max gap-1">
+                    {tabs.map(item => (
+                        <Link
+                            key={item}
+                            to={tabHref(item)}
+                            aria-current={tab === item ? "page" : undefined}
+                            className={`rounded-lg px-4 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${tab === item ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                        >
+                            {t(`league.tab.${item}`)}
+                        </Link>
+                    ))}
+                </div>
+            </nav>
+
+            {tab === "overview" && (
+                <div className="space-y-6">
+                    <section className="grid gap-3 sm:grid-cols-3">
+                        <Summary
+                            label={t("league.yourPosition")}
+                            value={role.role ? t(`enum.role.${role.role}`) : t("league.notMember")}
+                        />
+                        <Summary
+                            label={t("league.membersSummary")}
+                            value={`${league.data.playerCount} / ${league.data.maxPlayers}`}
+                        />
+                        <Summary label={t("league.nextAction")} value={nextAction} />
+                    </section>
+                    {role.isAdmin &&
+                        (requests.isLoading ? (
+                            <p>{t("async.requests")}</p>
+                        ) : requests.isError ? (
+                            <ErrorState
+                                message={t("league.requestsError")}
+                                retry={requests.refetch}
+                            />
+                        ) : (
+                            <div>
+                                <LeagueRequests leagueId={id} requests={requests.data ?? []} />
+                                <LoadMoreButton
+                                    hasNextPage={requests.hasNextPage}
+                                    isFetchingNextPage={requests.isFetchingNextPage}
+                                    isFetchNextPageError={requests.isFetchNextPageError}
+                                    onLoadMore={() => void requests.fetchNextPage()}
+                                />
+                            </div>
+                        ))}
+                </div>
+            )}
+            {tab === "standings" && <LeagueResults leagueId={id} section="standings" />}
+            {tab === "matches" && <LeagueResults leagueId={id} section="matches" />}
+            {tab === "lobbies" &&
+                (lobbies.isLoading ? (
+                    <p>{t("async.lobbies")}</p>
+                ) : lobbies.isError ? (
+                    <ErrorState message={t("league.lobbiesError")} retry={lobbies.refetch} />
                 ) : (
                     <LeagueLobbySection
-                        leagueId={leagueId}
-                        lobbies={lobbies ?? []}
-                        isAdmin={roleData.isAdmin}
+                        leagueId={id}
+                        lobbies={lobbies.data ?? []}
+                        isAdmin={role.isAdmin}
                     />
-                )}
-
-                {loadingMembers ? (
-                    <p className="text-muted-foreground">{t("async.members")}</p>
-                ) : membersError ? (
-                    <div className="rounded-xl border p-6">
-                        <p className="text-destructive" role="alert">
-                            {t("league.membersError")}
-                        </p>
-                        <button className="mt-2 underline" onClick={() => retryMembers()}>
-                            {t("common.retry")}
-                        </button>
-                    </div>
+                ))}
+            {tab === "members" &&
+                (members.isLoading ? (
+                    <p>{t("async.members")}</p>
+                ) : members.isError ? (
+                    <ErrorState message={t("league.membersError")} retry={members.refetch} />
                 ) : (
                     <div>
                         <LeagueMembers
-                            leagueId={leagueId}
-                            members={members || []}
-                            role={roleData.role}
-                            isAdmin={roleData.isAdmin}
+                            leagueId={id}
+                            members={members.data ?? []}
+                            role={role.role}
+                            isAdmin={role.isAdmin}
                         />
                         <LoadMoreButton
-                            hasNextPage={hasMoreMembers}
-                            isFetchingNextPage={loadingMoreMembers}
-                            isFetchNextPageError={moreMembersError}
-                            onLoadMore={() => void fetchMoreMembers()}
+                            hasNextPage={members.hasNextPage}
+                            isFetchingNextPage={members.isFetchingNextPage}
+                            isFetchNextPageError={members.isFetchNextPageError}
+                            onLoadMore={() => void members.fetchNextPage()}
                         />
                     </div>
-                )}
+                ))}
+        </div>
+    );
+}
 
-                {roleData.isAdmin &&
-                    (loadingRequests ? (
-                        <p className="text-muted-foreground">{t("async.requests")}</p>
-                    ) : requestsError ? (
-                        <div className="rounded-xl border p-6">
-                            <p className="text-destructive" role="alert">
-                                {t("league.requestsError")}
-                            </p>
-                            <button className="mt-2 underline" onClick={() => retryRequests()}>
-                                {t("common.retry")}
-                            </button>
-                        </div>
-                    ) : (
-                        <div>
-                            <LeagueRequests leagueId={leagueId} requests={requests || []} />
-                            <LoadMoreButton
-                                hasNextPage={hasMoreRequests}
-                                isFetchingNextPage={loadingMoreRequests}
-                                isFetchNextPageError={moreRequestsError}
-                                onLoadMore={() => void fetchMoreRequests()}
-                            />
-                        </div>
-                    ))}
-            </div>
-            <LeagueResults leagueId={leagueId} />
+function Summary({ label, value }: { label: string; value: string }) {
+    return (
+        <article className="rounded-xl border bg-card p-5">
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className="mt-2 font-semibold">{value}</p>
+        </article>
+    );
+}
+
+function ErrorState({ message, retry }: { message: string; retry(): unknown }) {
+    return (
+        <div className="rounded-xl border p-6">
+            <p className="text-destructive" role="alert">
+                {message}
+            </p>
+            <button className="mt-2 underline" onClick={() => retry()}>
+                {t("common.retry")}
+            </button>
         </div>
     );
 }

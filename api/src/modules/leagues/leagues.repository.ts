@@ -93,10 +93,11 @@ export class LeaguesRepository {
     async findById(leagueId: string, options: FindOptions = {}): Promise<League | null> {
         const { executor = db, lock, } = options;
         const query = `
-      SELECT *
-      FROM leagues
-      WHERE id = $1
-      ${lock === "update" ? "FOR UPDATE" : ""}
+      SELECT l.*,
+        (SELECT COUNT(*)::int FROM league_members lm WHERE lm.league_id = l.id) AS player_count
+      FROM leagues l
+      WHERE l.id = $1
+      ${lock === "update" ? "FOR UPDATE OF l" : ""}
     `;
         const result = await executor.query<League>(query, [leagueId]);
         return result.rows[0] ?? null;

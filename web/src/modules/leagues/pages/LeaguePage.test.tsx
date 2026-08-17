@@ -6,7 +6,7 @@ import { LeaguePage } from "./LeaguePage";
 
 const state = vi.hoisted(() => ({
     league: {
-        data: { id: "league-1", name: "Test league" },
+        data: { id: "league-1", name: "Test league", playerCount: 1, maxPlayers: 10 },
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
@@ -46,7 +46,7 @@ function page() {
 describe("LeaguePage", () => {
     beforeEach(() => {
         Object.assign(state.league, {
-            data: { id: "league-1", name: "Test league" },
+            data: { id: "league-1", name: "Test league", playerCount: 1, maxPlayers: 10 },
             isLoading: false,
             isError: false,
         });
@@ -69,11 +69,22 @@ describe("LeaguePage", () => {
         expect(screen.getByRole("button", { name: /tentar novamente/i })).toBeVisible();
     });
 
-    it("renders empty collections without inventing privileged actions", () => {
+    it("shows overview and keyboard-accessible internal navigation", () => {
         renderApp(page(), { route: "/leagues/league-1" });
-        expect(screen.getByText("Lobbies: 0")).toBeVisible();
-        expect(screen.getByText("Members: 0")).toBeVisible();
+        expect(screen.getByText("1 / 10")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Membros" })).toHaveAttribute(
+            "href",
+            "/leagues/league-1?tab=members"
+        );
         expect(screen.queryByText(/Requests:/)).not.toBeInTheDocument();
+    });
+
+    it("preserves other query parameters when navigating tabs", () => {
+        renderApp(page(), { route: "/leagues/league-1?source=dashboard" });
+        expect(screen.getByRole("link", { name: "Partidas" })).toHaveAttribute(
+            "href",
+            "/leagues/league-1?source=dashboard&tab=matches"
+        );
     });
 
     it("shows private join requests only to league administrators", () => {

@@ -21,11 +21,12 @@ import { ArrowLeft } from "lucide-react";
 import { TeamSelection } from "../components/TeamSelection";
 import { t } from "@/i18n";
 import { mutationErrorMessage } from "@/services/api-errors";
+import { LobbyPhaseHeader } from "../components/LobbyPhaseHeader";
 export function LobbyPage() {
     const { leagueId, lobbyId } = useParams();
     const { user } = useAuth();
     const { data: lobby, isLoading, isError, refetch } = useLobby(leagueId!, lobbyId!);
-    useLobbySocket(leagueId!, lobbyId!);
+    const realtimeStatus = useLobbySocket(leagueId!, lobbyId!);
     useLeagueSocket(leagueId!);
     const actions = useLobbyActions(leagueId!, lobbyId!);
     const queryClient = useQueryClient();
@@ -80,6 +81,7 @@ export function LobbyPage() {
             </Button>
 
             <LobbyHeader lobby={lobby} />
+            <LobbyPhaseHeader lobby={lobby} realtimeStatus={realtimeStatus} />
             <LobbyStatus lobby={lobby} />
 
             <TeamSelection lobby={lobby} />
