@@ -85,6 +85,8 @@ export async function updateLeague(
         visibility: string;
         joinPolicy: string;
         maxPlayers: number;
+        lobbyCreationPolicy: "admins" | "members";
+        autoStartLobby: boolean;
     }
 ) {
     return await api.patch(`/leagues/${leagueId}`, info);

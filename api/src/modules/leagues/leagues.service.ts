@@ -119,6 +119,8 @@ export class LeaguesService {
         visibility?: string;
         joinPolicy?: string;
         maxPlayers?: number;
+        lobbyCreationPolicy?: "admins" | "members";
+        autoStartLobby?: boolean;
     }) {
         if (!leagueId) {
             throw new AppError("League not found", 404);

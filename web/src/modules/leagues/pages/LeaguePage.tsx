@@ -25,6 +25,7 @@ export function LeaguePage() {
     const isMember = Boolean(currentRole);
     const isOwner = currentRole === "owner";
     const isAdmin = currentRole === "owner" || currentRole === "admin";
+    const canCreateLobby = isMember && (isAdmin || league.data?.lobbyCreationPolicy === "members");
     useLeagueSocket(id, isMember);
     const members = useLeagueMembers(id, isMember);
     const lobbies = useLeagueLobbies(id, isMember);
@@ -131,7 +132,7 @@ export function LeaguePage() {
                     <LeagueLobbySection
                         leagueId={id}
                         lobbies={lobbies.data ?? []}
-                        isAdmin={isAdmin}
+                        canCreateLobby={canCreateLobby}
                     />
                 ))}
             {tab === "members" &&

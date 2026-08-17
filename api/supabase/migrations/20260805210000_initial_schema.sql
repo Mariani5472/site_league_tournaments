@@ -38,6 +38,8 @@ create table public.leagues (
   description text,
   visibility varchar(20) not null constraint leagues_visibility_check check (visibility in ('public', 'private')),
   join_policy varchar(20) not null constraint leagues_join_policy_check check (join_policy in ('open', 'request', 'invite_only')),
+  lobby_creation_policy varchar(20) not null default 'admins' constraint leagues_lobby_creation_policy_check check (lobby_creation_policy in ('admins', 'members')),
+  auto_start_lobby boolean not null default false,
   max_players integer not null constraint leagues_max_players_check check (max_players between 2 and 500),
   created_at timestamp default current_timestamp
 );

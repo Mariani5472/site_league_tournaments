@@ -205,8 +205,9 @@ export class LobbiesService {
         if (!member) {
             throw new AppError("Not a league member", 403);
         }
-        if (!["owner", "admin"].includes(member.role)) {
-            throw new AppError("Only owners and admins can create lobbies", 403);
+        const canCreate = league.lobbyCreationPolicy === "members" || ["owner", "admin"].includes(member.role);
+        if (!canCreate) {
+            throw new AppError("Your league role cannot create lobbies", 403);
         }
         const currentLobby = await this.lobbiesRepository.findActiveLobbyByPlayer(userId);
         if (currentLobby) {
@@ -226,7 +227,7 @@ export class LobbiesService {
         });
         return lobby;
     }
-    async start(lobbyId: string | undefined, leagueId: string | undefined, userId: string | undefined) {
+    async start(lobbyId: string | undefined, leagueId: string | undefined, userId: string | undefined, automatic = false) {
         if (!lobbyId || !leagueId || !userId)
             throw new AppError("Invalid request", 400);
         const client = await db.connect();
@@ -240,9 +241,15 @@ export class LobbiesService {
             if (lobby.status !== "waiting")
                 throw new AppError("Lobby has already started", 409);
             if (lobby.leagueId !== leagueId) throw new AppError("Lobby not found", 404);
-            const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId, options);
-            if (!member || !["owner", "admin"].includes(member.role))
-                throw new AppError("Insufficient permissions", 403);
+            if (automatic) {
+                const league = await this.leaguesRepository.findById(leagueId, options);
+                if (!league?.autoStartLobby || Number(lobby.maxPlayers) !== 10)
+                    throw new AppError("Automatic start is disabled", 409);
+            } else {
+                const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId, options);
+                if (!member || !["owner", "admin"].includes(member.role))
+                    throw new AppError("Insufficient permissions", 403);
+            }
             const players = await this.lobbiesRepository.getPlayersForUpdate(lobbyId, options);
             if (players.length !== lobby.maxPlayers)
                 throw new AppError("Lobby must be full", 409);
@@ -271,6 +278,14 @@ export class LobbiesService {
         SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.MATCH_STARTED, { leagueId, lobbyId, matchId: match.id });
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.MATCH_STARTED, { leagueId, lobbyId, matchId: match.id });
         return match;
+    }
+    private async tryAutomaticStart(lobbyId: string, leagueId: string, userId: string) {
+        try {
+            return await this.start(lobbyId, leagueId, userId, true);
+        } catch (error) {
+            if (error instanceof AppError && error.statusCode === 409) return null;
+            throw error;
+        }
     }
     async joinLobby(lobbyId: string | undefined, userId: string | undefined, leagueId?: string) {
         if (!userId || !lobbyId || !leagueId)
@@ -340,7 +355,7 @@ export class LobbiesService {
 
             const remainingPlayers = await this.lobbiesRepository.getLobbyPlayers(lobbyId, options);
             if (remainingPlayers.length === 0) {
-                await this.lobbiesRepository.updateStatus(lobbyId, "cancelled", options);
+                await this.lobbiesRepository.remove(lobbyId, options);
             } else {
                 await this.lobbiesRepository.resetReady(lobbyId, options);
             }
@@ -354,7 +369,11 @@ export class LobbiesService {
             client.release();
         }
 
-        SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.LOBBY_UPDATE, { leagueId, lobbyId });
+        if (await this.lobbiesRepository.findById(lobbyId)) {
+            SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.LOBBY_UPDATE, { leagueId, lobbyId });
+        } else {
+            SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.LOBBY_DELETE, { leagueId, lobbyId });
+        }
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, { leagueId });
         return committedLobby;
     }
@@ -385,8 +404,8 @@ export class LobbiesService {
         if (!allowedRoles.includes(member.role)) {
             throw new AppError("Insufficient permissions", 403);
         }
-        await this.lobbiesRepository.updateStatus(lobby.id, "cancelled");
-        SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_UPDATE, {
+        await this.lobbiesRepository.remove(lobby.id);
+        SocketEmitter.emitToLobby(lobby.id, SOCKET_EVENTS.LOBBY_DELETE, {
             leagueId: lobby.leagueId,
             lobbyId: lobby.id,
         });
@@ -486,7 +505,16 @@ export class LobbiesService {
         SocketEmitter.emitToLeague(lobby.leagueId, SOCKET_EVENTS.LEAGUE_LOBBIES_UPDATE, {
             leagueId: lobby.leagueId,
         });
+        await this.tryAutomaticStart(lobby.id, lobby.leagueId, userId);
         return updated;
+    }
+
+    async releasePresence(lobbyId: string, userId: string) {
+        const lobby = await this.lobbiesRepository.findById(lobbyId);
+        if (!lobby || lobby.status !== "waiting") return;
+        const player = await this.lobbiesRepository.findPlayerInLobby(lobbyId, userId);
+        if (!player) return;
+        await this.leaveLobby(lobbyId, userId, lobby.leagueId);
     }
     async setUnready(lobbyId: string | undefined, userId: string | undefined, leagueId?: string) {
         if (!userId) {

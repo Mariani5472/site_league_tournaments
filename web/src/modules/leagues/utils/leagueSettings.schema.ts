@@ -5,5 +5,7 @@ export const leagueSettingsSchema = z.object({
     visibility: z.enum(["public", "private"]),
     joinPolicy: z.enum(["open", "request", "invite_only"]),
     maxPlayers: z.number().min(2).max(128),
+    lobbyCreationPolicy: z.enum(["admins", "members"]),
+    autoStartLobby: z.boolean(),
 });
 export type LeagueSettingsForm = z.infer<typeof leagueSettingsSchema>;

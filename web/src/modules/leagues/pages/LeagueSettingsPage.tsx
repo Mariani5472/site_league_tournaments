@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
     Select,
     SelectContent,
@@ -42,6 +43,8 @@ export function LeagueSettingsPage() {
         name: "joinPolicy",
         defaultValue: league?.joinPolicy,
     });
+    const lobbyCreationPolicy = useWatch({ control, name: "lobbyCreationPolicy" });
+    const autoStartLobby = useWatch({ control, name: "autoStartLobby" });
     useEffect(() => {
         if (!league) {
             return;
@@ -52,6 +55,8 @@ export function LeagueSettingsPage() {
             visibility: league.visibility,
             joinPolicy: league.joinPolicy,
             maxPlayers: league.maxPlayers,
+            lobbyCreationPolicy: league.lobbyCreationPolicy,
+            autoStartLobby: league.autoStartLobby,
         });
     }, [league, reset]);
     const isAuthorizationLoading = isLoading || areMembersLoading;
@@ -181,6 +186,42 @@ export function LeagueSettingsPage() {
                         {...register("maxPlayers", {
                             valueAsNumber: true,
                         })}
+                    />
+                </div>
+
+                <div>
+                    <label>{t("settings.lobbyCreationPolicy")}</label>
+                    <Select
+                        value={lobbyCreationPolicy}
+                        onValueChange={value =>
+                            setValue("lobbyCreationPolicy", value as "admins" | "members")
+                        }
+                    >
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="admins">
+                                {t("settings.lobbyCreationAdmins")}
+                            </SelectItem>
+                            <SelectItem value="members">
+                                {t("settings.lobbyCreationMembers")}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+                    <div>
+                        <label htmlFor="auto-start-lobby">{t("settings.autoStartLobby")}</label>
+                        <p className="text-sm text-muted-foreground">
+                            {t("settings.autoStartLobbyDescription")}
+                        </p>
+                    </div>
+                    <Switch
+                        id="auto-start-lobby"
+                        checked={autoStartLobby}
+                        onCheckedChange={checked => setValue("autoStartLobby", checked)}
                     />
                 </div>
 

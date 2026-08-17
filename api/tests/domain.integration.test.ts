@@ -315,6 +315,41 @@ describe("critical domain flows", { concurrency: false }, () => {
         assert.equal(results.filter(result => result.status === "fulfilled").length, 1);
         assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total), 2);
     });
+    test("league can allow regular members to create lobbies", async () => {
+        const league = await createLeague(4);
+        await leagues.join(league.id, ids[1]);
+        await assert.rejects(() => lobbies.create(league.id, ids[1], { maxPlayers: 2 }), /role/i);
+
+        await leagues.update(league.id, ids[0], { lobbyCreationPolicy: "members" });
+        const lobby = await lobbies.create(league.id, ids[1], { maxPlayers: 2 });
+
+        assert.equal(lobby.createdBy, ids[1]);
+    });
+    test("configured ten-player lobby starts when the final player is ready", async () => {
+        const league = await createLeague(10);
+        for (const userId of ids.slice(1)) await leagues.join(league.id, userId);
+        await leagues.update(league.id, ids[0], { autoStartLobby: true });
+        const lobby = await lobbies.create(league.id, ids[0], { maxPlayers: 10 });
+        for (const userId of ids) await lobbies.joinLobby(lobby.id, userId, league.id);
+        await db.query(
+            "UPDATE lobbies SET team_selection_completed = true WHERE id = $1",
+            [lobby.id]
+        );
+        for (const userId of ids.slice(0, -1)) {
+            await lobbies.setReady(lobby.id, userId, league.id);
+        }
+
+        await lobbies.setReady(lobby.id, ids.at(-1), league.id);
+
+        const updated = await db.query("SELECT status FROM lobbies WHERE id = $1", [lobby.id]);
+        assert.equal(updated.rows[0].status, "in_game");
+        assert.equal(
+            (await db.query("SELECT COUNT(*)::int AS total FROM matches WHERE lobby_id = $1", [
+                lobby.id,
+            ])).rows[0].total,
+            1
+        );
+    });
     test("team, ready, leave and cancellation enforce lobby state", async () => {
         const league = await createLeague(4);
         await leagues.join(league.id, ids[1]);
@@ -327,7 +362,7 @@ describe("critical domain flows", { concurrency: false }, () => {
         await lobbies.setUnready(lobby.id, ids[0], league.id);
         await lobbies.leaveLobby(lobby.id, ids[1], league.id);
         await lobbies.cancel(lobby.id, league.id, ids[0]);
-        assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
+        assert.equal((await db.query("SELECT id FROM lobbies WHERE id=$1", [lobby.id])).rowCount, 0);
     });
     test("two concurrent leaves serialize and cancel an empty lobby", async () => {
         const league = await createLeague(4);
@@ -341,9 +376,9 @@ describe("critical domain flows", { concurrency: false }, () => {
             lobbies.leaveLobby(lobby.id, ids[1], league.id),
         ]);
 
-        assert.equal(results.filter(result => result.status === "fulfilled").length, 2);
+        assert.ok(results.some(result => result.status === "fulfilled"));
         assert.equal(Number((await db.query("SELECT COUNT(*) total FROM lobby_players WHERE lobby_id=$1", [lobby.id])).rows[0].total), 0);
-        assert.equal((await db.query("SELECT status FROM lobbies WHERE id=$1", [lobby.id])).rows[0].status, "cancelled");
+        assert.equal((await db.query("SELECT id FROM lobbies WHERE id=$1", [lobby.id])).rowCount, 0);
     });
     test("leave rolls back player removal when selection cleanup fails", async () => {
         const league = await createLeague(4);

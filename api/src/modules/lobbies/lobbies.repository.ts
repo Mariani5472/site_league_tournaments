@@ -94,6 +94,10 @@ export class LobbiesRepository {
         ]);
         return result.rows[0];
     }
+    async remove(lobbyId: string, options: QueryOptions = {}) {
+        const { executor = db } = options;
+        await executor.query("DELETE FROM lobbies WHERE id = $1", [lobbyId]);
+    }
     async countPlayersByTeam(lobbyId: string, options: QueryOptions = {}) {
         const { executor = db } = options;
         const query = `
@@ -270,18 +274,11 @@ export class LobbiesRepository {
         LEFT JOIN lobby_players lp ON lp.lobby_id = l.id
 
         WHERE l.league_id = $1
+          AND l.status <> 'cancelled'
         GROUP BY l.id
 
         ORDER BY
           l.created_at DESC
-    `;
-        const result = await db.query(query, [lobbyId]);
-        return result.rows;
-    }
-    async remove(lobbyId: string) {
-        const query = `
-      DELETE FROM lobbies
-      WHERE id = $1
     `;
         const result = await db.query(query, [lobbyId]);
         return result.rows;
