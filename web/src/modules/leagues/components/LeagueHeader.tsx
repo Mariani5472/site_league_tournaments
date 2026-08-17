@@ -2,10 +2,11 @@ import { Button } from "@/components/ui/button";
 import type { League } from "../types/league";
 import { LeagueJoinActions } from "./LeagueJoinActions";
 import { useMutation } from "@tanstack/react-query";
-import { deleteLeague, leaveLeague } from "../services/leagues.service";
+import { leaveLeague } from "../services/leagues.service";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Settings, Shield, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Settings, Shield, Users } from "lucide-react";
+import { mutationErrorMessage } from "@/services/api";
 type Props = {
     league: League;
     isAdmin: boolean;
@@ -20,15 +21,7 @@ export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
             toast.success("You left the league");
             navigate("/leagues");
         },
-        onError: (error: Error) => toast.error(error.message)
-    });
-    const deleteMutation = useMutation({
-        mutationFn: () => deleteLeague(league.id),
-        onSuccess: () => {
-            toast.success("You delete the league");
-            navigate("/leagues");
-        },
-        onError: (error: Error) => toast.error(error.message)
+        onError: (error: unknown) => toast.error(mutationErrorMessage(error))
     });
     return (<header className="overflow-hidden rounded-2xl border bg-card shadow-sm">
       <div className="border-b bg-muted/30 px-5 py-3 sm:px-7"><Link to="/leagues" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="h-4 w-4"/> Back to leagues</Link></div>
@@ -63,7 +56,6 @@ export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
           {isAdmin && <Button variant="outline" asChild><Link to={`/leagues/${league.id}/settings`}><Settings className="h-4 w-4"/> Settings</Link></Button>}
           {!role && <LeagueJoinActions league={league}/>}
           {role && !isOwner && <Button variant="outline" disabled={leaveMutation.isPending} onClick={() => leaveMutation.mutate()}>{leaveMutation.isPending ? "Leaving..." : "Leave League"}</Button>}
-          {isOwner && <Button variant="destructive" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate()}><Trash2 className="h-4 w-4"/> {deleteMutation.isPending ? "Deleting..." : "Delete League"}</Button>}
           {role && <span className="inline-flex items-center justify-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-sm font-medium capitalize text-primary"><Shield className="h-4 w-4"/> {role}</span>}
         </div>
       </div>

@@ -3,6 +3,7 @@ import { approveRequest, rejectRequest } from "../services/leagues.service";
 import type { LeagueRequest } from "../types/request";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
+import { mutationErrorMessage } from "@/services/api";
 type Props = {
     leagueId: string;
     requests: LeagueRequest[];
@@ -19,7 +20,8 @@ export function LeagueRequests({ leagueId, requests }: Props) {
                 queryKey: queryKeys.leagues.members(leagueId)
             });
             toast.success("Player approved");
-        }
+        },
+        onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
     const rejectMutation = useMutation({
         mutationFn: (requestId: string) => rejectRequest(leagueId, requestId),
@@ -28,7 +30,8 @@ export function LeagueRequests({ leagueId, requests }: Props) {
                 queryKey: queryKeys.leagues.requests(leagueId)
             });
             toast.success("Request rejected");
-        }
+        },
+        onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
     const pendingRequests = requests.filter(r => r.status == 'pending');
     return (<div className="
