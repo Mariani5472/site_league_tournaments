@@ -1,19 +1,26 @@
 import { AppError } from "../../utils/AppError";
 import { ProfileRepository } from "./profile.repository";
+
 export class ProfileService {
-    private profileRepository = new ProfileRepository();
-    async show(userId: string) {
-        const profile = await this.profileRepository.findById(userId);
-        if (!profile) {
-            throw new AppError("Profile not found", 404);
-        }
-        return profile;
+    constructor(private readonly profileRepository = new ProfileRepository()) {}
+    async showPrivate(userId: string) {
+        const [profile, publicData] = await Promise.all([
+            this.profileRepository.findPrivateById(userId), this.showPublic(userId),
+        ]);
+        if (!profile) throw new AppError("Profile not found", 404);
+        return { ...publicData, email: profile.email };
     }
-    async update(userId: string, params: {
-        nickname: string;
-        avatarUrl: string | null;
-        bannerUrl: string | null;
-    }) {
+    async showPublic(userId: string) {
+        const profile = await this.profileRepository.findPublicById(userId);
+        if (!profile) throw new AppError("Profile not found", 404);
+        const [stats, publicLeagues, recentMatches] = await Promise.all([
+            this.profileRepository.getPublicStats(userId),
+            this.profileRepository.listPublicLeagues(userId),
+            this.profileRepository.listPublicRecentMatches(userId),
+        ]);
+        return { ...profile, stats, publicLeagues, recentMatches };
+    }
+    async update(userId: string, params: { nickname: string; avatarUrl?: string | null; bannerUrl?: string | null }) {
         return this.profileRepository.update(userId, params);
     }
 }
