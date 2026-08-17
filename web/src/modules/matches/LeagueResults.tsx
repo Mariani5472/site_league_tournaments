@@ -1,11 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { formatDateTime, formatList, formatNumber, formatPercent, t } from "@/i18n";
 import { labelMatchStatus, labelResolution } from "@/i18n/labels";
 import { getMatches, getStandings } from "./services";
+import { uniqueItems } from "@/types/pagination";
+import { LoadMoreButton } from "@/components/LoadMoreButton";
 
 export function LeagueResults({ leagueId }: { leagueId: string }) {
-    const matches = useQuery({ queryKey: queryKeys.leagues.matches(leagueId), queryFn: () => getMatches(leagueId) });
+    const matches = useInfiniteQuery({
+        queryKey: queryKeys.leagues.matches(leagueId),
+        queryFn: ({ pageParam }) => getMatches(leagueId, pageParam),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: page => page.nextCursor ?? undefined,
+    });
+    const matchItems = uniqueItems(matches.data?.pages);
     const standings = useQuery({ queryKey: queryKeys.leagues.standings(leagueId), queryFn: () => getStandings(leagueId) });
     return <>
         <section className="rounded-xl border p-4 sm:p-6 space-y-4 overflow-hidden">
@@ -16,10 +24,10 @@ export function LeagueResults({ leagueId }: { leagueId: string }) {
         </section>
         <section className="rounded-xl border p-4 sm:p-6 space-y-4">
             <h2 className="text-xl font-semibold">{t("match.history")}</h2>
-            {matches.isLoading ? <p className="text-muted-foreground">{t("async.matches")}</p> : matches.isError ? <p className="text-destructive">{t("match.historyError")}</p> : matches.data?.length ? <div className="space-y-3">{matches.data.map(match => {
+            {matches.isLoading ? <p className="text-muted-foreground">{t("async.matches")}</p> : matches.isError ? <p className="text-destructive">{t("match.historyError")}</p> : matchItems.length ? <div className="space-y-3">{matchItems.map(match => {
                 const votes = t("common.votes", { count: formatNumber(match.voteCount ?? 0) });
                 return <article key={match.id} className="rounded-lg border p-4 space-y-2"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{formatDateTime(match.startedAt)}</span><span className="text-sm">{labelMatchStatus(match.status)}</span></div><div className="grid sm:grid-cols-2 gap-2 text-sm">{[1, 2].map(team => <div key={team}>{t("match.teamPlayers", { team, players: formatList(match.players.filter(player => player.teamNumber === team).map(player => player.nickname)) })}</div>)}</div><p className="text-sm text-muted-foreground">{match.winnerTeamNumber ? t("match.winner", { team: match.winnerTeamNumber, resolution: labelResolution(match.resolutionType ?? "vote"), votes }) : t("match.votingOpen", { votes })}</p>{match.resolutionReason && <p className="text-sm">{t("common.reason", { reason: match.resolutionReason })}</p>}</article>;
-            })}</div> : <p className="text-muted-foreground">{t("match.noMatches")}</p>}
+            })}<LoadMoreButton hasNextPage={matches.hasNextPage} isFetchingNextPage={matches.isFetchingNextPage} isFetchNextPageError={matches.isFetchNextPageError} onLoadMore={() => void matches.fetchNextPage()}/></div> : <p className="text-muted-foreground">{t("match.noMatches")}</p>}
         </section>
     </>;
 }
