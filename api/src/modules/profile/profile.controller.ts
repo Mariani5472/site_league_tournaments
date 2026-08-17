@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import { ProfileService } from "./profile.service";
-import { profileParamsSchema, updateProfileBodySchema } from "./profile.schemas";
+import { discoverPlayersQuerySchema, profileParamsSchema, updateProfileBodySchema } from "./profile.schemas";
 export class ProfileController {
     private profileService = new ProfileService();
+    async discover(request: Request, response: Response) {
+        const query = discoverPlayersQuerySchema.parse(request.query);
+        return response.json(await this.profileService.discover(request.user.id, query));
+    }
     async show(request: Request, response: Response) {
         const profile = await this.profileService.showPrivate(request.user.id);
         return response.json(profile);

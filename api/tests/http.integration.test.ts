@@ -199,6 +199,29 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal(text.includes("Secret league"), false);
     });
 
+    test("authenticated player discovery is paginated and exposes only approved public data", async () => {
+        const publicLeague = await createLeague(ids[1], { name: "Shared public league", visibility: "public" });
+        const privateLeague = await createLeague(ids[1], { name: "Hidden membership", visibility: "private" });
+        await db.query("INSERT INTO league_members (league_id, user_id, role) VALUES ($1, $2, 'player')", [publicLeague.id, ids[0]]);
+        await db.query("INSERT INTO league_members (league_id, user_id, role) VALUES ($1, $2, 'player')", [privateLeague.id, ids[2]]);
+
+        assert.equal((await request("/players?search=http-user&limit=2")).status, 401);
+        const first = await request("/players?search=http-user&limit=2", { userId: ids[0] });
+        assert.equal(first.status, 200);
+        const firstText = await first.text();
+        const firstPage = JSON.parse(firstText) as { items: Array<{ id: string; nickname: string; publicLeagues: string[]; commonPublicLeagueCount: number }>; nextCursor: string };
+        assert.equal(firstPage.items.length, 2);
+        assert.ok(firstPage.nextCursor);
+        assert.equal(firstText.includes("@test.local"), false);
+        assert.equal(firstText.toLowerCase().includes("puuid"), false);
+        assert.equal(firstText.includes("Hidden membership"), false);
+
+        const second = await request(`/players?search=http-user&limit=2&cursor=${firstPage.nextCursor}`, { userId: ids[0] });
+        const secondPage = await second.json() as { items: Array<{ id: string }> };
+        assert.equal(secondPage.items.length, 2);
+        assert.equal(secondPage.items.some(player => firstPage.items.some(firstPlayer => firstPlayer.id === player.id)), false);
+    });
+
     test("profile schemas and expected SQL errors map to 400, 409 and 500", async () => {
         const validation = await request("/profile", {
             method: "PATCH", userId: ids[0], body: { nickname: "x", unknown: true }

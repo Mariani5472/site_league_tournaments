@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Trophy, UserRound } from "lucide-react";
+import { LayoutDashboard, Search, Trophy, UserRound } from "lucide-react";
 import { t } from "@/i18n";
 const links = [
     { to: "/main", label: t("sidebar.dashboard"), icon: LayoutDashboard },
     { to: "/leagues", label: t("sidebar.leagues"), icon: Trophy },
+    { to: "/players", label: t("sidebar.players"), icon: Search },
     { to: "/profile", label: t("sidebar.profile"), icon: UserRound },
 ];
 interface SidebarProps {
