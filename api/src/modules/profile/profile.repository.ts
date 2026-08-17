@@ -1,6 +1,21 @@
 import { db } from "../../database/connection";
+import { toCursorPage, type CursorParams } from "../../@types/shared/CursorPage";
 
 export class ProfileRepository {
+    async discover(requesterId: string, params: CursorParams & { search: string }) {
+        const result = await db.query(`SELECT u.id, u.nickname, u.avatar_url,
+          COALESCE(array_agg(DISTINCT public_leagues.name) FILTER (WHERE public_leagues.id IS NOT NULL), '{}') AS public_leagues,
+          COUNT(DISTINCT common_members.league_id)::int AS common_public_league_count
+          FROM users u
+          LEFT JOIN league_members public_members ON public_members.user_id = u.id
+          LEFT JOIN leagues public_leagues ON public_leagues.id = public_members.league_id AND public_leagues.visibility = 'public'
+          LEFT JOIN league_members common_members ON common_members.league_id = public_leagues.id AND common_members.user_id = $1
+          WHERE u.id <> $1 AND ($2 = '' OR u.nickname ILIKE '%' || $2 || '%')
+            AND ($3::uuid IS NULL OR u.id < $3)
+          GROUP BY u.id
+          ORDER BY u.id DESC LIMIT $4`, [requesterId, params.search, params.cursor ?? null, params.limit + 1]);
+        return toCursorPage(result.rows, params.limit);
+    }
     async findPrivateById(userId: string) {
         const result = await db.query(`SELECT id, email, nickname, avatar_url, banner_url, created_at FROM users WHERE id = $1`, [userId]);
         return result.rows[0];

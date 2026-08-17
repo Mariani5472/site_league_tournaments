@@ -9,12 +9,14 @@ export function createHttpRateLimitMiddleware(options: {
     limit?: number;
     windowMs?: number;
     key?: (request: Request) => string;
+    surface?: "http_ip" | "player_search";
 } = {}) {
     const limiter = new FixedWindowRateLimiter(
         options.limit ?? positiveInteger(process.env.HTTP_RATE_LIMIT, 120),
         options.windowMs ?? positiveInteger(process.env.HTTP_RATE_LIMIT_WINDOW_MS, 60_000)
     );
     const key = options.key ?? (request => request.ip ?? request.socket.remoteAddress ?? "unknown");
+    const surface = options.surface ?? "http_ip";
 
     return (request: Request, response: Response, next: NextFunction) => {
         if (exemptPaths.has(request.path)) return next();
@@ -22,8 +24,8 @@ export function createHttpRateLimitMiddleware(options: {
         if (decision.allowed) return next();
 
         response.setHeader("Retry-After", Math.ceil(decision.retryAfterMs / 1_000));
-        recordRateLimitRejection("http_ip");
-        logger.warn({ operation: "rate_limit.reject", surface: "http_ip" }, "request rate limited");
+        recordRateLimitRejection(surface);
+        logger.warn({ operation: "rate_limit.reject", surface }, "request rate limited");
         return response.status(429).json({
             status: "error",
             code: "RATE_LIMITED",

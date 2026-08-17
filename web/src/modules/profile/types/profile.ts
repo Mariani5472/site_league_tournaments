@@ -24,3 +24,10 @@ export type Profile = {
     }>;
 };
 export type PublicProfile = Omit<Profile, "email">;
+export type PlayerSearchResult = {
+    id: string;
+    nickname: string;
+    avatarUrl: string | null;
+    publicLeagues: string[];
+    commonPublicLeagueCount: number;
+};

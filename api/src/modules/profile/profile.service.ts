@@ -1,8 +1,12 @@
 import { AppError } from "../../utils/AppError";
 import { ProfileRepository } from "./profile.repository";
+import type { CursorParams } from "../../@types/shared/CursorPage";
 
 export class ProfileService {
     constructor(private readonly profileRepository = new ProfileRepository()) {}
+    async discover(requesterId: string, params: CursorParams & { search: string }) {
+        return this.profileRepository.discover(requesterId, params);
+    }
     async showPrivate(userId: string) {
         const [profile, publicData] = await Promise.all([
             this.profileRepository.findPrivateById(userId), this.showPublic(userId),

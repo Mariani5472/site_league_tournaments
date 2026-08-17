@@ -43,6 +43,11 @@ const PublicProfilePage = lazy(() =>
         default: module.PublicProfilePage,
     }))
 );
+const PlayersPage = lazy(() =>
+    import("@/modules/profile/pages/PlayersPage").then(module => ({
+        default: module.PlayersPage,
+    }))
+);
 const LeagueSettingsPage = lazy(() =>
     import("@/modules/leagues/pages/LeagueSettingsPage").then(module => ({
         default: module.LeagueSettingsPage,
@@ -73,12 +78,13 @@ export function AppRoutes() {
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     </Route>
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/players/:userId" element={<PublicProfilePage />} />
                     <Route element={<ProtectedLayout />}>
                         <Route path="/main" element={<DashboardPage />} />
                         <Route path="/leagues/:id" element={<LeaguePage />} />
                         <Route path="/leagues" element={<LeaguesPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/players" element={<PlayersPage />} />
+                        <Route path="/players/:userId" element={<PublicProfilePage />} />
                         <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
                         <Route path="/leagues/:leagueId/lobbies/:lobbyId" element={<LobbyPage />} />
                     </Route>

@@ -28,7 +28,7 @@ export function httpMetricsMiddleware(request: Request, response: Response, next
 export function recordSocketConnected() { activeSockets += 1; }
 export function recordSocketDisconnected() { activeSockets = Math.max(0, activeSockets - 1); }
 export function recordRealtimeEvent(event: string) { increment(realtimeEvents, event); }
-export function recordRateLimitRejection(surface: "http_ip" | "http_user" | "socket_connection" | "socket_event") {
+export function recordRateLimitRejection(surface: "http_ip" | "http_user" | "player_search" | "socket_connection" | "socket_event") {
     increment(rateLimitRejections, surface);
 }
 export function registerDatabasePoolMetrics(snapshot: typeof databasePoolSnapshot) {
