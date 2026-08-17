@@ -5,13 +5,15 @@ import { renderApp } from "@/test/renderApp";
 import { ProtectedLayout } from "./ProtectedLayout";
 
 function routes() {
-    return <Routes>
-        <Route path="/" element={<p>Public landing</p>} />
-        <Route path="/login" element={<p>Login page</p>} />
-        <Route element={<ProtectedLayout />}>
-            <Route path="/private" element={<p>Private content</p>} />
-        </Route>
-    </Routes>;
+    return (
+        <Routes>
+            <Route path="/" element={<p>Public landing</p>} />
+            <Route path="/login" element={<p>Login page</p>} />
+            <Route element={<ProtectedLayout />}>
+                <Route path="/private" element={<p>Private content</p>} />
+            </Route>
+        </Routes>
+    );
 }
 
 describe("ProtectedLayout", () => {

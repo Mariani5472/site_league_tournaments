@@ -13,15 +13,29 @@ describe("useDiscoverLeagues pagination", () => {
 
     it("loads following pages without duplicates", async () => {
         getDiscoverLeagues
-            .mockResolvedValueOnce({ items: [{ id: "league-2" }, { id: "league-1" }], nextCursor: "league-1" })
-            .mockResolvedValueOnce({ items: [{ id: "league-1" }, { id: "league-0" }], nextCursor: null });
+            .mockResolvedValueOnce({
+                items: [{ id: "league-2" }, { id: "league-1" }],
+                nextCursor: "league-1",
+            })
+            .mockResolvedValueOnce({
+                items: [{ id: "league-1" }, { id: "league-0" }],
+                nextCursor: null,
+            });
         const client = testQueryClient();
-        const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        );
         const { result } = renderHook(() => useDiscoverLeagues("ranked"), { wrapper });
         await waitFor(() => expect(result.current.data).toHaveLength(2));
 
         await act(() => result.current.fetchNextPage());
-        await waitFor(() => expect(result.current.data?.map(item => item.id)).toEqual(["league-2", "league-1", "league-0"]));
+        await waitFor(() =>
+            expect(result.current.data?.map(item => item.id)).toEqual([
+                "league-2",
+                "league-1",
+                "league-0",
+            ])
+        );
         expect(getDiscoverLeagues).toHaveBeenNthCalledWith(2, "ranked", "league-1");
         expect(result.current.hasNextPage).toBe(false);
     });
@@ -31,8 +45,13 @@ describe("useDiscoverLeagues pagination", () => {
             .mockResolvedValueOnce({ items: [{ id: "old" }], nextCursor: "old" })
             .mockResolvedValueOnce({ items: [{ id: "new" }], nextCursor: null });
         const client = testQueryClient();
-        const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-        const { result, rerender } = renderHook(({ search }) => useDiscoverLeagues(search), { initialProps: { search: "old filter" }, wrapper });
+        const wrapper = ({ children }: { children: ReactNode }) => (
+            <QueryClientProvider client={client}>{children}</QueryClientProvider>
+        );
+        const { result, rerender } = renderHook(({ search }) => useDiscoverLeagues(search), {
+            initialProps: { search: "old filter" },
+            wrapper,
+        });
         await waitFor(() => expect(result.current.data?.[0]?.id).toBe("old"));
 
         rerender({ search: "new filter" });

@@ -5,6 +5,6 @@ export function useLinkRiotAccount(gameName: string, tagLine: string) {
     return useQuery({
         queryKey: queryKeys.riot.account(gameName, tagLine),
         queryFn: () => linkRiotAccount({ gameName, tagLine }),
-        enabled: !!gameName && !!tagLine
+        enabled: !!gameName && !!tagLine,
     });
 }

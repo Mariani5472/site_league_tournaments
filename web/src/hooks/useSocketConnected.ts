@@ -11,5 +11,9 @@ function subscribe(onConnectionChange: () => void) {
 }
 
 export function useSocketConnected() {
-    return useSyncExternalStore(subscribe, () => socket.connected, () => false);
+    return useSyncExternalStore(
+        subscribe,
+        () => socket.connected,
+        () => false
+    );
 }

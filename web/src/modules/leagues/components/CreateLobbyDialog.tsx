@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -17,12 +23,10 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
     const [open, setOpen] = useState(false);
     const [maxPlayers, setMaxPlayers] = useState(10);
     const mutation = useMutation({
-        mutationFn: (data: {
-            maxPlayers: number;
-        }) => createLobby(leagueId, data),
+        mutationFn: (data: { maxPlayers: number }) => createLobby(leagueId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.leagues.lobbies(leagueId)
+                queryKey: queryKeys.leagues.lobbies(leagueId),
             });
             toast.success(t("league.lobbyCreated"));
             setOpen(false);
@@ -30,61 +34,51 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     function handleSubmit() {
         mutation.mutate({
-            maxPlayers
+            maxPlayers,
         });
     }
-    return (<Dialog open={open} onOpenChange={setOpen}>
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogTrigger asChild>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{t("league.createLobby")}</DialogTitle>
+                </DialogHeader>
 
-        {children}
-
-      </DialogTrigger>
-
-      <DialogContent>
-
-        <DialogHeader>
-
-          <DialogTitle>
-
-            {t("league.createLobby")}
-
-          </DialogTitle>
-
-        </DialogHeader>
-
-        <div className="
+                <div
+                    className="
             space-y-4
-          ">
-
-          <div>
-
-            <label className="
+          "
+                >
+                    <div>
+                        <label
+                            className="
                 text-sm
                 font-medium
-              ">
-              {t("league.maxPlayers")}
-            </label>
+              "
+                        >
+                            {t("league.maxPlayers")}
+                        </label>
 
-            <Input type="number" min={2} max={10} value={maxPlayers} onChange={(e) => setMaxPlayers(Number(e.target.value))}/>
+                        <Input
+                            type="number"
+                            min={2}
+                            max={10}
+                            value={maxPlayers}
+                            onChange={e => setMaxPlayers(Number(e.target.value))}
+                        />
+                    </div>
 
-          </div>
-
-          <Button className="w-full" disabled={mutation.isPending} onClick={handleSubmit}>
-
-            {mutation.isPending
-            ? t("league.creating")
-            : t("league.createLobby")}
-
-          </Button>
-
-        </div>
-
-      </DialogContent>
-
-    </Dialog>);
+                    <Button className="w-full" disabled={mutation.isPending} onClick={handleSubmit}>
+                        {mutation.isPending ? t("league.creating") : t("league.createLobby")}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
 }

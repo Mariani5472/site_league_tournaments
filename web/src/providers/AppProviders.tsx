@@ -7,9 +7,9 @@ type Props = {
 };
 const queryClient = createAppQueryClient();
 export function AppProviders({ children }: Props) {
-    return (<QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </QueryClientProvider>);
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>{children}</AuthProvider>
+        </QueryClientProvider>
+    );
 }

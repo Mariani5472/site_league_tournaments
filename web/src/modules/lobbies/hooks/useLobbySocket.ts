@@ -9,18 +9,16 @@ export function useLobbySocket(leagueId: string, lobbyId: string) {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     useEffect(() => {
-        const joinLobby = () => socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId, (ack: JoinAck) => {
-            if (!ack.ok)
-                return;
-            queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
-            queryClient.invalidateQueries({ queryKey: queryKeys.lobbies.detail(leagueId, lobbyId) });
-        });
-        const handleLobbyUpdate = (payload: {
-            lobbyId: string;
-            leagueId: string;
-        }) => {
-            if (payload.lobbyId !== lobbyId)
-                return;
+        const joinLobby = () =>
+            socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId, (ack: JoinAck) => {
+                if (!ack.ok) return;
+                queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
+                });
+            });
+        const handleLobbyUpdate = (payload: { lobbyId: string; leagueId: string }) => {
+            if (payload.lobbyId !== lobbyId) return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.detail(leagueId),
             });
@@ -28,12 +26,8 @@ export function useLobbySocket(leagueId: string, lobbyId: string) {
                 queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
             });
         };
-        const handleLobbyDelete = (payload: {
-            lobbyId: string;
-            leagueId: string;
-        }) => {
-            if (payload.lobbyId !== lobbyId)
-                return;
+        const handleLobbyDelete = (payload: { lobbyId: string; leagueId: string }) => {
+            if (payload.lobbyId !== lobbyId) return;
             queryClient.removeQueries({
                 queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
             });
@@ -51,5 +45,5 @@ export function useLobbySocket(leagueId: string, lobbyId: string) {
             socket.off(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
             socket.emit(SOCKET_EVENTS.LOBBY_LEAVE, lobbyId);
         };
-    }, [leagueId, lobbyId, navigate, queryClient,]);
+    }, [leagueId, lobbyId, navigate, queryClient]);
 }

@@ -4,6 +4,6 @@ import { getMineLeagues } from "../services/leagues.service";
 export function useMineLeagues() {
     return useQuery({
         queryKey: queryKeys.leagues.mine,
-        queryFn: getMineLeagues
+        queryFn: getMineLeagues,
     });
 }

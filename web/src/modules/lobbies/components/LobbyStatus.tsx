@@ -5,31 +5,37 @@ import { labelLobbyStatus } from "@/i18n/labels";
 interface Props {
     lobby: LobbyDetails;
 }
-export function LobbyStatus({ lobby, }: Props) {
-    return (<div className="
+export function LobbyStatus({ lobby }: Props) {
+    return (
+        <div
+            className="
         rounded-xl
         border
         p-5
         flex
         justify-between
         items-center
-      ">
-      <div>
-        <h2 className="
+      "
+        >
+            <div>
+                <h2
+                    className="
             font-semibold
-          ">
-          {t("lobby.statusTitle")}
-        </h2>
+          "
+                >
+                    {t("lobby.statusTitle")}
+                </h2>
 
-        <p className="
+                <p
+                    className="
             text-muted-foreground
-          ">
-          {t("lobby.readyCount", { ready: lobby.readyCount, total: lobby.playersCount })}
-        </p>
-      </div>
+          "
+                >
+                    {t("lobby.readyCount", { ready: lobby.readyCount, total: lobby.playersCount })}
+                </p>
+            </div>
 
-      <Badge>
-        {labelLobbyStatus(lobby.status)}
-      </Badge>
-    </div>);
+            <Badge>{labelLobbyStatus(lobby.status)}</Badge>
+        </div>
+    );
 }

@@ -18,23 +18,33 @@ export function LeagueJoinActions({ league }: Props) {
     };
     const joinMutation = useMutation({
         mutationFn: () => joinLeague(league.id),
-        onSuccess: () => { refreshLeagues(); toast.success(t("league.joined")); },
-        onError: (error) => toast.error(mutationErrorMessage(error))
+        onSuccess: () => {
+            refreshLeagues();
+            toast.success(t("league.joined"));
+        },
+        onError: error => toast.error(mutationErrorMessage(error)),
     });
     const requestMutation = useMutation({
         mutationFn: () => requestLeagueJoin(league.id),
-        onSuccess: () => { refreshLeagues(); toast.success(t("league.requestSent")); },
-        onError: (error) => toast.error(mutationErrorMessage(error))
+        onSuccess: () => {
+            refreshLeagues();
+            toast.success(t("league.requestSent"));
+        },
+        onError: error => toast.error(mutationErrorMessage(error)),
     });
     if (league.joinPolicy === "open") {
-        return (<Button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
-        {joinMutation.isPending ? t("league.joining") : t("league.join")}
-      </Button>);
+        return (
+            <Button onClick={() => joinMutation.mutate()} disabled={joinMutation.isPending}>
+                {joinMutation.isPending ? t("league.joining") : t("league.join")}
+            </Button>
+        );
     }
     if (league.joinPolicy === "invite_only") {
         return <p className="text-sm text-muted-foreground">{t("league.inviteOnly")}</p>;
     }
-    return (<Button onClick={() => requestMutation.mutate()} disabled={requestMutation.isPending}>
-      {requestMutation.isPending ? t("league.sending") : t("league.requestJoin")}
-    </Button>);
+    return (
+        <Button onClick={() => requestMutation.mutate()} disabled={requestMutation.isPending}>
+            {requestMutation.isPending ? t("league.sending") : t("league.requestJoin")}
+        </Button>
+    );
 }

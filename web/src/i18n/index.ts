@@ -10,7 +10,11 @@ export function t(key: MessageKey, params: Params = {}) {
     );
 }
 
-export function tp(value: number, keys: { one: MessageKey; other: MessageKey }, params: Params = {}) {
+export function tp(
+    value: number,
+    keys: { one: MessageKey; other: MessageKey },
+    params: Params = {}
+) {
     return t(pluralCategory(value) === "one" ? keys.one : keys.other, { ...params, count: value });
 }
 

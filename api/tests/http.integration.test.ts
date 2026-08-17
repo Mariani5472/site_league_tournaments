@@ -127,6 +127,43 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal((await invalid.json() as { code: string }).code, "UNAUTHENTICATED");
     });
 
+    test("dashboard aggregates personal actions and history without client fan-out", async () => {
+        const firstLeague = await createLeague(ids[0], { name: "Recent league" });
+        const secondLeague = await createLeague(ids[0], { name: "Match league" });
+        const waitingLobby = await db.query<{ id: string }>(
+            "INSERT INTO lobbies (league_id, max_players, created_by) VALUES ($1, 4, $2) RETURNING id",
+            [firstLeague.id, ids[0]]
+        );
+        await db.query("INSERT INTO lobby_players (lobby_id, user_id, team_number) VALUES ($1, $2, 1)", [waitingLobby.rows[0].id, ids[0]]);
+        await db.query("INSERT INTO league_join_requests (league_id, user_id, status) VALUES ($1, $2, 'pending')", [firstLeague.id, ids[1]]);
+        const gameLobby = await db.query<{ id: string }>(
+            "INSERT INTO lobbies (league_id, status, max_players, created_by) VALUES ($1, 'in_game', 4, $2) RETURNING id",
+            [secondLeague.id, ids[0]]
+        );
+        const match = await db.query<{ id: string }>(
+            "INSERT INTO matches (lobby_id, league_id, status, started_at) VALUES ($1, $2, 'in_game', current_timestamp) RETURNING id",
+            [gameLobby.rows[0].id, secondLeague.id]
+        );
+        await db.query("INSERT INTO match_players (match_id, user_id, team_number) VALUES ($1, $2, 1)", [match.rows[0].id, ids[0]]);
+
+        const response = await request("/dashboard", { userId: ids[0] });
+        assert.equal(response.status, 200);
+        const body = await response.json() as {
+            summary: { leagueCount: number; matchesPlayed: number };
+            actions: Array<{ type: string; href: string; count: number | null }>;
+            recentLeagues: Array<{ id: string }>;
+            recentMatches: Array<{ id: string; leagueName: string }>;
+        };
+        assert.equal(body.summary.leagueCount, 2);
+        assert.equal(body.summary.matchesPlayed, 0);
+        assert.deepEqual(body.actions.map(action => action.type), ["lobby_waiting", "vote_pending", "admin_requests"]);
+        assert.match(body.actions[0].href, new RegExp(`/leagues/${firstLeague.id}/lobbies/`));
+        assert.equal(body.actions[2].count, 1);
+        assert.equal(body.recentLeagues.length, 2);
+        assert.equal(body.recentMatches[0].id, match.rows[0].id);
+        assert.equal(body.recentMatches[0].leagueName, "Match league");
+    });
+
     test("auth sync and profile expose their successful contracts", async () => {
         const sync = await request("/auth/sync", { method: "POST", userId: ids[0] });
         assert.equal(sync.status, 201);

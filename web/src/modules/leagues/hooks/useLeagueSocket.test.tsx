@@ -44,9 +44,11 @@ describe("useLeagueSocket match reconciliation", () => {
 
         dispatch(SOCKET_EVENTS.MATCH_VOTE, { leagueId: "league-1", matchId: "match-1" });
 
-        await waitFor(() => expect(invalidate).toHaveBeenCalledWith({
-            queryKey: queryKeys.matches.detail("match-1")
-        }));
+        await waitFor(() =>
+            expect(invalidate).toHaveBeenCalledWith({
+                queryKey: queryKeys.matches.detail("match-1"),
+            })
+        );
     });
 
     it("invalidates active match queries after a successful socket rejoin", async () => {
@@ -57,8 +59,10 @@ describe("useLeagueSocket match reconciliation", () => {
 
         dispatch("connect");
 
-        await waitFor(() => expect(invalidate).toHaveBeenCalledWith({
-            queryKey: queryKeys.matches.all
-        }));
+        await waitFor(() =>
+            expect(invalidate).toHaveBeenCalledWith({
+                queryKey: queryKeys.matches.all,
+            })
+        );
     });
 });

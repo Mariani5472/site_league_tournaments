@@ -15,10 +15,10 @@ export function LeagueRequests({ leagueId, requests }: Props) {
         mutationFn: (requestId: string) => approveRequest(leagueId, requestId),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.leagues.requests(leagueId)
+                queryKey: queryKeys.leagues.requests(leagueId),
             });
             queryClient.invalidateQueries({
-                queryKey: queryKeys.leagues.members(leagueId)
+                queryKey: queryKeys.leagues.members(leagueId),
             });
             toast.success(t("league.approved"));
         },
@@ -28,71 +28,96 @@ export function LeagueRequests({ leagueId, requests }: Props) {
         mutationFn: (requestId: string) => rejectRequest(leagueId, requestId),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.leagues.requests(leagueId)
+                queryKey: queryKeys.leagues.requests(leagueId),
             });
             toast.success(t("league.rejected"));
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
-    const pendingRequests = requests.filter(r => r.status == 'pending');
-    return (<div className="
+    const pendingRequests = requests.filter(r => r.status == "pending");
+    return (
+        <div
+            className="
         rounded-xl
         border
         p-6
-      ">
-      <h2 className="
+      "
+        >
+            <h2
+                className="
           mb-4
           text-xl
           font-semibold
-        ">
-        {t("league.requests")}
-      </h2>
+        "
+            >
+                {t("league.requests")}
+            </h2>
 
-      <div className="space-y-3">
-        {pendingRequests.length === 0 && <p className="text-muted-foreground">{t("league.requestsEmpty")}</p>}
-        {pendingRequests.map((request) => (<div key={request.id} className="
+            <div className="space-y-3">
+                {pendingRequests.length === 0 && (
+                    <p className="text-muted-foreground">{t("league.requestsEmpty")}</p>
+                )}
+                {pendingRequests.map(request => (
+                    <div
+                        key={request.id}
+                        className="
               flex
               items-center
               justify-between
               rounded-lg
               border
               p-3
-            ">
-            <div>
-              <p className="
+            "
+                    >
+                        <div>
+                            <p
+                                className="
                   font-medium
-                ">
-                {request.nickname}
-              </p>
-            </div>
+                "
+                            >
+                                {request.nickname}
+                            </p>
+                        </div>
 
-            <div className="
+                        <div
+                            className="
                 flex
                 gap-2
-              ">
-              <button disabled={approveMutation.isPending || rejectMutation.isPending} onClick={() => approveMutation.mutate(request.id)} className="
+              "
+                        >
+                            <button
+                                disabled={approveMutation.isPending || rejectMutation.isPending}
+                                onClick={() => approveMutation.mutate(request.id)}
+                                className="
                   rounded-md
                   bg-green-600
                   px-3
                   py-1
                   text-sm
                   text-white
-                ">
-                {t("league.approve")}
-              </button>
+                "
+                            >
+                                {t("league.approve")}
+                            </button>
 
-              <button disabled={approveMutation.isPending || rejectMutation.isPending} onClick={() => rejectMutation.mutate(request.id)} className="
+                            <button
+                                disabled={approveMutation.isPending || rejectMutation.isPending}
+                                onClick={() => rejectMutation.mutate(request.id)}
+                                className="
                   rounded-md
                   bg-red-600
                   px-3
                   py-1
                   text-sm
                   text-white
-                ">
-                {t("league.reject")}
-              </button>
+                "
+                            >
+                                {t("league.reject")}
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
-          </div>))}
-      </div>
-    </div>);
+        </div>
+    );
 }

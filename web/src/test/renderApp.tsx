@@ -40,9 +40,7 @@ export function renderApp(
         ...render(
             <QueryClientProvider client={queryClient}>
                 <AuthContext.Provider value={auth}>
-                    <MemoryRouter initialEntries={[options.route ?? "/"]}>
-                        {ui}
-                    </MemoryRouter>
+                    <MemoryRouter initialEntries={[options.route ?? "/"]}>{ui}</MemoryRouter>
                 </AuthContext.Provider>
             </QueryClientProvider>
         ),

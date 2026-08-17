@@ -16,5 +16,5 @@ export const SOCKET_EVENTS = {
     MATCH_VOTE: "match:vote",
     MATCH_FINISHED: "match:finished",
     CHAT_MESSAGE: "chat:message",
-    CHAT_TYPING: "chat:typing"
+    CHAT_TYPING: "chat:typing",
 };

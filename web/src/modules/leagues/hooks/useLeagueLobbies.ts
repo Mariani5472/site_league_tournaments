@@ -5,6 +5,6 @@ export function useLeagueLobbies(leagueId: string) {
     return useQuery({
         queryKey: queryKeys.leagues.lobbies(leagueId),
         queryFn: () => getLeagueLobbies(leagueId),
-        enabled: !!leagueId
+        enabled: !!leagueId,
     });
 }

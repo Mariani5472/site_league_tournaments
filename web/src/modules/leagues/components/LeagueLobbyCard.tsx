@@ -11,64 +11,77 @@ interface Props {
 export function LeagueLobbyCard({ leagueId, lobby }: Props) {
     const navigate = useNavigate();
     const isWaiting = lobby.status === "waiting";
-    return (<div className="
+    return (
+        <div
+            className="
         rounded-xl
         border
         p-5
         flex
         flex-col
         gap-4
-      ">
-      <div className="
+      "
+        >
+            <div
+                className="
           flex
           justify-between
           items-start
-        ">
-        <div>
-          <h3 className="
+        "
+            >
+                <div>
+                    <h3
+                        className="
               font-semibold
               text-lg
-            ">
-            {t("league.lobby")}
-          </h3>
+            "
+                    >
+                        {t("league.lobby")}
+                    </h3>
 
-          <p className="
+                    <p
+                        className="
               text-sm
               text-muted-foreground
-            ">
-            {t("common.status", { status: labelLobbyStatus(lobby.status) })}
-          </p>
-        </div>
+            "
+                    >
+                        {t("common.status", { status: labelLobbyStatus(lobby.status) })}
+                    </p>
+                </div>
 
-        <span className="
+                <span
+                    className="
             rounded-full
             border
             px-3
             py-1
             text-xs
-          ">
-          {labelLobbyStatus(lobby.status)}
-        </span>
-      </div>
+          "
+                >
+                    {labelLobbyStatus(lobby.status)}
+                </span>
+            </div>
 
-      <div className="
+            <div
+                className="
           flex
           items-center
           gap-2
           text-sm
-        ">
-        <Users className="
+        "
+            >
+                <Users
+                    className="
             h-4
             w-4
-          "/>
+          "
+                />
+                {lobby.playersCount}/{lobby.maxPlayers}
+            </div>
 
-        {lobby.playersCount}
-        /
-        {lobby.maxPlayers}
-      </div>
-
-      <Button onClick={() => navigate(`/leagues/${leagueId}/lobbies/${lobby.id}`)}>
-        {isWaiting ? t("league.openLobby") : t("league.watchMatch")}
-      </Button>
-    </div>);
+            <Button onClick={() => navigate(`/leagues/${leagueId}/lobbies/${lobby.id}`)}>
+                {isWaiting ? t("league.openLobby") : t("league.watchMatch")}
+            </Button>
+        </div>
+    );
 }
