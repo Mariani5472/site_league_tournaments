@@ -93,10 +93,11 @@ export class LeaguesRepository {
     async findById(leagueId: string, options: FindOptions = {}): Promise<League | null> {
         const { executor = db, lock, } = options;
         const query = `
-      SELECT *
-      FROM leagues
-      WHERE id = $1
-      ${lock === "update" ? "FOR UPDATE" : ""}
+      SELECT l.*,
+        (SELECT COUNT(*)::int FROM league_members lm WHERE lm.league_id = l.id) AS player_count
+      FROM leagues l
+      WHERE l.id = $1
+      ${lock === "update" ? "FOR UPDATE OF l" : ""}
     `;
         const result = await executor.query<League>(query, [leagueId]);
         return result.rows[0] ?? null;
@@ -139,6 +140,8 @@ export class LeaguesRepository {
         visibility?: string;
         joinPolicy?: string;
         maxPlayers?: number;
+        lobbyCreationPolicy?: "admins" | "members";
+        autoStartLobby?: boolean;
     }, options: QueryOptions = {}): Promise<League> {
         const { executor = db } = options;
         const query = `
@@ -148,7 +151,9 @@ export class LeaguesRepository {
         description = CASE WHEN $3::boolean THEN $4 ELSE description END,
         visibility = COALESCE($5, visibility),
         join_policy = COALESCE($6, join_policy),
-        max_players = COALESCE($7, max_players)
+        max_players = COALESCE($7, max_players),
+        lobby_creation_policy = COALESCE($8, lobby_creation_policy),
+        auto_start_lobby = COALESCE($9, auto_start_lobby)
       WHERE id = $1
       RETURNING *
     `;
@@ -159,7 +164,9 @@ export class LeaguesRepository {
             params.description ?? null,
             params.visibility ?? null,
             params.joinPolicy ?? null,
-            params.maxPlayers ?? null
+            params.maxPlayers ?? null,
+            params.lobbyCreationPolicy ?? null,
+            params.autoStartLobby ?? null
         ]);
         return result.rows[0];
     }

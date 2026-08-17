@@ -16,6 +16,7 @@ function fakeSocket() {
         data: { user: { id: "30000000-0000-4000-8000-000000000001" } },
         id: "socket-test-1",
         on(event: string, handler: Handler) { handlers.set(event, handler); return socket; },
+        leave: async () => undefined,
         emit() { return true; }
     } as unknown as Socket;
     return { socket, handlers };
@@ -33,6 +34,25 @@ afterEach(() => {
 });
 
 describe("Socket event payload validation", { concurrency: false }, () => {
+    it("releases a waiting lobby place when leaving its realtime room", async () => {
+        const fixture = fakeSocket();
+        let released: { lobbyId: string; userId: string } | undefined;
+        registerLobbySocket(fixture.socket, {
+            releasePresence: async (lobbyId, userId) => {
+                released = { lobbyId, userId };
+            },
+        });
+        const lobbyId = "40000000-0000-4000-8000-000000000001";
+
+        const result = await invoke(fixture.handlers.get(SOCKET_EVENTS.LOBBY_LEAVE), lobbyId);
+
+        assert.equal(result.ok, true);
+        assert.deepEqual(released, {
+            lobbyId,
+            userId: "30000000-0000-4000-8000-000000000001",
+        });
+    });
+
     it("rejects invalid league and lobby UUIDs before repository queries", async () => {
         let leagueQueries = 0;
         let lobbyQueries = 0;

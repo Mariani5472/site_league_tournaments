@@ -74,8 +74,14 @@ export class MatchesService {
             client.release();
         }
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.MATCH_VOTE, { leagueId: leagueId, matchId: matchId });
-        if (finished)
+        if (finished) {
+            SocketEmitter.emitToLobby(finished.lobbyId, SOCKET_EVENTS.MATCH_FINISHED, {
+                leagueId,
+                lobbyId: finished.lobbyId,
+                matchId,
+            });
             SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.MATCH_FINISHED, { leagueId: leagueId, matchId: matchId });
+        }
         return this.show(matchId, userId);
     }
     async resolve(matchId: string, userId: string, winnerTeam: number, reason: string) {
@@ -85,6 +91,7 @@ export class MatchesService {
             throw new AppError("A justification is required", 400);
         const client = await db.connect();
         let leagueId = "";
+        let lobbyId = "";
         try {
             await client.query("BEGIN");
             const options = { executor: client } satisfies QueryOptions;
@@ -92,6 +99,7 @@ export class MatchesService {
             if (!match)
                 throw new AppError("Match not found", 404);
             leagueId = match.leagueId;
+            lobbyId = match.lobbyId;
             const member = await this.members.findByLeagueAndUser(leagueId, userId, { executor: client });
             if (!member || !["owner", "admin"].includes(member.role))
                 throw new AppError("Insufficient permissions", 403);
@@ -107,6 +115,11 @@ export class MatchesService {
         finally {
             client.release();
         }
+        SocketEmitter.emitToLobby(lobbyId, SOCKET_EVENTS.MATCH_FINISHED, {
+            leagueId,
+            lobbyId,
+            matchId,
+        });
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.MATCH_FINISHED, { leagueId: leagueId, matchId: matchId });
         return this.show(matchId, userId);
     }

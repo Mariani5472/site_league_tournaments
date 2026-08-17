@@ -4,7 +4,10 @@ export type League = {
     description: string | null;
     visibility: "public" | "private";
     joinPolicy: "open" | "request" | "invite_only";
+    lobbyCreationPolicy: "admins" | "members";
+    autoStartLobby: boolean;
     playerCount: number;
     maxPlayers: number;
     createdAt: string;
+    currentUserRole: "owner" | "admin" | "player" | "spec" | null;
 };

@@ -7,9 +7,9 @@ import { t } from "@/i18n";
 interface Props {
     leagueId: string;
     lobbies: Lobby[];
-    isAdmin: boolean;
+    canCreateLobby: boolean;
 }
-export function LeagueLobbySection({ leagueId, lobbies, isAdmin }: Props) {
+export function LeagueLobbySection({ leagueId, lobbies, canCreateLobby }: Props) {
     return (
         <section
             className="
@@ -45,7 +45,7 @@ export function LeagueLobbySection({ leagueId, lobbies, isAdmin }: Props) {
                     </p>
                 </div>
 
-                {isAdmin && (
+                {canCreateLobby && (
                     <CreateLobbyDialog leagueId={leagueId}>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />

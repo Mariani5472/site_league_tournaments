@@ -35,7 +35,9 @@ export const updateLeagueSchema = z.object({
     description: z.string().max(500).nullable().optional(),
     visibility: z.enum(["public", "private"]).optional(),
     joinPolicy: z.enum(["open", "request", "invite_only"]).optional(),
-    maxPlayers: z.number().int().min(2).max(500).optional()
+    maxPlayers: z.number().int().min(2).max(500).optional(),
+    lobbyCreationPolicy: z.enum(["admins", "members"]).optional(),
+    autoStartLobby: z.boolean().optional()
 }).strict().refine(body => Object.keys(body).length > 0, {
     message: "At least one field must be provided"
 });

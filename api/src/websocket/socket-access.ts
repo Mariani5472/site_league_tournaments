@@ -31,6 +31,17 @@ export class SocketAccess {
         grantsBySocket.get(socket.id)?.leagues.add(leagueId);
     }
 
+    static async grantMembership(userId: string, leagueId: string) {
+        const socketIds = [...(userSockets.get(userId) ?? [])];
+        await Promise.all(
+            socketIds.map(async socketId => {
+                const socket = getIO().sockets.sockets.get(socketId);
+                if (!socket) return;
+                await this.joinLeague(socket, leagueId);
+            })
+        );
+    }
+
     static async leaveLeague(socket: Socket, leagueId: string) {
         await socket.leave(`league:${leagueId}`);
         grantsBySocket.get(socket.id)?.leagues.delete(leagueId);

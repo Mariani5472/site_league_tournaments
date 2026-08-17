@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { socket } from "@/services/socket";
@@ -6,12 +6,16 @@ import { SOCKET_EVENTS } from "@/services/socket-events";
 import { queryKeys } from "@/lib/queryKeys";
 type JoinAck = { ok: true } | { ok: false; error: { code: string; message: string } };
 export function useLobbySocket(leagueId: string, lobbyId: string) {
+    const [status, setStatus] = useState<
+        "connecting" | "connected" | "disconnected" | "join_failed"
+    >("connecting");
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     useEffect(() => {
         const joinLobby = () =>
             socket.emit(SOCKET_EVENTS.LOBBY_JOIN, lobbyId, (ack: JoinAck) => {
-                if (!ack.ok) return;
+                if (!ack.ok) return setStatus("join_failed");
+                setStatus("connected");
                 queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
                 queryClient.invalidateQueries({
                     queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
@@ -36,14 +40,22 @@ export function useLobbySocket(leagueId: string, lobbyId: string) {
             });
         };
         joinLobby();
+        const handleDisconnect = () => setStatus("disconnected");
         socket.on("connect", joinLobby);
+        socket.on("disconnect", handleDisconnect);
         socket.on(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+        socket.on(SOCKET_EVENTS.MATCH_STARTED, handleLobbyUpdate);
+        socket.on(SOCKET_EVENTS.MATCH_FINISHED, handleLobbyUpdate);
         socket.on(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
         return () => {
             socket.off("connect", joinLobby);
+            socket.off("disconnect", handleDisconnect);
             socket.off(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+            socket.off(SOCKET_EVENTS.MATCH_STARTED, handleLobbyUpdate);
+            socket.off(SOCKET_EVENTS.MATCH_FINISHED, handleLobbyUpdate);
             socket.off(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
             socket.emit(SOCKET_EVENTS.LOBBY_LEAVE, lobbyId);
         };
     }, [leagueId, lobbyId, navigate, queryClient]);
+    return status;
 }

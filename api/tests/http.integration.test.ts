@@ -164,6 +164,15 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal(body.recentMatches[0].leagueName, "Match league");
     });
 
+    test("league detail projects the current member count", async () => {
+        const league = await createLeague(ids[0], { maxPlayers: 8 });
+        const response = await request(`/leagues/${league.id}`, { userId: ids[0] });
+        assert.equal(response.status, 200);
+        const body = await response.json() as { playerCount: number; currentUserRole: string };
+        assert.equal(body.playerCount, 1);
+        assert.equal(body.currentUserRole, "owner");
+    });
+
     test("auth sync and profile expose their successful contracts", async () => {
         const sync = await request("/auth/sync", { method: "POST", userId: ids[0] });
         assert.equal(sync.status, 201);

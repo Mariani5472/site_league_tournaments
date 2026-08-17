@@ -6,7 +6,13 @@ import { LeaguePage } from "./LeaguePage";
 
 const state = vi.hoisted(() => ({
     league: {
-        data: { id: "league-1", name: "Test league" },
+        data: {
+            id: "league-1",
+            name: "Test league",
+            playerCount: 1,
+            maxPlayers: 10,
+            currentUserRole: "player" as "owner" | "admin" | "player" | "spec" | null,
+        },
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
@@ -21,7 +27,6 @@ vi.mock("../hooks/useLeague", () => ({ useLeague: () => state.league }));
 vi.mock("../hooks/useLeagueMembers", () => ({ useLeagueMembers: () => state.members }));
 vi.mock("../hooks/useLeagueLobbies", () => ({ useLeagueLobbies: () => state.lobbies }));
 vi.mock("../hooks/useLeagueRequests", () => ({ useLeagueRequests: () => state.requests }));
-vi.mock("../hooks/useLeagueRole", () => ({ useLeagueRole: () => state.role }));
 vi.mock("../hooks/useLeagueSocket", () => ({ useLeagueSocket: vi.fn() }));
 vi.mock("../components/LeagueHeader", () => ({ LeagueHeader: () => <h1>Test league</h1> }));
 vi.mock("../components/LeagueMembers", () => ({
@@ -46,7 +51,13 @@ function page() {
 describe("LeaguePage", () => {
     beforeEach(() => {
         Object.assign(state.league, {
-            data: { id: "league-1", name: "Test league" },
+            data: {
+                id: "league-1",
+                name: "Test league",
+                playerCount: 1,
+                maxPlayers: 10,
+                currentUserRole: "player",
+            },
             isLoading: false,
             isError: false,
         });
@@ -69,17 +80,37 @@ describe("LeaguePage", () => {
         expect(screen.getByRole("button", { name: /tentar novamente/i })).toBeVisible();
     });
 
-    it("renders empty collections without inventing privileged actions", () => {
+    it("shows overview and keyboard-accessible internal navigation", () => {
         renderApp(page(), { route: "/leagues/league-1" });
-        expect(screen.getByText("Lobbies: 0")).toBeVisible();
-        expect(screen.getByText("Members: 0")).toBeVisible();
+        expect(screen.getByText("1 / 10")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Membros" })).toHaveAttribute(
+            "href",
+            "/leagues/league-1?tab=members"
+        );
         expect(screen.queryByText(/Requests:/)).not.toBeInTheDocument();
+    });
+
+    it("preserves other query parameters when navigating tabs", () => {
+        renderApp(page(), { route: "/leagues/league-1?source=dashboard" });
+        expect(screen.getByRole("link", { name: "Partidas" })).toHaveAttribute(
+            "href",
+            "/leagues/league-1?source=dashboard&tab=matches"
+        );
     });
 
     it("shows private join requests only to league administrators", () => {
         Object.assign(state.role, { role: "admin", isAdmin: true, isOwner: false });
+        state.league.data.currentUserRole = "admin";
         state.requests.data = [{ id: "request-1" }];
         renderApp(page(), { route: "/leagues/league-1" });
         expect(screen.getByText("Requests: 1")).toBeVisible();
+    });
+
+    it("shows a membership gate instead of protected collection errors", () => {
+        state.league.data.currentUserRole = null;
+        renderApp(page(), { route: "/leagues/league-1" });
+        expect(screen.getByText(/entre na liga para visualizar/i)).toBeVisible();
+        expect(screen.queryByText(/Lobbies:/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Members:/)).not.toBeInTheDocument();
     });
 });

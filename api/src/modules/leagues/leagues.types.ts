@@ -5,6 +5,8 @@ export type League = {
     description?: string;
     visibility: "public" | "private";
     joinPolicy: "open" | "request" | "invite_only";
+    lobbyCreationPolicy: "admins" | "members";
+    autoStartLobby: boolean;
     playerCount?: number;
     maxPlayers: number;
     createdAt: Date;
@@ -16,7 +18,7 @@ export type ListLeaguesParams = {
     membership?: string[];
     search?: string;
 };
-export type CreateLeagueDTO = Pick<League, "ownerId" | "name" | "description" | "visibility" | "joinPolicy" | "maxPlayers">;
+export type CreateLeagueDTO = Pick<League, "ownerId" | "name" | "description" | "visibility" | "joinPolicy" | "maxPlayers"> & Partial<Pick<League, "lobbyCreationPolicy" | "autoStartLobby">>;
 export type LeagueJoinRequest = {
     id: string;
     leagueId: string;

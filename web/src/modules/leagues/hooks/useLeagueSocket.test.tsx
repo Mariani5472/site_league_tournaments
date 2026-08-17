@@ -1,4 +1,6 @@
-import { waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderApp, testQueryClient } from "@/test/renderApp";
 import { queryKeys } from "@/lib/queryKeys";
@@ -24,9 +26,15 @@ const realtime = vi.hoisted(() => {
 
 vi.mock("@/services/socket", () => ({ socket: realtime }));
 
-function Harness() {
-    useLeagueSocket("league-1");
+function Harness({ enabled = true }: { enabled?: boolean }) {
+    useLeagueSocket("league-1", enabled);
     return null;
+}
+
+function MembershipHarness() {
+    const [enabled, setEnabled] = useState(false);
+    useLeagueSocket("league-1", enabled);
+    return <button onClick={() => setEnabled(true)}>Join membership</button>;
 }
 
 function dispatch(event: string, payload?: { leagueId: string; matchId?: string }) {
@@ -34,7 +42,10 @@ function dispatch(event: string, payload?: { leagueId: string; matchId?: string 
 }
 
 describe("useLeagueSocket match reconciliation", () => {
-    beforeEach(() => realtime.handlers.clear());
+    beforeEach(() => {
+        realtime.handlers.clear();
+        realtime.emit.mockClear();
+    });
 
     it("invalidates the match detail when a realtime match event arrives", async () => {
         const queryClient = testQueryClient();
@@ -63,6 +74,23 @@ describe("useLeagueSocket match reconciliation", () => {
             expect(invalidate).toHaveBeenCalledWith({
                 queryKey: queryKeys.matches.all,
             })
+        );
+    });
+
+    it("joins the league room as soon as membership becomes active", async () => {
+        renderApp(<MembershipHarness />);
+        expect(realtime.emit).not.toHaveBeenCalledWith(
+            SOCKET_EVENTS.LEAGUE_JOIN,
+            "league-1",
+            expect.any(Function)
+        );
+        await userEvent.click(screen.getByRole("button", { name: "Join membership" }));
+        await waitFor(() =>
+            expect(realtime.emit).toHaveBeenCalledWith(
+                SOCKET_EVENTS.LEAGUE_JOIN,
+                "league-1",
+                expect.any(Function)
+            )
         );
     });
 });
