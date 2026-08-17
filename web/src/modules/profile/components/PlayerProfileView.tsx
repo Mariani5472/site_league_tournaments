@@ -127,7 +127,7 @@ export function PlayerProfileView({
                                 <span
                                     className={
                                         match.result === "win"
-                                            ? "font-medium text-emerald-700"
+                                            ? "font-medium text-success"
                                             : "font-medium text-destructive"
                                     }
                                 >

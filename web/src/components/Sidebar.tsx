@@ -15,7 +15,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     return (
         <aside
             className={`
-        fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r bg-card transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:relative lg:flex lg:h-full lg:z-0
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
       `}
@@ -56,8 +56,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                             }) => `flex items-center rounded-md px-4 py-2.5 text-sm font-medium transition-all
               ${
                   isActive
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "border-l-4 border-sidebar-primary bg-sidebar-accent pl-3 text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
                         >
                             <Icon className="mr-3 h-4 w-4" />

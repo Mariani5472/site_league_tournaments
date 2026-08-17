@@ -1,10 +1,12 @@
 import { Toaster } from "sonner";
 import { AppRoutes } from "./routes/AppRoutes";
+import { useTheme } from "./providers/ThemeProvider";
 function App() {
+    const { resolvedTheme } = useTheme();
     return (
         <>
             <AppRoutes />
-            <Toaster richColors />
+            <Toaster richColors theme={resolvedTheme} />
         </>
     );
 }

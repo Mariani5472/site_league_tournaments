@@ -70,7 +70,7 @@ export function LobbyPhaseHeader({
                 </ul>
             )}
             {realtimeStatus !== "connected" && (
-                <p role="status" className="mt-3 text-xs text-amber-700">
+                <p role="status" className="mt-3 text-xs text-warning-foreground dark:text-warning">
                     {t(`realtime.${realtimeStatus}`)}
                 </p>
             )}

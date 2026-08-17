@@ -44,7 +44,7 @@ export function DangerZone({ leagueId, leagueName }: Props) {
             className="
         rounded-xl
         border
-        border-red-500
+        border-danger/50
         p-6
       "
         >
@@ -52,7 +52,7 @@ export function DangerZone({ leagueId, leagueName }: Props) {
                 className="
           text-xl
           font-semibold
-          text-red-500
+          text-danger
         "
             >
                 {t("danger.title")}

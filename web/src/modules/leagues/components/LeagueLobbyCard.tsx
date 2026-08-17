@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 import { t } from "@/i18n";
 import { labelLobbyStatus } from "@/i18n/labels";
+import { LobbyStatusBadge } from "@/components/SemanticBadge";
 interface Props {
     leagueId: string;
     lobby: Lobby;
@@ -49,17 +50,7 @@ export function LeagueLobbyCard({ leagueId, lobby }: Props) {
                     </p>
                 </div>
 
-                <span
-                    className="
-            rounded-full
-            border
-            px-3
-            py-1
-            text-xs
-          "
-                >
-                    {labelLobbyStatus(lobby.status)}
-                </span>
+                <LobbyStatusBadge status={lobby.status} />
             </div>
 
             <div

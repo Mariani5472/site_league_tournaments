@@ -5,10 +5,11 @@ import { useMutation } from "@tanstack/react-query";
 import { leaveLeague } from "../services/leagues.service";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Settings, Shield, Users } from "lucide-react";
+import { ArrowLeft, Settings, Users } from "lucide-react";
 import { mutationErrorMessage } from "@/services/api-errors";
 import { t } from "@/i18n";
-import { labelJoinPolicy, labelRole, labelVisibility } from "@/i18n/labels";
+import { labelVisibility } from "@/i18n/labels";
+import { JoinPolicyBadge, RoleBadge } from "@/components/SemanticBadge";
 type Props = {
     league: League;
     isAdmin: boolean;
@@ -50,17 +51,7 @@ export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
                             {labelVisibility(league.visibility)}
                         </span>
 
-                        <span
-                            className="
-              rounded-md
-              border
-              px-2
-              py-1
-              text-xs
-            "
-                        >
-                            {labelJoinPolicy(league.joinPolicy)}
-                        </span>
+                        <JoinPolicyBadge policy={league.joinPolicy} />
                     </div>
                     <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">
                         {league.name}
@@ -91,11 +82,7 @@ export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
                             {leaveMutation.isPending ? t("league.leaving") : t("league.leave")}
                         </Button>
                     )}
-                    {role && (
-                        <span className="inline-flex items-center justify-center gap-2 rounded-md bg-primary/5 px-3 py-2 text-sm font-medium text-primary">
-                            <Shield className="h-4 w-4" /> {labelRole(role)}
-                        </span>
-                    )}
+                    {role && <RoleBadge role={role} />}
                 </div>
             </div>
         </header>

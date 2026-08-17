@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
 import { mutationErrorMessage } from "@/services/api-errors";
 import { t } from "@/i18n";
+import { Button } from "@/components/ui/button";
 type Props = {
     leagueId: string;
     requests: LeagueRequest[];
@@ -85,35 +86,23 @@ export function LeagueRequests({ leagueId, requests }: Props) {
                 gap-2
               "
                         >
-                            <button
+                            <Button
+                                size="sm"
                                 disabled={approveMutation.isPending || rejectMutation.isPending}
                                 onClick={() => approveMutation.mutate(request.id)}
-                                className="
-                  rounded-md
-                  bg-green-600
-                  px-3
-                  py-1
-                  text-sm
-                  text-white
-                "
+                                className="bg-success text-success-foreground hover:bg-success/90"
                             >
                                 {t("league.approve")}
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                                size="sm"
+                                variant="destructive"
                                 disabled={approveMutation.isPending || rejectMutation.isPending}
                                 onClick={() => rejectMutation.mutate(request.id)}
-                                className="
-                  rounded-md
-                  bg-red-600
-                  px-3
-                  py-1
-                  text-sm
-                  text-white
-                "
                             >
                                 {t("league.reject")}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 ))}

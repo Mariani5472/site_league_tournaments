@@ -86,8 +86,8 @@ export function TeamSelection({ lobby }: { lobby: LobbyDetails }) {
     if (!selection?.available && !selection?.mode) return null;
     if (selection.completed)
         return (
-            <section className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">
-                <h2 className="font-semibold text-emerald-700">{t("selection.completed")}</h2>
+            <section className="rounded-2xl border border-success/30 bg-success/5 p-5">
+                <h2 className="font-semibold text-success">{t("selection.completed")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                     {t("selection.completedDescription", {
                         mode: options.find(option => option.mode === selection.mode)?.title ?? "—",

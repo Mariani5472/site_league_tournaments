@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, ShieldCheck, Swords, Trophy, Users } from "lu
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
 const features = [
     {
         icon: Users,
@@ -31,6 +32,7 @@ export function LandingPage() {
                         ligas
                     </Link>
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Button variant="ghost" asChild>
                             <Link to="/login">{t("auth.login")}</Link>
                         </Button>
@@ -73,7 +75,7 @@ export function LandingPage() {
                                     t("landing.benefit.realtime"),
                                 ].map(item => (
                                     <span key={item} className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
                                         {item}
                                     </span>
                                 ))}
@@ -82,12 +84,15 @@ export function LandingPage() {
                         <div className="rounded-3xl border bg-card p-5 shadow-xl shadow-primary/10">
                             <div className="rounded-2xl bg-primary p-6 text-primary-foreground">
                                 <p className="text-sm opacity-80">{t("landing.nextMatch")}</p>
-                                <h2 className="mt-2 text-2xl font-bold text-white">
+                                <h2 className="mt-2 text-2xl font-bold text-primary-foreground">
                                     Liga do Dev 5x5
                                 </h2>
                                 <div className="mt-8 grid grid-cols-2 gap-3">
                                     {[1, 2].map(team => (
-                                        <div key={team} className="rounded-xl bg-white/10 p-4">
+                                        <div
+                                            key={team}
+                                            className="rounded-xl bg-primary-foreground/10 p-4"
+                                        >
                                             <p className="text-sm opacity-80">
                                                 {t("common.team", { number: team })}
                                             </p>

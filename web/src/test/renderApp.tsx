@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { AuthContext, type AuthContextData } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export function testQueryClient() {
     return new QueryClient({
@@ -38,11 +39,13 @@ export function renderApp(
     return {
         queryClient,
         ...render(
-            <QueryClientProvider client={queryClient}>
-                <AuthContext.Provider value={auth}>
-                    <MemoryRouter initialEntries={[options.route ?? "/"]}>{ui}</MemoryRouter>
-                </AuthContext.Provider>
-            </QueryClientProvider>
+            <ThemeProvider>
+                <QueryClientProvider client={queryClient}>
+                    <AuthContext.Provider value={auth}>
+                        <MemoryRouter initialEntries={[options.route ?? "/"]}>{ui}</MemoryRouter>
+                    </AuthContext.Provider>
+                </QueryClientProvider>
+            </ThemeProvider>
         ),
     };
 }

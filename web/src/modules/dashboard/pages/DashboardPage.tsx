@@ -111,7 +111,7 @@ export function DashboardPage() {
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 rounded-2xl border bg-card p-5 text-muted-foreground">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                                <CheckCircle2 className="h-5 w-5 text-success" />
                                 <span>{t("dashboard.noActions")}</span>
                             </div>
                         )}
@@ -204,7 +204,7 @@ export function DashboardPage() {
                                             <span
                                                 className={
                                                     match.result === "win"
-                                                        ? "text-sm font-medium text-emerald-700"
+                                                        ? "text-sm font-medium text-success"
                                                         : match.result === "loss"
                                                           ? "text-sm font-medium text-destructive"
                                                           : "text-sm text-muted-foreground"

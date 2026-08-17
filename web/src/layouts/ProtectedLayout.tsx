@@ -5,6 +5,7 @@ import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { t } from "@/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
 export function ProtectedLayout() {
     const { user, loading, signOut, error } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -27,7 +28,7 @@ export function ProtectedLayout() {
 
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+                    className="fixed inset-0 z-30 bg-foreground/45 lg:hidden"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
@@ -35,6 +36,7 @@ export function ProtectedLayout() {
             <div className="flex flex-1 flex-col overflow-hidden">
                 <header className="flex h-16 shrink-0 items-center justify-between border-b bg-card/90 px-4 backdrop-blur sm:px-6">
                     <div className="flex items-center gap-4">
+                        <ThemeToggle />
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="rounded-md p-2 hover:bg-muted lg:hidden"
