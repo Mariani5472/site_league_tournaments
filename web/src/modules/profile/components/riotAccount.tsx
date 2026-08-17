@@ -4,38 +4,50 @@ type Props = {
     riotAccount: RiotAccount | null;
 };
 export function RiotAccountCard({ riotAccount }: Props) {
-    return (<div className="
+    return (
+        <div
+            className="
         rounded-xl
         border
         p-6
         space-y-4
-      ">
-      <h2 className="
+      "
+        >
+            <h2
+                className="
           text-xl
           font-semibold
-        ">
-        {t("profile.riot")}
-      </h2>
+        "
+            >
+                {t("profile.riot")}
+            </h2>
 
-      {!riotAccount && (<div className="
+            {!riotAccount && (
+                <div
+                    className="
             text-muted-foreground
-          ">
-          {t("profile.notLinked")}
-        </div>)}
+          "
+                >
+                    {t("profile.notLinked")}
+                </div>
+            )}
 
-      {riotAccount && (<>
-          <div>
-            {riotAccount.gameName}
-            #
-            {riotAccount.tagLine}
-          </div>
+            {riotAccount && (
+                <>
+                    <div>
+                        {riotAccount.gameName}#{riotAccount.tagLine}
+                    </div>
 
-          <div className="
+                    <div
+                        className="
               text-sm
               text-muted-foreground
-            ">
-            {t("profile.linkedStatus")}
-          </div>
-        </>)}
-    </div>);
+            "
+                    >
+                        {t("profile.linkedStatus")}
+                    </div>
+                </>
+            )}
+        </div>
+    );
 }

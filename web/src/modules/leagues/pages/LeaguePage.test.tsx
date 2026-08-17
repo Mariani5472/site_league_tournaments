@@ -5,7 +5,12 @@ import { renderApp } from "@/test/renderApp";
 import { LeaguePage } from "./LeaguePage";
 
 const state = vi.hoisted(() => ({
-    league: { data: { id: "league-1", name: "Test league" }, isLoading: false, isError: false, refetch: vi.fn() },
+    league: {
+        data: { id: "league-1", name: "Test league" },
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+    },
     members: { data: [] as unknown[], isLoading: false, isError: false, refetch: vi.fn() },
     lobbies: { data: [] as unknown[], isLoading: false, isError: false, refetch: vi.fn() },
     requests: { data: [] as unknown[], isLoading: false, isError: false, refetch: vi.fn() },
@@ -19,18 +24,32 @@ vi.mock("../hooks/useLeagueRequests", () => ({ useLeagueRequests: () => state.re
 vi.mock("../hooks/useLeagueRole", () => ({ useLeagueRole: () => state.role }));
 vi.mock("../hooks/useLeagueSocket", () => ({ useLeagueSocket: vi.fn() }));
 vi.mock("../components/LeagueHeader", () => ({ LeagueHeader: () => <h1>Test league</h1> }));
-vi.mock("../components/LeagueMembers", () => ({ LeagueMembers: ({ members }: { members: unknown[] }) => <p>Members: {members.length}</p> }));
-vi.mock("../components/LeagueRequests", () => ({ LeagueRequests: ({ requests }: { requests: unknown[] }) => <p>Requests: {requests.length}</p> }));
-vi.mock("../components/LeagueLobbySelection", () => ({ LeagueLobbySection: ({ lobbies }: { lobbies: unknown[] }) => <p>Lobbies: {lobbies.length}</p> }));
+vi.mock("../components/LeagueMembers", () => ({
+    LeagueMembers: ({ members }: { members: unknown[] }) => <p>Members: {members.length}</p>,
+}));
+vi.mock("../components/LeagueRequests", () => ({
+    LeagueRequests: ({ requests }: { requests: unknown[] }) => <p>Requests: {requests.length}</p>,
+}));
+vi.mock("../components/LeagueLobbySelection", () => ({
+    LeagueLobbySection: ({ lobbies }: { lobbies: unknown[] }) => <p>Lobbies: {lobbies.length}</p>,
+}));
 vi.mock("@/modules/matches/LeagueResults", () => ({ LeagueResults: () => <p>League results</p> }));
 
 function page() {
-    return <Routes><Route path="/leagues/:id" element={<LeaguePage />} /></Routes>;
+    return (
+        <Routes>
+            <Route path="/leagues/:id" element={<LeaguePage />} />
+        </Routes>
+    );
 }
 
 describe("LeaguePage", () => {
     beforeEach(() => {
-        Object.assign(state.league, { data: { id: "league-1", name: "Test league" }, isLoading: false, isError: false });
+        Object.assign(state.league, {
+            data: { id: "league-1", name: "Test league" },
+            isLoading: false,
+            isError: false,
+        });
         Object.assign(state.members, { data: [], isLoading: false, isError: false });
         Object.assign(state.lobbies, { data: [], isLoading: false, isError: false });
         Object.assign(state.requests, { data: [], isLoading: false, isError: false });

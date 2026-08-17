@@ -4,16 +4,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderApp } from "@/test/renderApp";
 import { MatchVoting } from "./MatchVoting";
 
-const services = vi.hoisted(() => ({ getMatch: vi.fn(), voteMatch: vi.fn(), resolveMatch: vi.fn() }));
+const services = vi.hoisted(() => ({
+    getMatch: vi.fn(),
+    voteMatch: vi.fn(),
+    resolveMatch: vi.fn(),
+}));
 const realtime = vi.hoisted(() => ({ connected: true, on: vi.fn(), off: vi.fn() }));
 vi.mock("./services", () => services);
 vi.mock("@/services/socket", () => ({ socket: realtime }));
 
 const match = {
-    id: "match-1", leagueId: "league-1", lobbyId: "lobby-1", status: "in_game" as const,
-    winnerTeamNumber: null, resolutionType: null, resolutionReason: null,
-    startedAt: "2026-01-01", finishedAt: null, players: [], majorityRequired: 3,
-    votes: { team1: 1, team2: 0, total: 1 }, myVote: 1 as const,
+    id: "match-1",
+    leagueId: "league-1",
+    lobbyId: "lobby-1",
+    status: "in_game" as const,
+    winnerTeamNumber: null,
+    resolutionType: null,
+    resolutionReason: null,
+    startedAt: "2026-01-01",
+    finishedAt: null,
+    players: [],
+    majorityRequired: 3,
+    votes: { team1: 1, team2: 0, total: 1 },
+    myVote: 1 as const,
 };
 
 describe("MatchVoting", () => {

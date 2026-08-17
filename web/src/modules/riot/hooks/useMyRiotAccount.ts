@@ -4,6 +4,6 @@ import { getMyRiotAccount } from "../services/riot.service";
 export function useMyRiotAccount() {
     return useQuery({
         queryKey: queryKeys.riot.me,
-        queryFn: getMyRiotAccount
+        queryFn: getMyRiotAccount,
     });
 }

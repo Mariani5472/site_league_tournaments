@@ -4,7 +4,8 @@ export type LoginDto = {
     email: string;
     password: string;
 };
-export type SignUpResult = { status: "authenticated" } | { status: "confirmation_required"; email: string };
+export type SignUpResult =
+    { status: "authenticated" } | { status: "confirmation_required"; email: string };
 export type AuthContextData = {
     user: User | null;
     signIn(data: LoginDto): Promise<void>;

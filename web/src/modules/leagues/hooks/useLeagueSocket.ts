@@ -20,45 +20,42 @@ export function useLeagueSocket(leagueId: string) {
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.standings(leagueId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.matches.all });
         };
-        const joinLeague = () => socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId, (ack: JoinAck) => {
-            if (ack.ok)
-                reconcileLeague();
-        });
+        const joinLeague = () =>
+            socket.emit(SOCKET_EVENTS.LEAGUE_JOIN, leagueId, (ack: JoinAck) => {
+                if (ack.ok) reconcileLeague();
+            });
         const handleLeagueUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
-            if (updatedLeagueId !== leagueId)
-                return;
+            if (updatedLeagueId !== leagueId) return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.detail(leagueId),
             });
         };
         const handleLeagueLobbiesUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
-            if (updatedLeagueId !== leagueId)
-                return;
+            if (updatedLeagueId !== leagueId) return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.lobbies(leagueId),
             });
         };
         const handleLeagueMembersUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
-            if (updatedLeagueId !== leagueId)
-                return;
+            if (updatedLeagueId !== leagueId) return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.members(leagueId),
             });
         };
         const handleLeagueRequestsUpdate = ({ leagueId: updatedLeagueId }: LeagueEventPayload) => {
-            if (updatedLeagueId !== leagueId)
-                return;
+            if (updatedLeagueId !== leagueId) return;
             queryClient.invalidateQueries({
                 queryKey: queryKeys.leagues.requests(leagueId),
             });
         };
         const handleMatchUpdate = (payload: LeagueEventPayload) => {
-            if (payload.leagueId !== leagueId)
-                return;
+            if (payload.leagueId !== leagueId) return;
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.matches(leagueId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.standings(leagueId) });
             if (payload.matchId)
-                queryClient.invalidateQueries({ queryKey: queryKeys.matches.detail(payload.matchId) });
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.matches.detail(payload.matchId),
+                });
         };
         joinLeague();
         socket.on("connect", joinLeague);

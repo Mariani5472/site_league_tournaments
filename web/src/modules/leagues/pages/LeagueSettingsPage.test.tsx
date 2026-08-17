@@ -6,7 +6,14 @@ import { LeagueSettingsPage } from "./LeagueSettingsPage";
 
 const state = vi.hoisted(() => ({
     league: {
-        data: { id: "league-1", name: "League", description: "", visibility: "private", joinPolicy: "request", maxPlayers: 10 },
+        data: {
+            id: "league-1",
+            name: "League",
+            description: "",
+            visibility: "private",
+            joinPolicy: "request",
+            maxPlayers: 10,
+        },
         isLoading: false,
     },
     members: { data: [] as Array<{ userId: string; role: string }>, isLoading: false },
@@ -20,10 +27,12 @@ vi.mock("../hooks/useUpdateLeague", () => ({
 vi.mock("../components/DangerZone", () => ({ DangerZone: () => <p>Danger zone</p> }));
 
 function page() {
-    return <Routes>
-        <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
-        <Route path="/leagues/:id" element={<p>League page</p>} />
-    </Routes>;
+    return (
+        <Routes>
+            <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
+            <Route path="/leagues/:id" element={<p>League page</p>} />
+        </Routes>
+    );
 }
 
 describe("LeagueSettingsPage authorization", () => {

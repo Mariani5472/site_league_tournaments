@@ -16,15 +16,33 @@ vi.mock("../services/lobbies.service", () => ({
 
 function completedLobby(): LobbyDetails {
     return {
-        id: "lobby-1", leagueId: "league-1", matchId: null, status: "waiting",
-        maxPlayers: 10, playersCount: 10, readyCount: 3, availableSlots: 0,
-        isFull: true, isBalanced: true, everyoneReady: false, canStart: false,
+        id: "lobby-1",
+        leagueId: "league-1",
+        matchId: null,
+        status: "waiting",
+        maxPlayers: 10,
+        playersCount: 10,
+        readyCount: 3,
+        availableSlots: 0,
+        isFull: true,
+        isBalanced: true,
+        everyoneReady: false,
+        canStart: false,
         currentPlayer: { userId: "user-1", teamNumber: 1, isReady: false },
-        players: [], teams: { team1: { count: 5, players: [] }, team2: { count: 5, players: [] } },
+        players: [],
+        teams: { team1: { count: 5, players: [] }, team2: { count: 5, players: [] } },
         teamSelection: {
-            available: true, canVote: true, mode: "random", completed: true,
-            majorityRequired: 6, myVote: "random", votes: { random: 6, balanced: 0, player_picks: 0 },
-            round: 1, confirmation: null, captainVote: null, draft: null,
+            available: true,
+            canVote: true,
+            mode: "random",
+            completed: true,
+            majorityRequired: 6,
+            myVote: "random",
+            votes: { random: 6, balanced: 0, player_picks: 0 },
+            round: 1,
+            confirmation: null,
+            captainVote: null,
+            draft: null,
         },
     };
 }
@@ -40,9 +58,21 @@ describe("lobby critical controls", () => {
         const ready = vi.fn();
         const switchTeam = vi.fn();
         const props = {
-            currentPlayer: { userId: "user-1", nickname: "Player", avatarUrl: null, teamNumber: 1 as const, isReady: false },
-            join: vi.fn(), leave: vi.fn(), ready, unready: vi.fn(), switchTeam, deleteLobby: vi.fn(),
-            status: "waiting" as const, canManage: false,
+            currentPlayer: {
+                userId: "user-1",
+                nickname: "Player",
+                avatarUrl: null,
+                teamNumber: 1 as const,
+                isReady: false,
+            },
+            join: vi.fn(),
+            leave: vi.fn(),
+            ready,
+            unready: vi.fn(),
+            switchTeam,
+            deleteLobby: vi.fn(),
+            status: "waiting" as const,
+            canManage: false,
         };
         const { rerender } = renderApp(<LobbyActions {...props} teamSelectionLocked />);
         expect(screen.getByRole("button", { name: /confirmar prontidão/i })).toBeDisabled();

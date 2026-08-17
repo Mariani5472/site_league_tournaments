@@ -52,5 +52,8 @@ export function authErrorMessage(error: unknown, fallback: "initialize" | "signI
     } as const;
     return code in keys
         ? t(keys[code as keyof typeof keys])
-        : t(`auth.error.${fallback}` as "auth.error.initialize" | "auth.error.signIn" | "auth.error.signUp");
+        : t(
+              `auth.error.${fallback}` as
+                  "auth.error.initialize" | "auth.error.signIn" | "auth.error.signUp"
+          );
 }

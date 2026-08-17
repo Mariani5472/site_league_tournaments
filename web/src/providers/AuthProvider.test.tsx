@@ -9,22 +9,31 @@ import { testQueryClient } from "@/test/renderApp";
 import { AuthProvider } from "./AuthProvider";
 
 const mocks = vi.hoisted(() => ({
-    getSession: vi.fn(), signInWithPassword: vi.fn(), signUp: vi.fn(), signOut: vi.fn(),
-    resetPasswordForEmail: vi.fn(), updateUser: vi.fn(),
-    onAuthStateChange: vi.fn(), sync: vi.fn(), socketApply: vi.fn(), unsubscribe: vi.fn(),
+    getSession: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    resetPasswordForEmail: vi.fn(),
+    updateUser: vi.fn(),
+    onAuthStateChange: vi.fn(),
+    sync: vi.fn(),
+    socketApply: vi.fn(),
+    unsubscribe: vi.fn(),
     authCallback: undefined as undefined | ((event: string, session: Session | null) => void),
 }));
 
 vi.mock("@/lib/supabase/supabase", () => ({
-    mySupabase: { auth: {
-        getSession: mocks.getSession,
-        signInWithPassword: mocks.signInWithPassword,
-        signUp: mocks.signUp,
-        signOut: mocks.signOut,
-        resetPasswordForEmail: mocks.resetPasswordForEmail,
-        updateUser: mocks.updateUser,
-        onAuthStateChange: mocks.onAuthStateChange,
-    } },
+    mySupabase: {
+        auth: {
+            getSession: mocks.getSession,
+            signInWithPassword: mocks.signInWithPassword,
+            signUp: mocks.signUp,
+            signOut: mocks.signOut,
+            resetPasswordForEmail: mocks.resetPasswordForEmail,
+            updateUser: mocks.updateUser,
+            onAuthStateChange: mocks.onAuthStateChange,
+        },
+    },
 }));
 vi.mock("@/services/api", () => ({ api: { post: mocks.sync } }));
 vi.mock("@/services/socket", () => ({ socketSessionOwner: { apply: mocks.socketApply } }));
@@ -35,12 +44,22 @@ function session(id: string): Session {
 
 function Probe() {
     const auth = useContext(AuthContext);
-    return <div>
-        <span>{auth.loading ? "loading" : auth.user?.id ?? "anonymous"}</span>
-        {auth.error && <span role="alert">{auth.error}</span>}
-        <button onClick={() => auth.signIn({ email: "a@test.local", password: "secret" })}>Login</button>
-        <button onClick={() => { void auth.signOut().catch(() => undefined); }}>Logout</button>
-    </div>;
+    return (
+        <div>
+            <span>{auth.loading ? "loading" : (auth.user?.id ?? "anonymous")}</span>
+            {auth.error && <span role="alert">{auth.error}</span>}
+            <button onClick={() => auth.signIn({ email: "a@test.local", password: "secret" })}>
+                Login
+            </button>
+            <button
+                onClick={() => {
+                    void auth.signOut().catch(() => undefined);
+                }}
+            >
+                Logout
+            </button>
+        </div>
+    );
 }
 
 describe("AuthProvider", () => {
@@ -48,7 +67,7 @@ describe("AuthProvider", () => {
         mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
         mocks.signOut.mockResolvedValue({ error: null });
         mocks.sync.mockResolvedValue({});
-        mocks.onAuthStateChange.mockImplementation((callback) => {
+        mocks.onAuthStateChange.mockImplementation(callback => {
             mocks.authCallback = callback;
             return { data: { subscription: { unsubscribe: mocks.unsubscribe } } };
         });
@@ -58,7 +77,13 @@ describe("AuthProvider", () => {
         const signedIn = session("user-a");
         mocks.signInWithPassword.mockResolvedValue({ data: { session: signedIn }, error: null });
         const queryClient = testQueryClient();
-        render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        render(
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         await screen.findByText("anonymous");
 
         await userEvent.click(screen.getByRole("button", { name: "Login" }));
@@ -74,25 +99,41 @@ describe("AuthProvider", () => {
 
     it("falls back to local logout when remote sign out fails and stays anonymous after reload", async () => {
         mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
-        mocks.signOut.mockImplementation(async (options?: { scope?: string }) => options?.scope === "local"
-            ? { error: null }
-            : { error: new Error("Remote logout unavailable") });
+        mocks.signOut.mockImplementation(async (options?: { scope?: string }) =>
+            options?.scope === "local"
+                ? { error: null }
+                : { error: new Error("Remote logout unavailable") }
+        );
         const queryClient = testQueryClient();
-        const view = render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        const view = render(
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         expect(await screen.findByText("user-a")).toBeVisible();
         queryClient.setQueryData(["profile", "me"], { private: true });
 
         await userEvent.click(screen.getByRole("button", { name: "Logout" }));
 
         expect(await screen.findByText("anonymous")).toBeVisible();
-        expect(screen.getByRole("alert")).toHaveTextContent("outras sessões podem continuar ativas");
+        expect(screen.getByRole("alert")).toHaveTextContent(
+            "outras sessões podem continuar ativas"
+        );
         expect(queryClient.getQueryData(["profile", "me"])).toBeUndefined();
         expect(mocks.signOut).toHaveBeenNthCalledWith(1);
         expect(mocks.signOut).toHaveBeenNthCalledWith(2, { scope: "local" });
 
         view.unmount();
         mocks.getSession.mockResolvedValue({ data: { session: null }, error: null });
-        render(<QueryClientProvider client={testQueryClient()}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        render(
+            <QueryClientProvider client={testQueryClient()}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         expect(await screen.findByText("anonymous")).toBeVisible();
     });
 
@@ -100,7 +141,13 @@ describe("AuthProvider", () => {
         mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
         mocks.signOut.mockResolvedValue({ error: new Error("Logout unavailable") });
         const queryClient = testQueryClient();
-        render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        render(
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         expect(await screen.findByText("user-a")).toBeVisible();
         queryClient.setQueryData(["leagues", "mine"], [{ id: "private-a" }]);
 
@@ -115,16 +162,30 @@ describe("AuthProvider", () => {
     it("keeps the user unauthenticated when local profile sync fails", async () => {
         mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
         mocks.sync.mockRejectedValueOnce(new Error("Profile sync unavailable"));
-        render(<QueryClientProvider client={testQueryClient()}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        render(
+            <QueryClientProvider client={testQueryClient()}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         expect(await screen.findByText("anonymous")).toBeVisible();
-        expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível inicializar seu perfil");
+        expect(screen.getByRole("alert")).toHaveTextContent(
+            "Não foi possível inicializar seu perfil"
+        );
         expect(mocks.socketApply).toHaveBeenLastCalledWith(null);
     });
 
     it("isolates cached data when auth changes to another account and unsubscribes on unmount", async () => {
         mocks.getSession.mockResolvedValue({ data: { session: session("user-a") }, error: null });
         const queryClient = testQueryClient();
-        const view = render(<QueryClientProvider client={queryClient}><AuthProvider><Probe /></AuthProvider></QueryClientProvider>);
+        const view = render(
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <Probe />
+                </AuthProvider>
+            </QueryClientProvider>
+        );
         expect(await screen.findByText("user-a")).toBeVisible();
         queryClient.setQueryData(["leagues", "mine"], [{ id: "private-a" }]);
 

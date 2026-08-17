@@ -28,19 +28,19 @@ export function ProfilePage() {
         mutationFn: updateProfile,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.profile.me
+                queryKey: queryKeys.profile.me,
             });
             toast.success(t("profile.updated"));
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const riotLinkMutation = useMutation({
         mutationFn: linkRiotAccount,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.riot.me
+                queryKey: queryKeys.riot.me,
             });
             toast.success(t("profile.linked"));
             setGameName("");
@@ -48,13 +48,13 @@ export function ProfilePage() {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const riotUnlinkMutation = useMutation({
         mutationFn: unlinkAccount,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.riot.me
+                queryKey: queryKeys.riot.me,
             });
             toast.success(t("profile.unlinked"));
             setGameName("");
@@ -62,7 +62,7 @@ export function ProfilePage() {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     useEffect(() => {
         if (!profile) {
@@ -78,12 +78,21 @@ export function ProfilePage() {
         return <p className="text-muted-foreground">{t("async.profile")}</p>;
     }
     if (profileQuery.isError)
-        return <div className="rounded-xl border p-6 space-y-3"><p className="text-destructive" role="alert">{t("profile.loadError")}</p><Button variant="outline" onClick={() => profileQuery.refetch()}>{t("common.retry")}</Button></div>;
+        return (
+            <div className="rounded-xl border p-6 space-y-3">
+                <p className="text-destructive" role="alert">
+                    {t("profile.loadError")}
+                </p>
+                <Button variant="outline" onClick={() => profileQuery.refetch()}>
+                    {t("common.retry")}
+                </Button>
+            </div>
+        );
     function handleSubmit() {
         profileUpdateMutation.mutate({
             nickname,
             avatarUrl: avatarUrl || null,
-            bannerUrl: bannerUrl || null
+            bannerUrl: bannerUrl || null,
         });
     }
     function handleLinkRiot() {
@@ -97,84 +106,107 @@ export function ProfilePage() {
         }
         riotLinkMutation.mutate({
             gameName,
-            tagLine
+            tagLine,
         });
     }
-    return (<div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">
-          {t("profile.title")}
-        </h1>
+    return (
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold">{t("profile.title")}</h1>
 
-        {bannerUrl && (<img src={bannerUrl} alt={t("profile.bannerAlt")} className="
+                {bannerUrl && (
+                    <img
+                        src={bannerUrl}
+                        alt={t("profile.bannerAlt")}
+                        className="
                 w-full
                 h-40
                 rounded-lg
-              "/>)}
+              "
+                    />
+                )}
 
-        {avatarUrl && (<img src={avatarUrl} alt={t("profile.avatarAlt")} className="
+                {avatarUrl && (
+                    <img
+                        src={avatarUrl}
+                        alt={t("profile.avatarAlt")}
+                        className="
                 w-20
                 h-20
                 rounded-lg
                 object-cover
-              "/>)}
+              "
+                    />
+                )}
 
-        <p className="text-muted-foreground">
-          {t("profile.description")}
-        </p>
-      </div>
+                <p className="text-muted-foreground">{t("profile.description")}</p>
+            </div>
 
-      <div className="rounded-xl border p-6 space-y-4">
-        <div className="space-y-2">
-          <label>{t("profile.nickname")}</label>
+            <div className="rounded-xl border p-6 space-y-4">
+                <div className="space-y-2">
+                    <label>{t("profile.nickname")}</label>
 
-          <Input value={nickname} onChange={(e) => setNickname(e.target.value)}/>
+                    <Input value={nickname} onChange={e => setNickname(e.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                    <label>{t("profile.avatarUrl")}</label>
+
+                    <Input value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
+                </div>
+
+                <div className="space-y-2">
+                    <label>{t("profile.bannerUrl")}</label>
+
+                    <Input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)} />
+                </div>
+
+                <Button onClick={handleSubmit} disabled={profileUpdateMutation.isPending}>
+                    {profileUpdateMutation.isPending ? t("common.saving") : t("common.save")}
+                </Button>
+
+                {!riotAccount && riotConfiguration.data?.enabled && (
+                    <div className="rounded-xl border p-6 space-y-4">
+                        <h2 className="text-xl font-semibold">{t("profile.riot")}</h2>
+
+                        <Input
+                            placeholder={t("profile.gameName")}
+                            value={gameName}
+                            onChange={e => setGameName(e.target.value)}
+                        />
+
+                        <Input
+                            placeholder={t("profile.tagLine")}
+                            value={tagLine}
+                            onChange={e => setTagLine(e.target.value)}
+                        />
+
+                        <Button onClick={handleLinkRiot} disabled={riotLinkMutation.isPending}>
+                            {riotLinkMutation.isPending ? t("profile.linking") : t("profile.link")}
+                        </Button>
+                    </div>
+                )}
+
+                {!riotAccount &&
+                    !riotConfiguration.isLoading &&
+                    !riotConfiguration.data?.enabled && (
+                        <p className="text-sm text-muted-foreground">{t("profile.riotDisabled")}</p>
+                    )}
+
+                {riotAccount && (
+                    <>
+                        <RiotAccountCard riotAccount={riotAccount} />
+                        <Button
+                            onClick={() => riotUnlinkMutation.mutate()}
+                            disabled={riotUnlinkMutation.isPending}
+                        >
+                            {riotUnlinkMutation.isPending
+                                ? t("profile.unlinking")
+                                : t("profile.unlink")}
+                        </Button>
+                    </>
+                )}
+            </div>
         </div>
-
-        <div className="space-y-2">
-          <label>{t("profile.avatarUrl")}</label>
-
-          <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)}/>
-        </div>
-
-        <div className="space-y-2">
-          <label>{t("profile.bannerUrl")}</label>
-
-          <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)}/>
-        </div>
-
-        <Button onClick={handleSubmit} disabled={profileUpdateMutation.isPending}>
-          {profileUpdateMutation.isPending
-            ? t("common.saving")
-            : t("common.save")}
-        </Button>
-
-        {!riotAccount && riotConfiguration.data?.enabled && (<div className="rounded-xl border p-6 space-y-4">
-            <h2 className="text-xl font-semibold">
-              {t("profile.riot")}
-            </h2>
-
-            <Input placeholder={t("profile.gameName")} value={gameName} onChange={(e) => setGameName(e.target.value)}/>
-
-            <Input placeholder={t("profile.tagLine")} value={tagLine} onChange={(e) => setTagLine(e.target.value)}/>
-
-            <Button onClick={handleLinkRiot} disabled={riotLinkMutation.isPending}>
-              {riotLinkMutation.isPending
-                ? t("profile.linking")
-                : t("profile.link")}
-            </Button>
-          </div>)}
-
-        {!riotAccount && !riotConfiguration.isLoading && !riotConfiguration.data?.enabled && (<p className="text-sm text-muted-foreground">{t("profile.riotDisabled")}</p>)}
-
-        {riotAccount && (<>
-          <RiotAccountCard riotAccount={riotAccount}/>
-          <Button onClick={() => riotUnlinkMutation.mutate()} disabled={riotUnlinkMutation.isPending}>
-            {riotUnlinkMutation.isPending
-                ? t("profile.unlinking")
-                : t("profile.unlink")}
-          </Button>
-        </>)}
-      </div>
-    </div>);
+    );
 }

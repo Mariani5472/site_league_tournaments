@@ -46,8 +46,12 @@ describe("SocketSessionOwner", () => {
         const client = {
             auth: {} as Record<string, string>,
             connected: false,
-            connect: vi.fn(function (this: typeof client) { this.connected = true; }),
-            disconnect: vi.fn(function (this: typeof client) { this.connected = false; }),
+            connect: vi.fn(function (this: typeof client) {
+                this.connected = true;
+            }),
+            disconnect: vi.fn(function (this: typeof client) {
+                this.connected = false;
+            }),
         };
         const owner = new SocketSessionOwner(client as never);
 

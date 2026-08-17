@@ -8,10 +8,7 @@ export async function getRiotConfiguration() {
     const { data } = await api.get<RiotConfiguration>("/riot/config");
     return data;
 }
-export async function linkRiotAccount(info: {
-    gameName: string;
-    tagLine: string;
-}) {
+export async function linkRiotAccount(info: { gameName: string; tagLine: string }) {
     const { data } = await api.post("/riot", info);
     return data;
 }

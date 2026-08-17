@@ -63,13 +63,16 @@ export const ptBR = {
     "auth.forgotPassword": "Esqueci minha senha",
     "auth.confirmationTitle": "Confira seu e-mail",
     "auth.confirmationDescription": "Enviamos um link de confirmação para {email}.",
-    "auth.confirmationHint": "Abra o link nesse e-mail e depois entre na sua conta. Verifique também a pasta de spam.",
+    "auth.confirmationHint":
+        "Abra o link nesse e-mail e depois entre na sua conta. Verifique também a pasta de spam.",
     "auth.backToLogin": "Voltar para o login",
     "auth.forgotTitle": "Recuperar senha",
-    "auth.forgotDescription": "Informe seu e-mail. Se houver uma conta, enviaremos um link seguro para redefinir a senha.",
+    "auth.forgotDescription":
+        "Informe seu e-mail. Se houver uma conta, enviaremos um link seguro para redefinir a senha.",
     "auth.sendReset": "Enviar link de recuperação",
     "auth.sendingReset": "Enviando…",
-    "auth.resetEmailSent": "Se houver uma conta com esse e-mail, o link de recuperação será enviado em instantes.",
+    "auth.resetEmailSent":
+        "Se houver uma conta com esse e-mail, o link de recuperação será enviado em instantes.",
     "auth.resetTitle": "Definir nova senha",
     "auth.resetDescription": "Escolha uma senha nova com pelo menos 10 caracteres.",
     "auth.newPassword": "Nova senha",
@@ -80,17 +83,20 @@ export const ptBR = {
     "auth.error.signIn": "Não foi possível entrar.",
     "auth.error.signUp": "Não foi possível criar a conta.",
     "auth.error.resetRequest": "Não foi possível solicitar a recuperação agora. Tente novamente.",
-    "auth.error.resetPassword": "Não foi possível atualizar a senha. Solicite um novo link e tente novamente.",
+    "auth.error.resetPassword":
+        "Não foi possível atualizar a senha. Solicite um novo link e tente novamente.",
     "auth.error.credentials": "E-mail ou senha inválidos.",
     "auth.error.confirmEmail": "Confirme seu e-mail antes de entrar.",
     "auth.error.accountExists": "Já existe uma conta com este e-mail.",
     "auth.error.weakPassword": "A senha não atende aos requisitos de segurança.",
     "auth.error.signOut": "Não foi possível sair. Sua sessão continua ativa; tente novamente.",
-    "auth.error.localSignOut": "Você saiu neste dispositivo, mas outras sessões podem continuar ativas.",
+    "auth.error.localSignOut":
+        "Você saiu neste dispositivo, mas outras sessões podem continuar ativas.",
     "landing.tagline": "Sua liga, suas regras",
     "landing.title": "Organize partidas.",
     "landing.titleHighlight": "Construa rivalidades.",
-    "landing.description": "Crie ligas privadas ou públicas, organize lobbies 5x5 e transforme cada partida entre amigos em uma competição de verdade.",
+    "landing.description":
+        "Crie ligas privadas ou públicas, organize lobbies 5x5 e transforme cada partida entre amigos em uma competição de verdade.",
     "landing.start": "Começar agora",
     "landing.features": "Ver recursos",
     "landing.benefit.riot": "Sem conta Riot obrigatória",
@@ -100,11 +106,14 @@ export const ptBR = {
     "landing.flow": "Tudo no mesmo fluxo",
     "landing.flowTitle": "Do convite ao placar final",
     "landing.feature.leagues.title": "Ligas organizadas",
-    "landing.feature.leagues.text": "Reúna jogadores, defina cargos e controle entradas em um só lugar.",
+    "landing.feature.leagues.text":
+        "Reúna jogadores, defina cargos e controle entradas em um só lugar.",
     "landing.feature.matches.title": "Partidas 5x5",
-    "landing.feature.matches.text": "Monte lobbies equilibrados, confirme presença e registre resultados.",
+    "landing.feature.matches.text":
+        "Monte lobbies equilibrados, confirme presença e registre resultados.",
     "landing.feature.ranking.title": "Classificação viva",
-    "landing.feature.ranking.text": "Acompanhe vitórias, derrotas e histórico calculados automaticamente.",
+    "landing.feature.ranking.text":
+        "Acompanhe vitórias, derrotas e histórico calculados automaticamente.",
     "dashboard.hub": "Central de competição",
     "dashboard.title": "Pronto para a próxima partida?",
     "dashboard.description": "Acesse uma liga existente ou crie uma nova comunidade para começar.",
@@ -202,10 +211,12 @@ export const ptBR = {
     "settings.description": "Atualize as informações e regras da sua liga.",
     "settings.updated": "Liga atualizada.",
     "danger.title": "Zona de perigo",
-    "danger.impact": "Excluir esta liga remove permanentemente o acesso aos membros, solicitações, lobbies e histórico de partidas. Esta ação não pode ser desfeita.",
+    "danger.impact":
+        "Excluir esta liga remove permanentemente o acesso aos membros, solicitações, lobbies e histórico de partidas. Esta ação não pode ser desfeita.",
     "danger.delete": "Excluir liga",
     "danger.confirmTitle": "Excluir {name}?",
-    "danger.confirmDescription": "Esta ação exclui permanentemente a liga e os dados associados à competição. Digite {name} para confirmar.",
+    "danger.confirmDescription":
+        "Esta ação exclui permanentemente a liga e os dados associados à competição. Digite {name} para confirmar.",
     "danger.confirmLabel": "Confirmação pelo nome da liga",
     "danger.permanent": "Excluir liga permanentemente",
     "danger.deleting": "Excluindo…",
@@ -247,22 +258,28 @@ export const ptBR = {
     "selection.picksDescription": "Os dois mais votados viram capitães e fazem as escolhas.",
     "selection.completed": "Times definidos",
     "selection.completedDescription": "Modo: {mode}. Aceitar os times não confirma sua prontidão.",
-    "selection.readyHint": "{ready} de {total} jogadores prontos. Use o botão “Confirmar prontidão” abaixo.",
+    "selection.readyHint":
+        "{ready} de {total} jogadores prontos. Use o botão “Confirmar prontidão” abaixo.",
     "selection.randomTitle": "Sorteio #{round}: os times ficaram bons?",
-    "selection.majorityHint": "São necessários {count} votos iguais. Você pode mudar seu voto enquanto não houver maioria.",
+    "selection.majorityHint":
+        "São necessários {count} votos iguais. Você pode mudar seu voto enquanto não houver maioria.",
     "selection.accept": "Aprovar times ({votes}/{required})",
     "selection.reroll": "Sortear novamente ({votes}/{required})",
     "selection.voteCaptains": "Vote nos capitães",
-    "selection.captainsHint": "Os dois mais votados serão os capitães. Em caso de empate, o desempate é aleatório.",
+    "selection.captainsHint":
+        "Os dois mais votados serão os capitães. Em caso de empate, o desempate é aleatório.",
     "selection.counting": "Apurando os votos…",
-    "selection.draftTurn": "Vez do capitão do Time {team}. Ordem: 1 escolha, 2 escolhas, 2 escolhas, 2 escolhas e 1 escolha.",
+    "selection.draftTurn":
+        "Vez do capitão do Time {team}. Ordem: 1 escolha, 2 escolhas, 2 escolhas, 2 escolhas e 1 escolha.",
     "selection.watchDraft": "Acompanhe as escolhas dos capitães em tempo real.",
     "selection.question": "Como os times serão formados?",
-    "selection.voteHint": "A primeira opção a receber {count} votos vence. Você pode alterar seu voto.",
+    "selection.voteHint":
+        "A primeira opção a receber {count} votos vence. Você pode alterar seu voto.",
     "match.result": "Resultado da partida",
     "match.loadingError": "Não foi possível carregar a partida.",
     "match.finished": "O Time {team} venceu por {resolution}.",
-    "match.majority": "Maioria absoluta: {required} votos. O Time 1 precisa de {team1}; o Time 2 precisa de {team2}.",
+    "match.majority":
+        "Maioria absoluta: {required} votos. O Time 1 precisa de {team1}; o Time 2 precisa de {team2}.",
     "match.myVote": "Seu voto atual: Time {team}",
     "match.notVoted": "Você ainda não votou.",
     "match.voteTeam": "Votar no Time {team}",

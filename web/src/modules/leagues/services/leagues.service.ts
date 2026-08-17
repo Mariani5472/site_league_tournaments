@@ -27,13 +27,17 @@ export async function getLeague(leagueId: string) {
 export async function getLeagueMembers(leagueId: string, cursor?: string, limit = PAGE_LIMIT) {
     const params = new URLSearchParams({ limit: String(limit) });
     if (cursor) params.set("cursor", cursor);
-    const { data } = await api.get<CursorPage<LeagueMember>>(`/leagues/${leagueId}/members?${params.toString()}`);
+    const { data } = await api.get<CursorPage<LeagueMember>>(
+        `/leagues/${leagueId}/members?${params.toString()}`
+    );
     return data;
 }
 export async function getLeagueRequests(leagueId: string, cursor?: string, limit = PAGE_LIMIT) {
     const params = new URLSearchParams({ limit: String(limit), status: "pending" });
     if (cursor) params.set("cursor", cursor);
-    const { data } = await api.get<CursorPage<LeagueRequest>>(`/leagues/${leagueId}/requests?${params.toString()}`);
+    const { data } = await api.get<CursorPage<LeagueRequest>>(
+        `/leagues/${leagueId}/requests?${params.toString()}`
+    );
     return data;
 }
 export async function joinLeague(leagueId: string) {
@@ -46,13 +50,13 @@ export async function requestLeagueJoin(leagueId: string) {
 }
 export async function approveRequest(leagueId: string, requestId: string) {
     const { data } = await api.patch(`/leagues/${leagueId}/requests/${requestId}`, {
-        status: "approved"
+        status: "approved",
     });
     return data;
 }
 export async function rejectRequest(leagueId: string, requestId: string) {
     const { data } = await api.patch(`/leagues/${leagueId}/requests/${requestId}`, {
-        status: "rejected"
+        status: "rejected",
     });
     return data;
 }
@@ -73,22 +77,28 @@ export async function leaveLeague(leagueId: string) {
 export async function deleteLeague(leagueId: string) {
     return await api.delete(`/leagues/${leagueId}`);
 }
-export async function updateLeague(leagueId: string, info: {
-    name: string;
-    description: string;
-    visibility: string;
-    joinPolicy: string;
-    maxPlayers: number;
-}) {
+export async function updateLeague(
+    leagueId: string,
+    info: {
+        name: string;
+        description: string;
+        visibility: string;
+        joinPolicy: string;
+        maxPlayers: number;
+    }
+) {
     return await api.patch(`/leagues/${leagueId}`, info);
 }
 export async function getLeagueLobbies(leagueId: string) {
     const { data } = await api.get<Lobby[]>(`/leagues/${leagueId}/lobbies`);
     return data;
 }
-export async function createLobby(leagueId: string, data: {
-    maxPlayers: number;
-}) {
+export async function createLobby(
+    leagueId: string,
+    data: {
+        maxPlayers: number;
+    }
+) {
     const response = await api.post(`/leagues/${leagueId}/lobbies`, { ...data });
     return response.data;
 }

@@ -10,6 +10,23 @@ export type DashboardData = {
         count: number | null;
         href: string;
     }>;
-    recentLeagues: Array<{ id: string; name: string; description: string | null; playerCount: number; maxPlayers: number; role: string }>;
-    recentMatches: Array<{ id: string; leagueId: string; leagueName: string; status: string; startedAt: string; finishedAt: string | null; winnerTeamNumber: number | null; teamNumber: number; result: "win" | "loss" | null }>;
+    recentLeagues: Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        playerCount: number;
+        maxPlayers: number;
+        role: string;
+    }>;
+    recentMatches: Array<{
+        id: string;
+        leagueId: string;
+        leagueName: string;
+        status: string;
+        startedAt: string;
+        finishedAt: string | null;
+        winnerTeamNumber: number | null;
+        teamNumber: number;
+        result: "win" | "loss" | null;
+    }>;
 };

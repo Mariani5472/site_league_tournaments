@@ -26,56 +26,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const syncLocalProfile = useCallback(async () => {
         await api.post("/auth/sync");
     }, []);
-    const acceptSession = useCallback(async (session: Session | null) => {
-        const sessionKey = session ? `${session.user.id}:${session.access_token}` : "signed-out";
-        if (lastSessionKey.current === sessionKey)
-            return;
-        lastSessionKey.current = sessionKey;
-        const generation = ++sessionGeneration.current;
-        setLoading(true);
-        setError(null);
-        try {
-            await sessionLifecycle.transition(session);
-            if (!session) {
-                setUser(null);
-                return;
+    const acceptSession = useCallback(
+        async (session: Session | null) => {
+            const sessionKey = session
+                ? `${session.user.id}:${session.access_token}`
+                : "signed-out";
+            if (lastSessionKey.current === sessionKey) return;
+            lastSessionKey.current = sessionKey;
+            const generation = ++sessionGeneration.current;
+            setLoading(true);
+            setError(null);
+            try {
+                await sessionLifecycle.transition(session);
+                if (!session) {
+                    setUser(null);
+                    return;
+                }
+                await syncLocalProfile();
+                if (generation === sessionGeneration.current) setUser(session.user);
+            } catch (loadError) {
+                if (generation === sessionGeneration.current) {
+                    lastSessionKey.current = undefined;
+                    await sessionLifecycle.transition(null);
+                    setUser(null);
+                    setError(authErrorMessage(loadError, "initialize"));
+                }
+            } finally {
+                if (generation === sessionGeneration.current) setLoading(false);
             }
-            await syncLocalProfile();
-            if (generation === sessionGeneration.current)
-                setUser(session.user);
-        }
-        catch (loadError) {
-            if (generation === sessionGeneration.current) {
-                lastSessionKey.current = undefined;
-                await sessionLifecycle.transition(null);
-                setUser(null);
-                setError(authErrorMessage(loadError, "initialize"));
-            }
-        }
-        finally {
-            if (generation === sessionGeneration.current)
-                setLoading(false);
-        }
-    }, [sessionLifecycle, syncLocalProfile]);
+        },
+        [sessionLifecycle, syncLocalProfile]
+    );
     async function signIn(data: LoginDto) {
         setLoading(true);
         setError(null);
         try {
             const { data: signInData, error } = await mySupabase.auth.signInWithPassword({
                 email: data.email,
-                password: data.password
+                password: data.password,
             });
             if (error) {
                 throw error;
             }
             await acceptSession(signInData.session);
-        }
-        catch (signInError) {
+        } catch (signInError) {
             setUser(null);
             setError(authErrorMessage(signInError, "signIn"));
             throw signInError;
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     }
@@ -95,13 +93,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
             await acceptSession(signUpData.session);
             return { status: "authenticated" };
-        }
-        catch (signUpError) {
+        } catch (signUpError) {
             setUser(null);
             setError(authErrorMessage(signUpError, "signUp"));
             throw signUpError;
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     }
@@ -134,8 +130,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 return;
             }
             await acceptSession(null);
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     }
@@ -144,7 +139,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(null);
         try {
             const redirectTo = `${window.location.origin}/reset-password`;
-            const { error: resetError } = await mySupabase.auth.resetPasswordForEmail(email, { redirectTo });
+            const { error: resetError } = await mySupabase.auth.resetPasswordForEmail(email, {
+                redirectTo,
+            });
             if (resetError) throw resetError;
         } catch (resetError) {
             setError(t("auth.error.resetRequest"));
@@ -170,13 +167,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         let active = true;
         const { data: authListener } = mySupabase.auth.onAuthStateChange((_event, session) => {
             setTimeout(() => {
-                if (active)
-                    void acceptSession(session);
+                if (active) void acceptSession(session);
             }, 0);
         });
         void mySupabase.auth.getSession().then(({ data, error: sessionError }) => {
-            if (!active)
-                return;
+            if (!active) return;
             if (sessionError) {
                 setError(authErrorMessage(sessionError, "initialize"));
                 setLoading(false);
@@ -191,16 +186,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
             void sessionLifecycle.dispose();
         };
     }, [acceptSession, sessionLifecycle]);
-    return (<AuthContext.Provider value={{
-            user,
-            signIn,
-            signUp,
-            requestPasswordReset,
-            updatePassword,
-            signOut,
-            loading,
-            error,
-        }}>
-      {children}
-    </AuthContext.Provider>);
+    return (
+        <AuthContext.Provider
+            value={{
+                user,
+                signIn,
+                signUp,
+                requestPasswordReset,
+                updatePassword,
+                signOut,
+                loading,
+                error,
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
 }

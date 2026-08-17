@@ -6,7 +6,8 @@ export const queryKeys = {
     riot: {
         config: ["riot", "config"] as const,
         me: ["riot", "me"] as const,
-        account: (gameName: string, tagLine: string) => ["riot", "account", gameName, tagLine] as const,
+        account: (gameName: string, tagLine: string) =>
+            ["riot", "account", gameName, tagLine] as const,
     },
     leagues: {
         all: ["leagues"] as const,
@@ -21,7 +22,8 @@ export const queryKeys = {
         standings: (leagueId: string) => ["leagues", "standings", leagueId] as const,
     },
     lobbies: {
-        detail: (leagueId: string, lobbyId: string) => ["lobbies", "detail", leagueId, lobbyId] as const,
+        detail: (leagueId: string, lobbyId: string) =>
+            ["lobbies", "detail", leagueId, lobbyId] as const,
     },
     matches: {
         all: ["matches"] as const,

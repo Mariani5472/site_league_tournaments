@@ -43,18 +43,22 @@ export interface TeamSelection {
     captainVote: null | {
         endsAt: string;
         myVote: string | null;
-        candidates: Array<Pick<LobbyPlayer, "userId" | "nickname" | "avatarUrl"> & {
-            votes: number;
-        }>;
+        candidates: Array<
+            Pick<LobbyPlayer, "userId" | "nickname" | "avatarUrl"> & {
+                votes: number;
+            }
+        >;
     };
     draft: null | {
         captain1: string;
         captain2: string;
         nextTeam: 1 | 2 | null;
         pickIndex: number;
-        picks: Array<LobbyPlayer & {
-            pickNumber: number;
-        }>;
+        picks: Array<
+            LobbyPlayer & {
+                pickNumber: number;
+            }
+        >;
         availablePlayers: LobbyPlayer[];
     };
 }

@@ -2,7 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
-import { joinLobby, leaveLobby, toggleReady, changeTeam, toggleUnready, deleteLobby } from "../services/lobbies.service";
+import {
+    joinLobby,
+    leaveLobby,
+    toggleReady,
+    changeTeam,
+    toggleUnready,
+    deleteLobby,
+} from "../services/lobbies.service";
 import { t } from "@/i18n";
 import { mutationErrorMessage } from "@/services/api-errors";
 export function useLobbyActions(leagueId: string, lobbyId: string) {
@@ -10,10 +17,10 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
     const navigate = useNavigate();
     function invalidateLobby() {
         queryClient.invalidateQueries({
-            queryKey: queryKeys.lobbies.detail(leagueId, lobbyId)
+            queryKey: queryKeys.lobbies.detail(leagueId, lobbyId),
         });
         queryClient.invalidateQueries({
-            queryKey: queryKeys.leagues.lobbies(leagueId)
+            queryKey: queryKeys.leagues.lobbies(leagueId),
         });
     }
     const joinMutation = useMutation({
@@ -24,7 +31,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const leaveMutation = useMutation({
         mutationFn: () => leaveLobby(leagueId, lobbyId),
@@ -36,7 +43,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const readyMutation = useMutation({
         mutationFn: () => toggleReady(leagueId, lobbyId),
@@ -45,7 +52,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const unreadyMutation = useMutation({
         mutationFn: () => toggleUnready(leagueId, lobbyId),
@@ -54,7 +61,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const changeTeamMutation = useMutation({
         mutationFn: () => changeTeam(leagueId, lobbyId),
@@ -63,7 +70,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     const deleteLobbyMutation = useMutation({
         mutationFn: () => deleteLobby(leagueId, lobbyId),
@@ -75,7 +82,7 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         },
         onError: (error: unknown) => {
             toast.error(mutationErrorMessage(error));
-        }
+        },
     });
     return {
         join: joinMutation.mutate,
@@ -90,11 +97,12 @@ export function useLobbyActions(leagueId: string, lobbyId: string) {
         isUnreadyLoading: unreadyMutation.isPending,
         isChangingTeam: changeTeamMutation.isPending,
         isDeleting: deleteLobbyMutation.isPending,
-        isLoading: joinMutation.isPending ||
+        isLoading:
+            joinMutation.isPending ||
             leaveMutation.isPending ||
             readyMutation.isPending ||
             unreadyMutation.isPending ||
             changeTeamMutation.isPending ||
-            deleteLobbyMutation.isPending
+            deleteLobbyMutation.isPending,
     };
 }

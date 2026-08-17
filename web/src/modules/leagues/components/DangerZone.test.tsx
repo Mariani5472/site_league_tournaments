@@ -12,10 +12,15 @@ vi.mock("../services/leagues.service", () => ({ deleteLeague: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function subject() {
-    return <Routes>
-        <Route path="/leagues/league-1/settings" element={<DangerZone leagueId="league-1" leagueName="Champions" />} />
-        <Route path="/leagues" element={<p>League list</p>} />
-    </Routes>;
+    return (
+        <Routes>
+            <Route
+                path="/leagues/league-1/settings"
+                element={<DangerZone leagueId="league-1" leagueName="Champions" />}
+            />
+            <Route path="/leagues" element={<p>League list</p>} />
+        </Routes>
+    );
 }
 
 describe("DangerZone", () => {
@@ -26,9 +31,11 @@ describe("DangerZone", () => {
     it("requires the exact league name before deleting and closes only after success", async () => {
         const user = userEvent.setup();
         let resolveDelete!: () => void;
-        vi.mocked(deleteLeague).mockReturnValue(new Promise<Awaited<ReturnType<typeof deleteLeague>>>((resolve) => {
-            resolveDelete = () => resolve({} as Awaited<ReturnType<typeof deleteLeague>>);
-        }));
+        vi.mocked(deleteLeague).mockReturnValue(
+            new Promise<Awaited<ReturnType<typeof deleteLeague>>>(resolve => {
+                resolveDelete = () => resolve({} as Awaited<ReturnType<typeof deleteLeague>>);
+            })
+        );
         renderApp(subject(), { route: "/leagues/league-1/settings" });
 
         await user.click(screen.getByRole("button", { name: "Excluir liga" }));
@@ -55,7 +62,9 @@ describe("DangerZone", () => {
 
     it("keeps the dialog open and shows one consistent error toast", async () => {
         const user = userEvent.setup();
-        vi.mocked(deleteLeague).mockRejectedValue(new ApiError("internal detail", 500, "INTERNAL_ERROR"));
+        vi.mocked(deleteLeague).mockRejectedValue(
+            new ApiError("internal detail", 500, "INTERNAL_ERROR")
+        );
         renderApp(subject(), { route: "/leagues/league-1/settings" });
 
         await user.click(screen.getByRole("button", { name: "Excluir liga" }));
@@ -64,7 +73,9 @@ describe("DangerZone", () => {
 
         expect(await screen.findByRole("dialog")).toBeVisible();
         expect(toast.error).toHaveBeenCalledOnce();
-        expect(toast.error).toHaveBeenCalledWith("Ocorreu um erro inesperado no servidor. Tente novamente.");
+        expect(toast.error).toHaveBeenCalledWith(
+            "Ocorreu um erro inesperado no servidor. Tente novamente."
+        );
         expect(toast.success).not.toHaveBeenCalled();
     });
 });
@@ -73,7 +84,11 @@ describe("critical mutation error messages", () => {
     it.each([
         [403, "forbidden", "Você não tem permissão para realizar esta ação."],
         [404, "missing", "O recurso solicitado não foi encontrado."],
-        [409, "Transfer ownership first.", "Esta ação conflita com o estado atual. Atualize a página e tente novamente."],
+        [
+            409,
+            "Transfer ownership first.",
+            "Esta ação conflita com o estado atual. Atualize a página e tente novamente.",
+        ],
         [500, "database detail", "Ocorreu um erro inesperado no servidor. Tente novamente."],
     ])("maps HTTP %s consistently", (status, detail, expected) => {
         expect(mutationErrorMessage(new ApiError(detail, status))).toBe(expected);

@@ -4,6 +4,6 @@ import { getLeague } from "../services/leagues.service";
 export function useLeague(leagueId: string) {
     return useQuery({
         queryKey: queryKeys.leagues.detail(leagueId),
-        queryFn: () => getLeague(leagueId)
+        queryFn: () => getLeague(leagueId),
     });
 }
