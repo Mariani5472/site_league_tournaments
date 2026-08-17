@@ -1,0 +1,13 @@
+project_id = "fpl-lol"
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/reset-password"]
+enable_signup = true
+minimum_password_length = 10
+password_requirements = ""
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true

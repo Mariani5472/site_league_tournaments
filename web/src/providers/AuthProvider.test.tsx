@@ -10,6 +10,7 @@ import { AuthProvider } from "./AuthProvider";
 
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(), signInWithPassword: vi.fn(), signUp: vi.fn(), signOut: vi.fn(),
+    resetPasswordForEmail: vi.fn(), updateUser: vi.fn(),
     onAuthStateChange: vi.fn(), sync: vi.fn(), socketApply: vi.fn(), unsubscribe: vi.fn(),
     authCallback: undefined as undefined | ((event: string, session: Session | null) => void),
 }));
@@ -20,6 +21,8 @@ vi.mock("@/lib/supabase/supabase", () => ({
         signInWithPassword: mocks.signInWithPassword,
         signUp: mocks.signUp,
         signOut: mocks.signOut,
+        resetPasswordForEmail: mocks.resetPasswordForEmail,
+        updateUser: mocks.updateUser,
         onAuthStateChange: mocks.onAuthStateChange,
     } },
 }));

@@ -19,7 +19,9 @@ const defaultAuth: AuthContextData = {
     loading: false,
     error: null,
     signIn: async () => undefined,
-    signUp: async () => undefined,
+    signUp: async () => ({ status: "authenticated" }),
+    requestPasswordReset: async () => undefined,
+    updatePassword: async () => undefined,
     signOut: async () => undefined,
 };
 
