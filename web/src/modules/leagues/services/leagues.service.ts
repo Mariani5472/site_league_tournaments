@@ -4,30 +4,37 @@ import type { LeagueMember } from "../types/member";
 import type { LeagueRequest } from "../types/request";
 import type { CreateLeagueInput } from "../types/createInput";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
-type CursorPage<T> = { items: T[]; nextCursor: string | null };
+import type { CursorPage } from "@/types/pagination";
+const PAGE_LIMIT = 50;
 export async function getMineLeagues() {
     const { data } = await api.get<League[]>(`/leagues/mine`);
     return data;
 }
-export async function getDiscoverLeagues(search?: string) {
+export async function getDiscoverLeagues(search?: string, cursor?: string, limit = PAGE_LIMIT) {
     const params = new URLSearchParams();
     if (search) {
         params.set("search", search);
     }
+    if (cursor) params.set("cursor", cursor);
+    params.set("limit", String(limit));
     const { data } = await api.get<CursorPage<League>>(`/leagues/discover?${params.toString()}`);
-    return data.items;
+    return data;
 }
 export async function getLeague(leagueId: string) {
     const { data } = await api.get<League>(`/leagues/${leagueId}`);
     return data;
 }
-export async function getLeagueMembers(leagueId: string) {
-    const { data } = await api.get<CursorPage<LeagueMember>>(`/leagues/${leagueId}/members`);
-    return data.items;
+export async function getLeagueMembers(leagueId: string, cursor?: string, limit = PAGE_LIMIT) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (cursor) params.set("cursor", cursor);
+    const { data } = await api.get<CursorPage<LeagueMember>>(`/leagues/${leagueId}/members?${params.toString()}`);
+    return data;
 }
-export async function getLeagueRequests(leagueId: string) {
-    const { data } = await api.get<CursorPage<LeagueRequest>>(`/leagues/${leagueId}/requests`);
-    return data.items;
+export async function getLeagueRequests(leagueId: string, cursor?: string, limit = PAGE_LIMIT) {
+    const params = new URLSearchParams({ limit: String(limit), status: "pending" });
+    if (cursor) params.set("cursor", cursor);
+    const { data } = await api.get<CursorPage<LeagueRequest>>(`/leagues/${leagueId}/requests?${params.toString()}`);
+    return data;
 }
 export async function joinLeague(leagueId: string) {
     const { data } = await api.post(`/leagues/${leagueId}/join`);

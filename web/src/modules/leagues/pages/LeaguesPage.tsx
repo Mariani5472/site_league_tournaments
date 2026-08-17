@@ -6,6 +6,7 @@ import { LeagueListItem } from "../components/LeagueListItem";
 import { CreateLeagueDialog } from "../components/CreateLeagueDialog";
 import { Search, Trophy } from "lucide-react";
 import { t, tp } from "@/i18n";
+import { LoadMoreButton } from "@/components/LoadMoreButton";
 export function LeaguesPage() {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -13,7 +14,7 @@ export function LeaguesPage() {
         const timeout = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
         return () => window.clearTimeout(timeout);
     }, [search]);
-    const { data: discoverLeagues = [], isLoading: discoverLeaguesLoading, isError: discoverLeaguesError, } = useDiscoverLeagues(debouncedSearch);
+    const { data: discoverLeagues = [], isLoading: discoverLeaguesLoading, isError: discoverLeaguesError, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useDiscoverLeagues(debouncedSearch);
     const { data: myLeagues = [], isLoading: myLeaguesLoading, isError: myLeaguesError, } = useMineLeagues();
     const isLoading = discoverLeaguesLoading || myLeaguesLoading;
     if (isLoading) {
@@ -101,6 +102,7 @@ export function LeaguesPage() {
             </p>
           </div>) : (<div className="space-y-3">
             {discoverLeagues.map((league) => (<LeagueListItem key={league.id} league={league}/>))}
+            <LoadMoreButton hasNextPage={hasNextPage} isFetchingNextPage={isFetchingNextPage} isFetchNextPageError={isFetchNextPageError} onLoadMore={() => void fetchNextPage()}/>
           </div>)}
       </section>
     </div>);
