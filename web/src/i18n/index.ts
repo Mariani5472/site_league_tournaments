@@ -20,6 +20,7 @@ export function tp(
 
 export {
     defaultLocale,
+    defaultTimeZone,
     formatDate,
     formatDateTime,
     formatList,

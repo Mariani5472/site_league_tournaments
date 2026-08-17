@@ -22,7 +22,6 @@ export type Match = {
         total: number;
     };
     majorityRequired?: number;
-    myVote?: 1 | 2 | null;
 };
 export type Standing = {
     position: number;

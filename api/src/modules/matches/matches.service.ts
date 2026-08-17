@@ -24,7 +24,7 @@ export class MatchesService {
         return this.repository.standings(leagueId);
     }
     async show(matchId: string, userId: string) {
-        const match = await this.repository.details(matchId, userId);
+        const match = await this.repository.details(matchId);
         if (!match)
             throw new AppError("Match not found", 404);
         await this.requireLeagueAccess(match.leagueId, userId);

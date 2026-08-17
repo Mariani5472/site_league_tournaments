@@ -187,7 +187,7 @@ export function DashboardPage() {
                                     {recentMatches.map(match => (
                                         <Link
                                             key={match.id}
-                                            to={`/leagues/${match.leagueId}`}
+                                            to={`/matches/${match.id}`}
                                             className="flex items-center gap-4 rounded-xl border bg-card p-4 hover:border-primary/40"
                                         >
                                             <History className="h-5 w-5 text-primary" />

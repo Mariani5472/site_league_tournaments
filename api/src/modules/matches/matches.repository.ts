@@ -37,7 +37,8 @@ export class MatchesRepository {
     }
     async listByLeague(leagueId: string, pagination: CursorParams) {
         const result = await db.query(`
-      SELECT m.*,
+      SELECT m.id, m.league_id, m.lobby_id, m.status, m.winner_team_number,
+        m.resolution_type, m.resolution_reason, m.started_at, m.finished_at,
         COALESCE(json_agg(json_build_object(
           'user_id', mp.user_id, 'nickname', COALESCE(mp.nickname_snapshot, u.nickname),
           'team_number', mp.team_number, 'result', mp.result
@@ -50,9 +51,10 @@ export class MatchesRepository {
       GROUP BY m.id ORDER BY m.id DESC LIMIT $3`, [leagueId, pagination.cursor ?? null, pagination.limit + 1]);
         return toCursorPage(result.rows, pagination.limit);
     }
-    async details(matchId: string, userId: string) {
+    async details(matchId: string) {
         const result = await db.query(`
-      SELECT m.*,
+      SELECT m.id, m.league_id, m.lobby_id, m.status, m.winner_team_number,
+        m.resolution_type, m.resolution_reason, m.started_at, m.finished_at,
         COALESCE(json_agg(json_build_object(
           'user_id', mp.user_id, 'nickname', COALESCE(mp.nickname_snapshot, u.nickname),
           'team_number', mp.team_number, 'result', mp.result
@@ -61,11 +63,10 @@ export class MatchesRepository {
           'team_1', COUNT(*) FILTER (WHERE winner_team = 1),
           'team_2', COUNT(*) FILTER (WHERE winner_team = 2),
           'total', COUNT(*)
-        ) FROM match_votes mv WHERE mv.match_id = m.id) AS votes,
-        (SELECT winner_team FROM match_votes mv WHERE mv.match_id = m.id AND mv.voter_id = $2) AS my_vote
+        ) FROM match_votes mv WHERE mv.match_id = m.id) AS votes
       FROM matches m JOIN lobbies l ON l.id = m.lobby_id AND l.league_id = m.league_id
       LEFT JOIN match_players mp ON mp.match_id = m.id
-      LEFT JOIN users u ON u.id = mp.user_id WHERE m.id = $1 GROUP BY m.id`, [matchId, userId]);
+      LEFT JOIN users u ON u.id = mp.user_id WHERE m.id = $1 GROUP BY m.id`, [matchId]);
         return result.rows[0] ?? null;
     }
     async standings(leagueId: string) {

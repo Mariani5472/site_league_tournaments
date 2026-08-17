@@ -26,20 +26,19 @@ const match = {
     players: [],
     majorityRequired: 3,
     votes: { team1: 1, team2: 0, total: 1 },
-    myVote: 1 as const,
 };
 
 describe("MatchVoting", () => {
     beforeEach(() => {
         realtime.connected = true;
         services.getMatch.mockResolvedValue(match);
-        services.voteMatch.mockResolvedValue({ ...match, myVote: 2 });
+        services.voteMatch.mockResolvedValue(match);
     });
 
-    it("shows loading and then the user's current vote", async () => {
+    it("shows loading and explains that individual votes remain private", async () => {
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
         expect(screen.getByText(/carregando partida/i)).toBeVisible();
-        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
+        expect(await screen.findByText(/seu voto é privado/i)).toBeVisible();
         expect(screen.queryByText(/resolver resultado contestado/i)).not.toBeInTheDocument();
     });
 
@@ -52,7 +51,7 @@ describe("MatchVoting", () => {
     it("does not schedule match polling while realtime is connected", async () => {
         const intervals = vi.spyOn(globalThis, "setInterval");
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
-        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
+        expect(await screen.findByText(/seu voto é privado/i)).toBeVisible();
         expect(intervals).not.toHaveBeenCalledWith(expect.any(Function), 15_000);
     });
 
@@ -60,7 +59,7 @@ describe("MatchVoting", () => {
         realtime.connected = false;
         const intervals = vi.spyOn(globalThis, "setInterval");
         renderApp(<MatchVoting matchId="match-1" canResolve={false} />);
-        expect(await screen.findByText(/seu voto atual: time 1/i)).toBeVisible();
+        expect(await screen.findByText(/seu voto é privado/i)).toBeVisible();
         expect(intervals).toHaveBeenCalledWith(expect.any(Function), 15_000);
     });
 });
