@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { renderApp } from "@/test/renderApp";
-import { ApiError, mutationErrorMessage } from "@/services/api";
+import { ApiError, mutationErrorMessage } from "@/services/api-errors";
 import { DangerZone } from "./DangerZone";
 import { deleteLeague } from "../services/leagues.service";
 import { toast } from "sonner";

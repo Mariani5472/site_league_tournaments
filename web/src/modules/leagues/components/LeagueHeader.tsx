@@ -6,7 +6,7 @@ import { leaveLeague } from "../services/leagues.service";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Settings, Shield, Users } from "lucide-react";
-import { mutationErrorMessage } from "@/services/api";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     league: League;
     isAdmin: boolean;

@@ -2,7 +2,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderApp } from "@/test/renderApp";
-import { ApiError } from "@/services/api";
+import { ApiError } from "@/services/api-errors";
 import { LeagueRequests } from "./LeagueRequests";
 import { approveRequest, rejectRequest } from "../services/leagues.service";
 import { toast } from "sonner";

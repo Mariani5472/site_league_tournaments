@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { deleteLeague } from "../services/leagues.service";
-import { mutationErrorMessage } from "@/services/api";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     leagueId: string;
     leagueName: string;

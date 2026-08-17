@@ -3,7 +3,7 @@ import { approveRequest, rejectRequest } from "../services/leagues.service";
 import type { LeagueRequest } from "../types/request";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
-import { mutationErrorMessage } from "@/services/api";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     leagueId: string;
     requests: LeagueRequest[];

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/queryKeys";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { mutationErrorMessage } from "@/services/api";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     members: LeagueMember[];
     role: "owner" | "admin" | "player" | "spec" | null;
