@@ -9,6 +9,7 @@ import { useSocketConnected } from "@/hooks/useSocketConnected";
 import { formatNumber, t } from "@/i18n";
 import { labelResolution } from "@/i18n/labels";
 import { mutationErrorMessage } from "@/services/api-errors";
+import { Link } from "react-router-dom";
 export function MatchVoting({ matchId, canResolve }: { matchId: string; canResolve: boolean }) {
     const client = useQueryClient();
     const socketConnected = useSocketConnected();
@@ -54,15 +55,30 @@ export function MatchVoting({ matchId, canResolve }: { matchId: string; canResol
         <section className="rounded-xl border p-4 sm:p-6 space-y-4">
             <h2 className="text-xl font-semibold">{t("match.result")}</h2>
             {data.status === "finished" ? (
-                <p className="font-medium">
-                    {t("match.finished", {
-                        team: data.winnerTeamNumber ?? "—",
-                        resolution:
-                            data.resolutionType === "admin"
-                                ? labelResolution("admin")
-                                : t("enum.resolution.majority"),
-                    })}
-                </p>
+                <div className="space-y-4">
+                    <p className="font-medium">
+                        {t("match.finished", {
+                            team: data.winnerTeamNumber ?? "—",
+                            resolution:
+                                data.resolutionType === "admin"
+                                    ? labelResolution("admin")
+                                    : t("enum.resolution.majority"),
+                        })}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        <Button asChild>
+                            <Link to={`/matches/${data.id}`}>{t("match.viewDetails")}</Link>
+                        </Button>
+                        <Button asChild variant="outline">
+                            <Link to={`/leagues/${data.leagueId}#standings`}>
+                                {t("match.viewStandings")}
+                            </Link>
+                        </Button>
+                        <Button asChild variant="ghost">
+                            <Link to={`/leagues/${data.leagueId}`}>{t("match.backToLeague")}</Link>
+                        </Button>
+                    </div>
+                </div>
             ) : (
                 <>
                     <p className="text-sm text-muted-foreground">
@@ -72,17 +88,12 @@ export function MatchVoting({ matchId, canResolve }: { matchId: string; canResol
                             team2: formatNumber(needed2),
                         })}
                     </p>
-                    <p className="font-medium">
-                        {data.myVote
-                            ? t("match.myVote", { team: data.myVote })
-                            : t("match.notVoted")}
-                    </p>
+                    <p className="font-medium">{t("match.votePrivate")}</p>
                     <div className="flex flex-wrap gap-2">
                         {[1, 2].map(team => (
                             <Button
                                 key={team}
-                                variant={data.myVote === team ? "default" : "outline"}
-                                aria-pressed={data.myVote === team}
+                                variant="outline"
                                 disabled={vote.isPending}
                                 onClick={() => vote.mutate(team)}
                             >

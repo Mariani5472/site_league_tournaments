@@ -56,6 +56,11 @@ const LeagueSettingsPage = lazy(() =>
 const LobbyPage = lazy(() =>
     import("@/modules/lobbies/pages/LobbyPage").then(module => ({ default: module.LobbyPage }))
 );
+const MatchDetailPage = lazy(() =>
+    import("@/modules/matches/MatchDetailPage").then(module => ({
+        default: module.MatchDetailPage,
+    }))
+);
 
 export function RouteLoadingFallback() {
     return (
@@ -85,6 +90,7 @@ export function AppRoutes() {
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/players" element={<PlayersPage />} />
                         <Route path="/players/:userId" element={<PublicProfilePage />} />
+                        <Route path="/matches/:matchId" element={<MatchDetailPage />} />
                         <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
                         <Route path="/leagues/:leagueId/lobbies/:lobbyId" element={<LobbyPage />} />
                     </Route>

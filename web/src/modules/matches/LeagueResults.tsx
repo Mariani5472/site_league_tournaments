@@ -5,6 +5,7 @@ import { labelMatchStatus, labelResolution } from "@/i18n/labels";
 import { getMatches, getStandings } from "./services";
 import { uniqueItems } from "@/types/pagination";
 import { LoadMoreButton } from "@/components/LoadMoreButton";
+import { Link } from "react-router-dom";
 
 export function LeagueResults({ leagueId }: { leagueId: string }) {
     const matches = useInfiniteQuery({
@@ -20,7 +21,10 @@ export function LeagueResults({ leagueId }: { leagueId: string }) {
     });
     return (
         <>
-            <section className="rounded-xl border p-4 sm:p-6 space-y-4 overflow-hidden">
+            <section
+                id="standings"
+                className="rounded-xl border p-4 sm:p-6 space-y-4 overflow-hidden scroll-mt-6"
+            >
                 <h2 className="text-xl font-semibold">{t("match.standings")}</h2>
                 {standings.isLoading ? (
                     <p className="text-muted-foreground">{t("async.standings")}</p>
@@ -70,7 +74,11 @@ export function LeagueResults({ leagueId }: { leagueId: string }) {
                                 count: formatNumber(match.voteCount ?? 0),
                             });
                             return (
-                                <article key={match.id} className="rounded-lg border p-4 space-y-2">
+                                <Link
+                                    key={match.id}
+                                    to={`/matches/${match.id}`}
+                                    className="block rounded-lg border p-4 space-y-2 transition-colors hover:border-primary/40"
+                                >
                                     <div className="flex flex-wrap justify-between gap-2">
                                         <span className="font-medium">
                                             {formatDateTime(match.startedAt)}
@@ -111,7 +119,7 @@ export function LeagueResults({ leagueId }: { leagueId: string }) {
                                             {t("common.reason", { reason: match.resolutionReason })}
                                         </p>
                                     )}
-                                </article>
+                                </Link>
                             );
                         })}
                         <LoadMoreButton

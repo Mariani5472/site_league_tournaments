@@ -112,8 +112,9 @@ export function PlayerProfileView({
                 {profile.recentMatches.length ? (
                     <div className="space-y-3">
                         {profile.recentMatches.map(match => (
-                            <article
+                            <Link
                                 key={match.id}
+                                to={`/matches/${match.id}`}
                                 className="flex items-center gap-4 rounded-xl border bg-card p-4"
                             >
                                 <Trophy className="h-5 w-5 text-primary" />
@@ -134,7 +135,7 @@ export function PlayerProfileView({
                                         ? t("dashboard.result.win")
                                         : t("dashboard.result.loss")}
                                 </span>
-                            </article>
+                            </Link>
                         ))}
                     </div>
                 ) : (

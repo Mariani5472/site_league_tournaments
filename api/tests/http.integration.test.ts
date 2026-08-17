@@ -433,5 +433,16 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal((await request(`/matches/${match.id}/votes`, {
             method: "POST", userId: ids[0], body: { winnerTeam: 1 }
         })).status, 200);
+        assert.equal((await request(`/matches/${match.id}/votes`, {
+            method: "POST", userId: ids[1], body: { winnerTeam: 1 }
+        })).status, 200);
+        const detailText = await (await request(`/matches/${match.id}`, { userId: ids[0] })).text();
+        const detail = JSON.parse(detailText) as { status: string; winnerTeamNumber: number; votes: { team1: number; team2: number; total: number } };
+        assert.equal(detail.status, "finished");
+        assert.equal(detail.winnerTeamNumber, 1);
+        assert.deepEqual(detail.votes, { team1: 2, team2: 0, total: 2 });
+        assert.equal(detailText.includes("myVote"), false);
+        assert.equal(detailText.includes("voterId"), false);
+        assert.equal(detailText.includes("resolvedBy"), false);
     });
 });

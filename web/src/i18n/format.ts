@@ -1,4 +1,5 @@
 export const defaultLocale = "pt-BR" as const;
+export const defaultTimeZone = "America/Sao_Paulo" as const;
 
 export const formatNumber = (value: number) => new Intl.NumberFormat(defaultLocale).format(value);
 export const formatPercent = (value: number) =>
@@ -10,9 +11,13 @@ export const formatDateTime = (value: string | number | Date) =>
     new Intl.DateTimeFormat(defaultLocale, {
         dateStyle: "short",
         timeStyle: "short",
+        timeZone: defaultTimeZone,
     }).format(new Date(value));
 export const formatDate = (value: string | number | Date) =>
-    new Intl.DateTimeFormat(defaultLocale, { dateStyle: "long" }).format(new Date(value));
+    new Intl.DateTimeFormat(defaultLocale, {
+        dateStyle: "long",
+        timeZone: defaultTimeZone,
+    }).format(new Date(value));
 export const formatList = (values: string[]) =>
     new Intl.ListFormat(defaultLocale, {
         style: "long",
