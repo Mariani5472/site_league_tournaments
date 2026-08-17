@@ -246,6 +246,33 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         })).status, 201);
     });
 
+    test("members can leave through the unambiguous self endpoint", async () => {
+        const league = await createLeague();
+        const created = await request(`/leagues/${league.id}/members/${ids[1]}`, {
+            method: "POST", userId: ids[0], body: { role: "player" }
+        });
+        assert.equal(created.status, 201);
+
+        const leave = await request(`/leagues/${league.id}/members/me`, {
+            method: "DELETE", userId: ids[1]
+        });
+        assert.equal(leave.status, 204);
+        assert.equal(Number((await db.query(
+            "SELECT COUNT(*) AS total FROM league_members WHERE league_id = $1 AND user_id = $2",
+            [league.id, ids[1]]
+        )).rows[0].total), 0);
+
+        assert.equal((await request(`/leagues/${league.id}/members/me`, {
+            method: "DELETE", userId: ids[1]
+        })).status, 403);
+        assert.equal((await request(`/leagues/${randomUUID()}/members/me`, {
+            method: "DELETE", userId: ids[1]
+        })).status, 404);
+        assert.equal((await request(`/leagues/${league.id}/members/me`, {
+            method: "DELETE", userId: ids[0]
+        })).status, 409);
+    });
+
     test("join requests cover creation, duplicate conflict and privileged listing", async () => {
         const league = await createLeague();
         assert.equal((await request(`/leagues/${league.id}/requests`, {

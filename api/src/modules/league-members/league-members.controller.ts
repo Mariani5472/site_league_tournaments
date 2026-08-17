@@ -30,4 +30,10 @@ export class LeagueMembersController {
         await this.leagueMembersService.remove(requesterId, leagueId, memberId);
         return response.status(204).send();
     }
+    async leave(request: Request, response: Response) {
+        const requesterId = request.user.id;
+        const { leagueId } = listLeagueMembersParamsSchema.parse(request.params);
+        await this.leagueMembersService.removeSelf(requesterId, leagueId);
+        return response.status(204).send();
+    }
 }
