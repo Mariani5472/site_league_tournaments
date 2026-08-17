@@ -7,4 +7,5 @@ export type League = {
     playerCount: number;
     maxPlayers: number;
     createdAt: string;
+    currentUserRole: "owner" | "admin" | "player" | "spec" | null;
 };

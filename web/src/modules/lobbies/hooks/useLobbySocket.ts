@@ -44,11 +44,15 @@ export function useLobbySocket(leagueId: string, lobbyId: string) {
         socket.on("connect", joinLobby);
         socket.on("disconnect", handleDisconnect);
         socket.on(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+        socket.on(SOCKET_EVENTS.MATCH_STARTED, handleLobbyUpdate);
+        socket.on(SOCKET_EVENTS.MATCH_FINISHED, handleLobbyUpdate);
         socket.on(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
         return () => {
             socket.off("connect", joinLobby);
             socket.off("disconnect", handleDisconnect);
             socket.off(SOCKET_EVENTS.LOBBY_UPDATE, handleLobbyUpdate);
+            socket.off(SOCKET_EVENTS.MATCH_STARTED, handleLobbyUpdate);
+            socket.off(SOCKET_EVENTS.MATCH_FINISHED, handleLobbyUpdate);
             socket.off(SOCKET_EVENTS.LOBBY_DELETE, handleLobbyDelete);
             socket.emit(SOCKET_EVENTS.LOBBY_LEAVE, lobbyId);
         };

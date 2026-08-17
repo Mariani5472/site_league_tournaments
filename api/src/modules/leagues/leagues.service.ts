@@ -49,12 +49,12 @@ export class LeaguesService {
         const league = await this.leaguesRepository.findById(leagueId);
         if (!league)
             throw new AppError("League not found", 404);
+        const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
         if (league.visibility === "private") {
-            const member = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId);
             if (!member)
                 throw new AppError("League not found", 404);
         }
-        return league;
+        return { ...league, currentUserRole: member?.role ?? null };
     }
     async create(userId: string, params: CreateLeagueDTO) {
         if (!userId) {
@@ -81,6 +81,7 @@ export class LeaguesService {
         if (!leagueId)
             throw new AppError("League not found", 404);
         const client = await db.connect();
+        let member;
         try {
             await client.query("BEGIN");
             const options = { executor: client, lock: "update" } satisfies FindOptions;
@@ -92,15 +93,14 @@ export class LeaguesService {
             const existing = await this.leagueMembersRepository.findByLeagueAndUser(leagueId, userId, options);
             if (existing) {
                 await client.query("COMMIT");
-                return existing;
+                member = existing;
+            } else {
+                const count = await this.leagueMembersRepository.count(leagueId, options);
+                if (count >= league.maxPlayers)
+                    throw new AppError("League is full", 409);
+                member = await this.leagueMembersRepository.create(leagueId, userId, { role: "player" }, options);
+                await client.query("COMMIT");
             }
-            const count = await this.leagueMembersRepository.count(leagueId, options);
-            if (count >= league.maxPlayers)
-                throw new AppError("League is full", 409);
-            const member = await this.leagueMembersRepository.create(leagueId, userId, { role: "player" }, options);
-            await client.query("COMMIT");
-            SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, { leagueId });
-            return member;
         }
         catch (error) {
             await client.query("ROLLBACK");
@@ -109,6 +109,9 @@ export class LeaguesService {
         finally {
             client.release();
         }
+        await SocketAccess.grantMembership(userId, leagueId);
+        SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, { leagueId });
+        return member;
     }
     async update(leagueId: string | undefined, userId: string, params: {
         name?: string;

@@ -7,6 +7,7 @@ import { SocketEmitter } from "../../websocket/emitter";
 import { SOCKET_EVENTS } from "../../websocket/socket-events";
 import { db } from "../../database/connection";
 import { FindOptions } from "../../@types/shared/FindOptions";
+import { SocketAccess } from "../../websocket/socket-access";
 export class LeagueJoinRequestsService {
     private readonly leagueJoinRequestsRepository = new LeagueJoinRequestsRepository();
     private readonly leagueMembersRepository = new LeagueMembersRepository();
@@ -101,6 +102,12 @@ export class LeagueJoinRequestsService {
         }
         finally {
             client.release();
+        }
+        if (params.status === "approved") {
+            await SocketAccess.grantMembership(updatedRequest.userId, leagueId);
+            SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_MEMBERS_UPDATE, {
+                leagueId,
+            });
         }
         SocketEmitter.emitToLeague(leagueId, SOCKET_EVENTS.LEAGUE_REQUESTS_UPDATE, {
             leagueId

@@ -6,7 +6,13 @@ import { LeaguePage } from "./LeaguePage";
 
 const state = vi.hoisted(() => ({
     league: {
-        data: { id: "league-1", name: "Test league", playerCount: 1, maxPlayers: 10 },
+        data: {
+            id: "league-1",
+            name: "Test league",
+            playerCount: 1,
+            maxPlayers: 10,
+            currentUserRole: "player" as "owner" | "admin" | "player" | "spec" | null,
+        },
         isLoading: false,
         isError: false,
         refetch: vi.fn(),
@@ -21,7 +27,6 @@ vi.mock("../hooks/useLeague", () => ({ useLeague: () => state.league }));
 vi.mock("../hooks/useLeagueMembers", () => ({ useLeagueMembers: () => state.members }));
 vi.mock("../hooks/useLeagueLobbies", () => ({ useLeagueLobbies: () => state.lobbies }));
 vi.mock("../hooks/useLeagueRequests", () => ({ useLeagueRequests: () => state.requests }));
-vi.mock("../hooks/useLeagueRole", () => ({ useLeagueRole: () => state.role }));
 vi.mock("../hooks/useLeagueSocket", () => ({ useLeagueSocket: vi.fn() }));
 vi.mock("../components/LeagueHeader", () => ({ LeagueHeader: () => <h1>Test league</h1> }));
 vi.mock("../components/LeagueMembers", () => ({
@@ -46,7 +51,13 @@ function page() {
 describe("LeaguePage", () => {
     beforeEach(() => {
         Object.assign(state.league, {
-            data: { id: "league-1", name: "Test league", playerCount: 1, maxPlayers: 10 },
+            data: {
+                id: "league-1",
+                name: "Test league",
+                playerCount: 1,
+                maxPlayers: 10,
+                currentUserRole: "player",
+            },
             isLoading: false,
             isError: false,
         });
@@ -89,8 +100,17 @@ describe("LeaguePage", () => {
 
     it("shows private join requests only to league administrators", () => {
         Object.assign(state.role, { role: "admin", isAdmin: true, isOwner: false });
+        state.league.data.currentUserRole = "admin";
         state.requests.data = [{ id: "request-1" }];
         renderApp(page(), { route: "/leagues/league-1" });
         expect(screen.getByText("Requests: 1")).toBeVisible();
+    });
+
+    it("shows a membership gate instead of protected collection errors", () => {
+        state.league.data.currentUserRole = null;
+        renderApp(page(), { route: "/leagues/league-1" });
+        expect(screen.getByText(/entre na liga para visualizar/i)).toBeVisible();
+        expect(screen.queryByText(/Lobbies:/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Members:/)).not.toBeInTheDocument();
     });
 });

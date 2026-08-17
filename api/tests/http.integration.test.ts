@@ -168,7 +168,9 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         const league = await createLeague(ids[0], { maxPlayers: 8 });
         const response = await request(`/leagues/${league.id}`, { userId: ids[0] });
         assert.equal(response.status, 200);
-        assert.equal((await response.json() as { playerCount: number }).playerCount, 1);
+        const body = await response.json() as { playerCount: number; currentUserRole: string };
+        assert.equal(body.playerCount, 1);
+        assert.equal(body.currentUserRole, "owner");
     });
 
     test("auth sync and profile expose their successful contracts", async () => {

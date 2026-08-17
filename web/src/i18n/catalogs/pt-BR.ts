@@ -177,6 +177,9 @@ export const ptBR = {
     "league.nextAction": "Próxima ação",
     "league.nextActionLobby": "Entrar ou acompanhar o lobby ativo",
     "league.nextActionCreateLobby": "Criar ou aguardar um novo lobby",
+    "league.memberOnlyTitle": "Conteúdo disponível para membros",
+    "league.memberOnlyDescription":
+        "Entre na liga para visualizar classificação, partidas, lobbies e membros.",
     "league.settings": "Configurações",
     "league.leave": "Sair da liga",
     "league.leaving": "Saindo…",

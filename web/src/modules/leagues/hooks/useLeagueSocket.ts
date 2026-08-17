@@ -8,9 +8,10 @@ type LeagueEventPayload = {
     matchId?: string;
 };
 type JoinAck = { ok: true } | { ok: false; error: { code: string; message: string } };
-export function useLeagueSocket(leagueId: string) {
+export function useLeagueSocket(leagueId: string, enabled = true) {
     const queryClient = useQueryClient();
     useEffect(() => {
+        if (!enabled) return;
         const reconcileLeague = () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.detail(leagueId) });
             queryClient.invalidateQueries({ queryKey: queryKeys.leagues.members(leagueId) });
@@ -77,5 +78,5 @@ export function useLeagueSocket(leagueId: string) {
             socket.off(SOCKET_EVENTS.MATCH_FINISHED, handleMatchUpdate);
             socket.emit(SOCKET_EVENTS.LEAGUE_LEAVE, leagueId);
         };
-    }, [leagueId, queryClient]);
+    }, [enabled, leagueId, queryClient]);
 }

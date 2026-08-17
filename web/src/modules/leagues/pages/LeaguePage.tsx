@@ -10,7 +10,6 @@ import { useLeague } from "../hooks/useLeague";
 import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { useLeagueMembers } from "../hooks/useLeagueMembers";
 import { useLeagueRequests } from "../hooks/useLeagueRequests";
-import { useLeagueRole } from "../hooks/useLeagueRole";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
 
 const tabs = ["overview", "standings", "matches", "lobbies", "members"] as const;
@@ -22,14 +21,31 @@ export function LeaguePage() {
     const requestedTab = searchParams.get("tab");
     const tab: Tab = tabs.includes(requestedTab as Tab) ? (requestedTab as Tab) : "overview";
     const league = useLeague(id);
-    useLeagueSocket(id);
-    const members = useLeagueMembers(id);
-    const role = useLeagueRole(members.data ?? []);
-    const lobbies = useLeagueLobbies(id);
-    const requests = useLeagueRequests(id, role.isAdmin || role.isOwner);
+    const currentRole = league.data?.currentUserRole ?? null;
+    const isMember = Boolean(currentRole);
+    const isOwner = currentRole === "owner";
+    const isAdmin = currentRole === "owner" || currentRole === "admin";
+    useLeagueSocket(id, isMember);
+    const members = useLeagueMembers(id, isMember);
+    const lobbies = useLeagueLobbies(id, isMember);
+    const requests = useLeagueRequests(id, isAdmin);
     if (league.isLoading) return <div>{t("async.league")}</div>;
     if (league.isError || !league.data)
         return <ErrorState message={t("league.loadError")} retry={league.refetch} />;
+
+    if (!isMember) {
+        return (
+            <div className="space-y-6">
+                <LeagueHeader league={league.data} isAdmin={false} isOwner={false} role={null} />
+                <section className="rounded-xl border border-dashed bg-card p-8 text-center">
+                    <h2 className="text-xl font-semibold">{t("league.memberOnlyTitle")}</h2>
+                    <p className="mt-2 text-muted-foreground">
+                        {t("league.memberOnlyDescription")}
+                    </p>
+                </section>
+            </div>
+        );
+    }
 
     const tabHref = (nextTab: Tab) => {
         const next = new URLSearchParams(searchParams);
@@ -46,9 +62,9 @@ export function LeaguePage() {
         <div className="space-y-6">
             <LeagueHeader
                 league={league.data}
-                isAdmin={role.isAdmin}
-                isOwner={role.isOwner}
-                role={role.role}
+                isAdmin={isAdmin}
+                isOwner={isOwner}
+                role={currentRole}
             />
             <nav
                 aria-label={t("league.navigation")}
@@ -73,7 +89,9 @@ export function LeaguePage() {
                     <section className="grid gap-3 sm:grid-cols-3">
                         <Summary
                             label={t("league.yourPosition")}
-                            value={role.role ? t(`enum.role.${role.role}`) : t("league.notMember")}
+                            value={
+                                currentRole ? t(`enum.role.${currentRole}`) : t("league.notMember")
+                            }
                         />
                         <Summary
                             label={t("league.membersSummary")}
@@ -81,7 +99,7 @@ export function LeaguePage() {
                         />
                         <Summary label={t("league.nextAction")} value={nextAction} />
                     </section>
-                    {role.isAdmin &&
+                    {isAdmin &&
                         (requests.isLoading ? (
                             <p>{t("async.requests")}</p>
                         ) : requests.isError ? (
@@ -113,7 +131,7 @@ export function LeaguePage() {
                     <LeagueLobbySection
                         leagueId={id}
                         lobbies={lobbies.data ?? []}
-                        isAdmin={role.isAdmin}
+                        isAdmin={isAdmin}
                     />
                 ))}
             {tab === "members" &&
@@ -126,8 +144,8 @@ export function LeaguePage() {
                         <LeagueMembers
                             leagueId={id}
                             members={members.data ?? []}
-                            role={role.role}
-                            isAdmin={role.isAdmin}
+                            role={currentRole}
+                            isAdmin={isAdmin}
                         />
                         <LoadMoreButton
                             hasNextPage={members.hasNextPage}
