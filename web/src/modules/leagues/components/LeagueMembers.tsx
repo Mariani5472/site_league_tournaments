@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { queryKeys } from "@/lib/queryKeys";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { mutationErrorMessage } from "@/services/api-errors";
 type Props = {
     members: LeagueMember[];
     role: "owner" | "admin" | "player" | "spec" | null;
@@ -25,7 +26,8 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                 queryKey: queryKeys.leagues.members(leagueId)
             });
             toast.success("Role updated");
-        }
+        },
+        onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
     const kickMutation = useMutation({
         mutationFn: (memberId: string) => kickMember(leagueId, memberId),
@@ -34,7 +36,8 @@ export function LeagueMembers({ members, role, isAdmin, leagueId }: Props) {
                 queryKey: queryKeys.leagues.members(leagueId)
             });
             toast.success("Member removed");
-        }
+        },
+        onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
     return (<div className="
         rounded-xl

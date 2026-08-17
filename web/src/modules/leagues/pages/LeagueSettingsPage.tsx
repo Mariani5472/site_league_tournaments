@@ -172,6 +172,6 @@ export function LeagueSettingsPage() {
         </Button>
       </form>
 
-      {roleData.isOwner && (<DangerZone leagueId={leagueId}/>)}
+      {roleData.isOwner && (<DangerZone leagueId={leagueId} leagueName={league.name}/>)}
     </div>);
 }
