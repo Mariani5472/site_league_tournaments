@@ -17,7 +17,7 @@ export function LeagueSettingsPage() {
     const { id } = useParams();
     const leagueId = id!;
     const { data: league, isLoading } = useLeague(leagueId);
-    const { data: members } = useLeagueMembers(leagueId);
+    const { data: members, isLoading: areMembersLoading } = useLeagueMembers(leagueId);
     const roleData = useLeagueRole(members || []);
     const mutation = useUpdateLeague();
     const { register, handleSubmit, setValue, reset, control, } = useForm<LeagueSettingsForm>({
@@ -45,7 +45,8 @@ export function LeagueSettingsPage() {
             maxPlayers: league.maxPlayers
         });
     }, [league, reset]);
-    if (!isLoading && !roleData.isAdmin) {
+    const isAuthorizationLoading = isLoading || areMembersLoading;
+    if (!isAuthorizationLoading && !roleData.isAdmin) {
         return (<Navigate to={`/leagues/${leagueId}`}/>);
     }
     function onSubmit(data: LeagueSettingsForm) {
@@ -58,7 +59,7 @@ export function LeagueSettingsPage() {
             }
         });
     }
-    if (isLoading || !league) {
+    if (isAuthorizationLoading || !league) {
         return (<div>
         Loading...
       </div>);

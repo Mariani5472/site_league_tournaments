@@ -158,6 +158,12 @@ export class LeagueMembersService {
         return updatedMember;
     }
     async remove(requesterId: string, leagueId: string, memberId: string): Promise<void> {
+        return this.removeMember(requesterId, leagueId, memberId);
+    }
+    async removeSelf(requesterId: string, leagueId: string): Promise<void> {
+        return this.removeMember(requesterId, leagueId);
+    }
+    private async removeMember(requesterId: string, leagueId: string, memberId?: string): Promise<void> {
         const client = await db.connect();
         let removedUserId: string;
         try {
@@ -173,7 +179,9 @@ export class LeagueMembersService {
             if (!requester) {
                 throw new AppError("Requester is not a league member", 403);
             }
-            const member = await this.leagueMembersRepository.findById(memberId, lockForUpdate);
+            const member = memberId
+                ? await this.leagueMembersRepository.findById(memberId, lockForUpdate)
+                : requester;
             if (!member || member.leagueId !== leagueId) {
                 throw new AppError("League member not found", 404);
             }

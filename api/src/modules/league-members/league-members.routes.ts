@@ -4,6 +4,7 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 const leagueMembersRoutes = Router({ mergeParams: true });
 const leagueMembersController = new LeagueMembersController();
 leagueMembersRoutes.get("/", authMiddleware, leagueMembersController.list.bind(leagueMembersController));
+leagueMembersRoutes.delete("/me", authMiddleware, leagueMembersController.leave.bind(leagueMembersController));
 leagueMembersRoutes.post("/:memberId", authMiddleware, leagueMembersController.create.bind(leagueMembersController));
 leagueMembersRoutes.patch("/:memberId", authMiddleware, leagueMembersController.update.bind(leagueMembersController));
 leagueMembersRoutes.delete("/:memberId", authMiddleware, leagueMembersController.remove.bind(leagueMembersController));

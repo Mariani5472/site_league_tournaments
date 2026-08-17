@@ -5,7 +5,6 @@ import { useMutation } from "@tanstack/react-query";
 import { deleteLeague, leaveLeague } from "../services/leagues.service";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, Settings, Shield, Trash2, Users } from "lucide-react";
 type Props = {
     league: League;
@@ -15,9 +14,8 @@ type Props = {
 };
 export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
     const navigate = useNavigate();
-    const { user } = useAuth();
     const leaveMutation = useMutation({
-        mutationFn: () => leaveLeague(league.id, user?.id),
+        mutationFn: () => leaveLeague(league.id),
         onSuccess: () => {
             toast.success("You left the league");
             navigate("/leagues");
