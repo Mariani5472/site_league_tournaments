@@ -3,7 +3,8 @@ import { ArrowLeft, CalendarDays, Trophy, Vote } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { formatDateTime, formatNumber, t } from "@/i18n";
-import { labelMatchStatus, labelResolution } from "@/i18n/labels";
+import { labelResolution } from "@/i18n/labels";
+import { MatchStatusBadge } from "@/components/SemanticBadge";
 import { queryKeys } from "@/lib/queryKeys";
 import { getMatch } from "./services";
 
@@ -43,9 +44,7 @@ export function MatchDetailPage() {
                             )}
                         </div>
                     </div>
-                    <span className="rounded-full bg-muted px-3 py-1 text-sm">
-                        {labelMatchStatus(data.status)}
-                    </span>
+                    <MatchStatusBadge status={data.status} />
                 </div>
             </header>
             <section className="grid gap-4 md:grid-cols-2">

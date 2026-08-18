@@ -1,7 +1,17 @@
-import { ArrowRight, CheckCircle2, ShieldCheck, Swords, Trophy, Users } from "lucide-react";
+import {
+    ArrowRight,
+    CheckCircle2,
+    Code2,
+    ShieldCheck,
+    Swords,
+    Trophy,
+    Users,
+    Vote,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { t } from "@/i18n";
+import { ThemeToggle } from "@/components/ThemeToggle";
 const features = [
     {
         icon: Users,
@@ -19,6 +29,14 @@ const features = [
         text: t("landing.feature.ranking.text"),
     },
 ];
+const productLoop = [
+    [Users, "landing.loop.league"],
+    [Swords, "landing.loop.lobby"],
+    [CheckCircle2, "landing.loop.ready"],
+    [Trophy, "landing.loop.match"],
+    [Vote, "landing.loop.vote"],
+    [Trophy, "landing.loop.standings"],
+] as const;
 export function LandingPage() {
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -31,6 +49,7 @@ export function LandingPage() {
                         ligas
                     </Link>
                     <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <Button variant="ghost" asChild>
                             <Link to="/login">{t("auth.login")}</Link>
                         </Button>
@@ -73,28 +92,75 @@ export function LandingPage() {
                                     t("landing.benefit.realtime"),
                                 ].map(item => (
                                     <span key={item} className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                        <CheckCircle2 className="h-4 w-4 text-success" />
                                         {item}
                                     </span>
                                 ))}
                             </div>
                         </div>
                         <div className="rounded-3xl border bg-card p-5 shadow-xl shadow-primary/10">
-                            <div className="rounded-2xl bg-primary p-6 text-primary-foreground">
-                                <p className="text-sm opacity-80">{t("landing.nextMatch")}</p>
-                                <h2 className="mt-2 text-2xl font-bold text-white">
-                                    Liga do Dev 5x5
-                                </h2>
-                                <div className="mt-8 grid grid-cols-2 gap-3">
-                                    {[1, 2].map(team => (
-                                        <div key={team} className="rounded-xl bg-white/10 p-4">
-                                            <p className="text-sm opacity-80">
-                                                {t("common.team", { number: team })}
-                                            </p>
-                                            <p className="mt-1 text-2xl font-bold">5</p>
-                                        </div>
-                                    ))}
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                {t("landing.demoLabel")}
+                            </p>
+                            <div className="rounded-2xl border bg-muted/35 p-5 sm:p-6">
+                                <div className="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <h2 className="text-2xl font-bold">
+                                            {t("landing.lobbyDemo.title")}
+                                        </h2>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {t("landing.lobbyDemo.description")}
+                                        </p>
+                                    </div>
+                                    <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs font-medium text-warning-foreground dark:text-warning">
+                                        {t("landing.lobbyDemo.gathering")}
+                                    </span>
                                 </div>
+
+                                <div className="mt-6">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="flex items-center gap-2 font-medium">
+                                            <Users className="h-4 w-4 text-primary" />
+                                            {t("landing.lobbyDemo.players")}
+                                        </span>
+                                        <span className="font-semibold">8 / 10</span>
+                                    </div>
+                                    <div
+                                        className="mt-2 h-2 overflow-hidden rounded-full bg-secondary"
+                                        role="progressbar"
+                                        aria-label={t("landing.lobbyDemo.playersProgress")}
+                                        aria-valuemin={0}
+                                        aria-valuemax={10}
+                                        aria-valuenow={8}
+                                    >
+                                        <div className="h-full w-4/5 rounded-full bg-primary" />
+                                    </div>
+                                </div>
+
+                                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                                    <div className="rounded-xl border bg-card p-4">
+                                        <Swords className="h-5 w-5 text-primary" />
+                                        <p className="mt-2 font-medium">
+                                            {t("landing.lobbyDemo.teams")}
+                                        </p>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t("landing.lobbyDemo.teamsDescription")}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-xl border bg-card p-4">
+                                        <CheckCircle2 className="h-5 w-5 text-success" />
+                                        <p className="mt-2 font-medium">
+                                            {t("landing.lobbyDemo.ready")}
+                                        </p>
+                                        <p className="mt-1 text-xs text-muted-foreground">
+                                            {t("landing.lobbyDemo.readyDescription")}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p className="mt-5 border-t pt-4 text-sm text-muted-foreground">
+                                    {t("landing.lobbyDemo.nextStep")}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -121,7 +187,63 @@ export function LandingPage() {
                         ))}
                     </div>
                 </section>
+                <section className="border-y bg-muted/35">
+                    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+                        <p className="font-semibold text-primary">{t("landing.loop.eyebrow")}</p>
+                        <h2 className="mt-2 text-3xl font-bold">{t("landing.loop.title")}</h2>
+                        <p className="mt-3 max-w-2xl text-muted-foreground">
+                            {t("landing.loop.description")}
+                        </p>
+                        <ol className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                            {productLoop.map(([Icon, key], index) => (
+                                <li key={key} className="rounded-xl border bg-card p-4">
+                                    <span className="text-xs font-bold text-primary">
+                                        {index + 1}
+                                    </span>
+                                    <Icon
+                                        className="mt-3 h-5 w-5 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                    <p className="mt-2 font-medium">{t(key)}</p>
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                </section>
+                <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
+                    <h2 className="text-3xl font-bold">{t("landing.cta.title")}</h2>
+                    <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+                        {t("landing.cta.description")}
+                    </p>
+                    <Button className="mt-7" size="lg" asChild>
+                        <Link to="/register">
+                            {t("landing.cta.button")}
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </section>
             </main>
+            <footer className="border-t bg-card">
+                <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div>
+                        <p className="font-bold">FPL_LOL</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t("landing.footer.description")}
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            {t("landing.footer.copyright", { year: new Date().getFullYear() })}
+                        </p>
+                    </div>
+                    <a
+                        className="inline-flex items-center gap-2 text-sm font-medium hover:text-primary"
+                        href="https://github.com/Mariani5472/site_league_tournaments"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <Code2 className="h-4 w-4" /> GitHub
+                    </a>
+                </div>
+            </footer>
         </div>
     );
 }

@@ -37,7 +37,7 @@ export function PlayerCard({ player }: Props) {
             {player.isReady && (
                 <CheckCircle2
                     className="
-            text-green-500
+            text-success
           "
                 />
             )}
