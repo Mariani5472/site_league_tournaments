@@ -14,6 +14,7 @@ import { CreateLeagueDialog } from "@/modules/leagues/components/CreateLeagueDia
 import { formatDateTime, formatNumber, t } from "@/i18n";
 import { useDashboard } from "../useDashboard";
 import type { DashboardData } from "../types";
+import { FirstLoginOnboarding } from "../components/FirstLoginOnboarding";
 
 const actionIcon = { lobby_waiting: Clock3, vote_pending: Swords, admin_requests: Inbox } as const;
 function actionText(action: DashboardData["actions"][number]) {
@@ -45,6 +46,7 @@ export function DashboardPage() {
     const empty = summary.leagueCount === 0;
     return (
         <div className="space-y-8">
+            <FirstLoginOnboarding />
             <section className="relative overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-9">
                 <div className="absolute -right-12 -top-20 h-56 w-56 rounded-full bg-white/10" />
                 <div className="relative flex flex-col gap-7 md:flex-row md:items-end md:justify-between">

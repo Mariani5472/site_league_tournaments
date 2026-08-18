@@ -107,9 +107,23 @@ export const ptBR = {
     "landing.benefit.riot": "Sem conta Riot obrigatória",
     "landing.benefit.vote": "Resultado por votação",
     "landing.benefit.realtime": "Atualização em tempo real",
-    "landing.nextMatch": "Próxima partida",
+    "landing.demoLabel": "Demonstração da experiência",
+    "landing.lobbyDemo.title": "Como funciona um lobby",
+    "landing.lobbyDemo.description":
+        "Um espaço temporário para reunir jogadores e preparar a próxima partida.",
+    "landing.lobbyDemo.gathering": "Reunindo jogadores",
+    "landing.lobbyDemo.players": "Jogadores no lobby",
+    "landing.lobbyDemo.playersProgress": "8 de 10 jogadores no lobby",
+    "landing.lobbyDemo.teams": "Formação dos times",
+    "landing.lobbyDemo.teamsDescription":
+        "Com o lobby completo, os jogadores escolhem como os dois times serão formados.",
+    "landing.lobbyDemo.ready": "Confirmação de presença",
+    "landing.lobbyDemo.readyDescription":
+        "Cada participante marca ready para confirmar que está disponível para começar.",
+    "landing.lobbyDemo.nextStep":
+        "Quando os 10 jogadores estiverem presentes, os times definidos e todos prontos, a partida pode começar.",
     "landing.flow": "Tudo no mesmo fluxo",
-    "landing.flowTitle": "Do convite ao placar final",
+    "landing.flowTitle": "Da liga ao placar final",
     "landing.feature.leagues.title": "Ligas organizadas",
     "landing.feature.leagues.text":
         "Reúna jogadores, defina cargos e controle entradas em um só lugar.",
@@ -119,6 +133,30 @@ export const ptBR = {
     "landing.feature.ranking.title": "Classificação viva",
     "landing.feature.ranking.text":
         "Acompanhe vitórias, derrotas e histórico calculados automaticamente.",
+    "landing.loop.eyebrow": "Como funciona",
+    "landing.loop.title": "Uma competição completa, passo a passo",
+    "landing.loop.description":
+        "Cada etapa mantém os jogadores orientados e transforma partidas entre amigos em histórico confiável.",
+    "landing.loop.league": "Entre ou crie uma liga",
+    "landing.loop.lobby": "Reúna o lobby",
+    "landing.loop.ready": "Confirme o ready",
+    "landing.loop.match": "Jogue a partida",
+    "landing.loop.vote": "Registre o resultado",
+    "landing.loop.standings": "Acompanhe a classificação",
+    "landing.cta.title": "Sua próxima liga começa aqui",
+    "landing.cta.description":
+        "Crie sua conta, encontre outros jogadores e organize a próxima partida em poucos passos.",
+    "landing.cta.button": "Criar minha conta",
+    "landing.footer.description": "Ligas, lobbies e partidas competitivas entre amigos.",
+    "landing.footer.copyright": "© {year} Vini Mariani. Projeto pessoal.",
+    "onboarding.eyebrow": "Primeiros passos",
+    "onboarding.title": "Prepare sua experiência na plataforma",
+    "onboarding.description":
+        "Escolha uma ação para começar. Você pode voltar às demais quando quiser.",
+    "onboarding.profile": "Completar perfil",
+    "onboarding.createLeague": "Criar uma liga",
+    "onboarding.discoverLeague": "Descobrir uma liga",
+    "onboarding.dismiss": "Fechar primeiros passos",
     "dashboard.hub": "Central de competição",
     "dashboard.title": "Pronto para a próxima partida?",
     "dashboard.description": "Acesse uma liga existente ou crie uma nova comunidade para começar.",
