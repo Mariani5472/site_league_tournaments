@@ -1,6 +1,6 @@
 import { Laptop, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme, type ThemePreference } from "@/providers/ThemeProvider";
+import { useTheme, type ThemePreference } from "@/providers/theme-context";
 import { t } from "@/i18n";
 
 const order: ThemePreference[] = ["light", "dark", "system"];
