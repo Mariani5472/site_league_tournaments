@@ -49,10 +49,18 @@ export function ForgotPasswordPage() {
                             id="reset-email"
                             type="email"
                             autoComplete="email"
+                            aria-invalid={Boolean(errors.email)}
+                            aria-describedby={errors.email ? "reset-email-error" : undefined}
                             {...register("email", { required: t("auth.emailRequired") })}
                         />
                         {errors.email && (
-                            <p className="text-sm text-destructive">{errors.email.message}</p>
+                            <p
+                                id="reset-email-error"
+                                className="text-sm text-destructive"
+                                role="alert"
+                            >
+                                {errors.email.message}
+                            </p>
                         )}
                     </div>
                     {error && (

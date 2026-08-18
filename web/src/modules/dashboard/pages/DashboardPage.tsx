@@ -15,6 +15,9 @@ import { formatDateTime, formatNumber, t } from "@/i18n";
 import { useDashboard } from "../useDashboard";
 import type { DashboardData } from "../types";
 import { FirstLoginOnboarding } from "../components/FirstLoginOnboarding";
+import { PageSkeleton } from "@/components/async/PageSkeleton";
+import { InlineError } from "@/components/async/InlineError";
+import { BackgroundRefresh } from "@/components/async/BackgroundRefresh";
 
 const actionIcon = { lobby_waiting: Clock3, vote_pending: Swords, admin_requests: Inbox } as const;
 function actionText(action: DashboardData["actions"][number]) {
@@ -30,22 +33,14 @@ function actionText(action: DashboardData["actions"][number]) {
 
 export function DashboardPage() {
     const dashboard = useDashboard();
-    if (dashboard.isLoading) return <p>{t("dashboard.loading")}</p>;
+    if (dashboard.isLoading) return <PageSkeleton rows={4} />;
     if (dashboard.isError || !dashboard.data)
-        return (
-            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
-                <p className="text-destructive" role="alert">
-                    {t("dashboard.loadError")}
-                </p>
-                <Button className="mt-3" variant="outline" onClick={() => dashboard.refetch()}>
-                    {t("common.retry")}
-                </Button>
-            </div>
-        );
+        return <InlineError message={t("dashboard.loadError")} retry={dashboard.refetch} />;
     const { summary, actions, recentLeagues, recentMatches } = dashboard.data;
     const empty = summary.leagueCount === 0;
     return (
         <div className="space-y-8">
+            <BackgroundRefresh active={dashboard.isFetching && !dashboard.isLoading} />
             <FirstLoginOnboarding />
             <section className="relative overflow-hidden rounded-3xl bg-primary p-6 text-primary-foreground shadow-lg shadow-primary/15 sm:p-9">
                 <div className="absolute -right-12 -top-20 h-56 w-56 rounded-full bg-white/10" />

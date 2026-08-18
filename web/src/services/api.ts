@@ -19,6 +19,10 @@ api.interceptors.response.use(
         if (axios.isAxiosError(error)) {
             const message = error.response?.data?.message;
             const code = error.response?.data?.code;
+            if (error.response?.status === 401 && window.location.pathname !== "/session-expired") {
+                window.dispatchEvent(new Event("auth:session-expired"));
+                window.location.assign("/session-expired");
+            }
             return Promise.reject(
                 new ApiError(
                     typeof message === "string" ? message : "The request could not be completed.",

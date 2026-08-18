@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Search, Trophy, UserRound } from "lucide-react";
 import { t } from "@/i18n";
@@ -12,8 +13,14 @@ interface SidebarProps {
     onClose: () => void;
 }
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (isOpen) closeButtonRef.current?.focus();
+    }, [isOpen]);
     return (
         <aside
+            id="application-sidebar"
+            aria-label={t("sidebar.navigation")}
             className={`
         fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:relative lg:flex lg:h-full lg:z-0
@@ -28,6 +35,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <span>ligas</span>
                 </NavLink>
                 <button
+                    ref={closeButtonRef}
                     onClick={onClose}
                     className="rounded-md p-1 hover:bg-muted lg:hidden"
                     aria-label={t("sidebar.close")}

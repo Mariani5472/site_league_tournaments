@@ -121,19 +121,19 @@ export function LeagueSettingsPage() {
         "
             >
                 <div>
-                    <label>{t("league.name")}</label>
+                    <label htmlFor="league-name">{t("league.name")}</label>
 
-                    <Input {...register("name")} />
+                    <Input id="league-name" {...register("name")} />
                 </div>
 
                 <div>
-                    <label>{t("league.descriptionLabel")}</label>
+                    <label htmlFor="league-description">{t("league.descriptionLabel")}</label>
 
-                    <Input {...register("description")} />
+                    <Input id="league-description" {...register("description")} />
                 </div>
 
                 <div>
-                    <label>{t("league.visibility")}</label>
+                    <label htmlFor="league-visibility">{t("league.visibility")}</label>
 
                     <Select
                         value={visibilityValue || ""}
@@ -141,7 +141,7 @@ export function LeagueSettingsPage() {
                             setValue("visibility", value as "public" | "private")
                         }
                     >
-                        <SelectTrigger>
+                        <SelectTrigger id="league-visibility">
                             <SelectValue />
                         </SelectTrigger>
 
@@ -154,7 +154,7 @@ export function LeagueSettingsPage() {
                 </div>
 
                 <div>
-                    <label>{t("league.joinPolicy")}</label>
+                    <label htmlFor="league-join-policy">{t("league.joinPolicy")}</label>
 
                     <Select
                         value={joinPolicyValue || ""}
@@ -162,7 +162,7 @@ export function LeagueSettingsPage() {
                             setValue("joinPolicy", value as "open" | "request" | "invite_only")
                         }
                     >
-                        <SelectTrigger>
+                        <SelectTrigger id="league-join-policy">
                             <SelectValue />
                         </SelectTrigger>
 
@@ -179,10 +179,11 @@ export function LeagueSettingsPage() {
                 </div>
 
                 <div>
-                    <label>{t("league.maxPlayers")}</label>
+                    <label htmlFor="league-max-players">{t("league.maxPlayers")}</label>
 
                     <Input
                         type="number"
+                        id="league-max-players"
                         {...register("maxPlayers", {
                             valueAsNumber: true,
                         })}
@@ -190,14 +191,16 @@ export function LeagueSettingsPage() {
                 </div>
 
                 <div>
-                    <label>{t("settings.lobbyCreationPolicy")}</label>
+                    <label htmlFor="lobby-creation-policy">
+                        {t("settings.lobbyCreationPolicy")}
+                    </label>
                     <Select
                         value={lobbyCreationPolicy}
                         onValueChange={value =>
                             setValue("lobbyCreationPolicy", value as "admins" | "members")
                         }
                     >
-                        <SelectTrigger>
+                        <SelectTrigger id="lobby-creation-policy">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

@@ -186,6 +186,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             void sessionLifecycle.dispose();
         };
     }, [acceptSession, sessionLifecycle]);
+    useEffect(() => {
+        const expireSession = () => void acceptSession(null);
+        window.addEventListener("auth:session-expired", expireSession);
+        return () => window.removeEventListener("auth:session-expired", expireSession);
+    }, [acceptSession]);
     return (
         <AuthContext.Provider
             value={{

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
@@ -9,8 +9,19 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export function ProtectedLayout() {
     const { user, loading, signOut, error } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
+    useEffect(() => {
+        if (!isSidebarOpen) return;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return;
+            setIsSidebarOpen(false);
+            menuButtonRef.current?.focus();
+        };
+        window.addEventListener("keydown", closeOnEscape);
+        return () => window.removeEventListener("keydown", closeOnEscape);
+    }, [isSidebarOpen]);
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -24,6 +35,12 @@ export function ProtectedLayout() {
     }
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-muted/20 text-foreground">
+            <a
+                href="#main-content"
+                className="sr-only z-50 rounded-md bg-background p-3 text-foreground focus:fixed focus:left-3 focus:top-3 focus:not-sr-only focus:ring-2 focus:ring-ring"
+            >
+                {t("skip.main")}
+            </a>
             <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {isSidebarOpen && (
@@ -38,9 +55,12 @@ export function ProtectedLayout() {
                     <div className="flex items-center gap-4">
                         <ThemeToggle />
                         <button
+                            ref={menuButtonRef}
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="rounded-md p-2 hover:bg-muted lg:hidden"
                             aria-label={t("sidebar.open")}
+                            aria-expanded={isSidebarOpen}
+                            aria-controls="application-sidebar"
                         >
                             <svg
                                 className="h-6 w-6"
@@ -87,7 +107,11 @@ export function ProtectedLayout() {
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+                <main
+                    id="main-content"
+                    tabIndex={-1}
+                    className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8"
+                >
                     <div className="mx-auto max-w-7xl">
                         <Outlet />
                     </div>

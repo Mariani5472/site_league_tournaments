@@ -50,11 +50,15 @@ export function LoginPage() {
                             className="pl-9"
                             type="email"
                             autoComplete="email"
+                            aria-invalid={Boolean(errors.email)}
+                            aria-describedby={errors.email ? "login-email-error" : undefined}
                             {...register("email", { required: t("auth.emailRequired") })}
                         />
                     </div>
                     {errors.email && (
-                        <p className="text-sm text-destructive">{errors.email.message}</p>
+                        <p id="login-email-error" className="text-sm text-destructive" role="alert">
+                            {errors.email.message}
+                        </p>
                     )}
                 </div>
                 <PasswordField
