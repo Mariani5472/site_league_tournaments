@@ -2,8 +2,8 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { PublicLayout } from "@/layouts/PublicLayout";
 import { ProtectedLayout } from "@/layouts/ProtectedLayout";
-import { FallbackRedirect } from "./FallbackRedirect";
 import { t } from "@/i18n";
+import { HttpStatusPage } from "@/pages/HttpStatusPage";
 
 const LandingPage = lazy(() =>
     import("@/modules/landing/pages/LandingPage").then(module => ({ default: module.LandingPage }))
@@ -83,6 +83,10 @@ export function AppRoutes() {
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     </Route>
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route
+                        path="/session-expired"
+                        element={<HttpStatusPage kind="sessionExpired" />}
+                    />
                     <Route element={<ProtectedLayout />}>
                         <Route path="/main" element={<DashboardPage />} />
                         <Route path="/leagues/:id" element={<LeaguePage />} />
@@ -94,7 +98,8 @@ export function AppRoutes() {
                         <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
                         <Route path="/leagues/:leagueId/lobbies/:lobbyId" element={<LobbyPage />} />
                     </Route>
-                    <Route path="*" element={<FallbackRedirect />} />
+                    <Route path="/forbidden" element={<HttpStatusPage kind="forbidden" />} />
+                    <Route path="*" element={<HttpStatusPage kind="notFound" />} />
                 </Routes>
             </Suspense>
         </BrowserRouter>

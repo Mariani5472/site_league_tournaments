@@ -7,6 +7,10 @@ import { CreateLeagueDialog } from "../components/CreateLeagueDialog";
 import { Search, Trophy } from "lucide-react";
 import { t, tp } from "@/i18n";
 import { LoadMoreButton } from "@/components/LoadMoreButton";
+import { PageSkeleton } from "@/components/async/PageSkeleton";
+import { InlineError } from "@/components/async/InlineError";
+import { EmptyState } from "@/components/async/EmptyState";
+import { BackgroundRefresh } from "@/components/async/BackgroundRefresh";
 export function LeaguesPage() {
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -20,6 +24,7 @@ export function LeaguesPage() {
         isError: discoverLeaguesError,
         hasNextPage,
         fetchNextPage,
+        isFetching: discoverLeaguesFetching,
         isFetchingNextPage,
         isFetchNextPageError,
     } = useDiscoverLeagues(debouncedSearch);
@@ -27,21 +32,17 @@ export function LeaguesPage() {
         data: myLeagues = [],
         isLoading: myLeaguesLoading,
         isError: myLeaguesError,
+        isFetching: myLeaguesFetching,
     } = useMineLeagues();
     const isLoading = discoverLeaguesLoading || myLeaguesLoading;
     if (isLoading) {
-        return (
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold">{t("leagues.title")}</h1>
-                </div>
-
-                <div className="rounded-xl border p-6">{t("async.leagues")}</div>
-            </div>
-        );
+        return <PageSkeleton rows={5} label={t("async.leagues")} />;
     }
     return (
         <div className="space-y-8 sm:space-y-10">
+            <BackgroundRefresh
+                active={(discoverLeaguesFetching || myLeaguesFetching) && !isFetchingNextPage}
+            />
             <header className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
                 <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary/5" />
                 <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -79,21 +80,9 @@ export function LeaguesPage() {
                 </div>
 
                 {myLeaguesError ? (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
-                        {t("leagues.mineError")}
-                    </div>
+                    <InlineError message={t("leagues.mineError")} />
                 ) : myLeagues.length === 0 ? (
-                    <div
-                        className="
-              rounded-xl
-              border
-              border-dashed
-              p-8
-              text-center
-            "
-                    >
-                        <p className="text-muted-foreground">{t("leagues.mineEmpty")}</p>
-                    </div>
+                    <EmptyState title={t("leagues.mineEmpty")} />
                 ) : (
                     <div className="space-y-3">
                         {myLeagues.map(league => (
@@ -125,21 +114,9 @@ export function LeaguesPage() {
                 </div>
 
                 {discoverLeaguesError ? (
-                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
-                        {t("leagues.discoverError")}
-                    </div>
+                    <InlineError message={t("leagues.discoverError")} />
                 ) : discoverLeagues.length === 0 ? (
-                    <div
-                        className="
-              rounded-xl
-              border
-              border-dashed
-              p-8
-              text-center
-            "
-                    >
-                        <p className="text-muted-foreground">{t("leagues.notFound")}</p>
-                    </div>
+                    <EmptyState title={t("leagues.notFound")} />
                 ) : (
                     <div className="space-y-3">
                         {discoverLeagues.map(league => (

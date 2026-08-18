@@ -11,6 +11,8 @@ import { useLeagueLobbies } from "../hooks/useLeagueLobbies";
 import { useLeagueMembers } from "../hooks/useLeagueMembers";
 import { useLeagueRequests } from "../hooks/useLeagueRequests";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
+import { PageSkeleton } from "@/components/async/PageSkeleton";
+import { InlineError } from "@/components/async/InlineError";
 
 const tabs = ["overview", "standings", "matches", "lobbies", "members"] as const;
 type Tab = (typeof tabs)[number];
@@ -30,7 +32,7 @@ export function LeaguePage() {
     const members = useLeagueMembers(id, isMember);
     const lobbies = useLeagueLobbies(id, isMember);
     const requests = useLeagueRequests(id, isAdmin);
-    if (league.isLoading) return <div>{t("async.league")}</div>;
+    if (league.isLoading) return <PageSkeleton rows={4} label={t("async.league")} />;
     if (league.isError || !league.data)
         return <ErrorState message={t("league.loadError")} retry={league.refetch} />;
 
@@ -170,14 +172,5 @@ function Summary({ label, value }: { label: string; value: string }) {
 }
 
 function ErrorState({ message, retry }: { message: string; retry(): unknown }) {
-    return (
-        <div className="rounded-xl border p-6">
-            <p className="text-destructive" role="alert">
-                {message}
-            </p>
-            <button className="mt-2 underline" onClick={() => retry()}>
-                {t("common.retry")}
-            </button>
-        </div>
-    );
+    return <InlineError message={message} retry={retry} />;
 }

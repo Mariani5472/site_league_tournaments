@@ -50,22 +50,14 @@ export function CreateLobbyDialog({ leagueId, children }: Props) {
                     <DialogTitle>{t("league.createLobby")}</DialogTitle>
                 </DialogHeader>
 
-                <div
-                    className="
-            space-y-4
-          "
-                >
-                    <div>
-                        <label
-                            className="
-                text-sm
-                font-medium
-              "
-                        >
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label htmlFor="create-lobby-max-players" className="text-sm font-medium">
                             {t("league.maxPlayers")}
                         </label>
 
                         <Input
+                            id="create-lobby-max-players"
                             type="number"
                             min={2}
                             max={10}

@@ -15,6 +15,7 @@ type Props = {
 export function PasswordField({ id, label, autoComplete, registration, error }: Props) {
     const [visible, setVisible] = useState(false);
     const toggleLabel = visible ? t("auth.hidePassword") : t("auth.showPassword");
+    const errorId = `${id}-error`;
     return (
         <div className="space-y-2">
             <label htmlFor={id} className="text-sm font-medium">
@@ -30,6 +31,8 @@ export function PasswordField({ id, label, autoComplete, registration, error }: 
                     className="px-9"
                     type={visible ? "text" : "password"}
                     autoComplete={autoComplete}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={error ? errorId : undefined}
                     {...registration}
                 />
                 <button
@@ -42,7 +45,11 @@ export function PasswordField({ id, label, autoComplete, registration, error }: 
                     {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+                <p id={errorId} className="text-sm text-destructive" role="alert">
+                    {error}
+                </p>
+            )}
         </div>
     );
 }

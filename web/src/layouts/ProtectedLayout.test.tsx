@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 import { renderApp } from "@/test/renderApp";
 import { ProtectedLayout } from "./ProtectedLayout";
@@ -32,5 +33,24 @@ describe("ProtectedLayout", () => {
     it("renders protected content for an authenticated user", () => {
         renderApp(routes(), { route: "/private" });
         expect(screen.getByText("Private content")).toBeVisible();
+        expect(screen.getByRole("link", { name: "Ir para o conteúdo principal" })).toHaveAttribute(
+            "href",
+            "#main-content"
+        );
+    });
+
+    it("exposes mobile menu state and closes it with Escape", async () => {
+        renderApp(routes(), { route: "/private" });
+        const trigger = screen.getByRole("button", { name: "Abrir menu" });
+
+        expect(trigger).toHaveAttribute("aria-controls", "application-sidebar");
+        expect(trigger).toHaveAttribute("aria-expanded", "false");
+        await userEvent.click(trigger);
+        expect(trigger).toHaveAttribute("aria-expanded", "true");
+        expect(screen.getByRole("button", { name: "Fechar menu" })).toHaveFocus();
+
+        await userEvent.keyboard("{Escape}");
+        expect(trigger).toHaveAttribute("aria-expanded", "false");
+        expect(trigger).toHaveFocus();
     });
 });
