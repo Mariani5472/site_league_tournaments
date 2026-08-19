@@ -32,6 +32,10 @@ export function LeagueSettingsPage() {
     const mutation = useUpdateLeague();
     const { register, handleSubmit, setValue, reset, control } = useForm<LeagueSettingsForm>({
         resolver: zodResolver(leagueSettingsSchema),
+        defaultValues: {
+            lobbyCreationPolicy: "admins",
+            autoStartLobby: false,
+        },
     });
     const visibilityValue = useWatch({
         control,
@@ -43,8 +47,16 @@ export function LeagueSettingsPage() {
         name: "joinPolicy",
         defaultValue: league?.joinPolicy,
     });
-    const lobbyCreationPolicy = useWatch({ control, name: "lobbyCreationPolicy" });
-    const autoStartLobby = useWatch({ control, name: "autoStartLobby" });
+    const lobbyCreationPolicy = useWatch({
+        control,
+        name: "lobbyCreationPolicy",
+        defaultValue: "admins",
+    });
+    const autoStartLobby = useWatch({
+        control,
+        name: "autoStartLobby",
+        defaultValue: false,
+    });
     useEffect(() => {
         if (!league) {
             return;
@@ -55,8 +67,8 @@ export function LeagueSettingsPage() {
             visibility: league.visibility,
             joinPolicy: league.joinPolicy,
             maxPlayers: league.maxPlayers,
-            lobbyCreationPolicy: league.lobbyCreationPolicy,
-            autoStartLobby: league.autoStartLobby,
+            lobbyCreationPolicy: league.lobbyCreationPolicy ?? "admins",
+            autoStartLobby: league.autoStartLobby ?? false,
         });
     }, [league, reset]);
     const isAuthorizationLoading = isLoading || areMembersLoading;
