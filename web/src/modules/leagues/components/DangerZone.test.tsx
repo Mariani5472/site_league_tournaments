@@ -11,12 +11,12 @@ import { toast } from "sonner";
 vi.mock("../services/leagues.service", () => ({ deleteLeague: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-function subject() {
+function subject(leagueName = "Champions") {
     return (
         <Routes>
             <Route
                 path="/leagues/league-1/settings"
-                element={<DangerZone leagueId="league-1" leagueName="Champions" />}
+                element={<DangerZone leagueId="league-1" leagueName={leagueName} />}
             />
             <Route path="/leagues" element={<p>League list</p>} />
         </Routes>
@@ -77,6 +77,18 @@ describe("DangerZone", () => {
             "Ocorreu um erro inesperado no servidor. Tente novamente."
         );
         expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    it("ignores accidental surrounding spaces in legacy league names and confirmation", async () => {
+        const user = userEvent.setup();
+        vi.mocked(deleteLeague).mockResolvedValue({} as Awaited<ReturnType<typeof deleteLeague>>);
+        renderApp(subject("Champions "), { route: "/leagues/league-1/settings" });
+
+        await user.click(screen.getByRole("button", { name: "Excluir liga" }));
+        await user.type(screen.getByLabelText(/confirmação pelo nome da liga/i), " Champions ");
+        await user.click(screen.getByRole("button", { name: /excluir liga permanentemente/i }));
+
+        expect(deleteLeague).toHaveBeenCalledOnce();
     });
 });
 

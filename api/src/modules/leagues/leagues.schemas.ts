@@ -10,10 +10,12 @@ export const discoverLeaguesQuerySchema = cursorPaginationSchema.extend({ search
 export const createLeagueSchema = z.object({
     name: z
         .string()
+        .trim()
         .min(3)
         .max(100),
     description: z
         .string()
+        .trim()
         .max(500)
         .optional(),
     visibility: z.enum([
@@ -32,7 +34,7 @@ export const createLeagueSchema = z.object({
 });
 export const updateLeagueSchema = z.object({
     name: z.string().trim().min(3).max(100).optional(),
-    description: z.string().max(500).nullable().optional(),
+    description: z.string().trim().max(500).nullable().optional(),
     visibility: z.enum(["public", "private"]).optional(),
     joinPolicy: z.enum(["open", "request", "invite_only"]).optional(),
     maxPlayers: z.number().int().min(2).max(500).optional(),

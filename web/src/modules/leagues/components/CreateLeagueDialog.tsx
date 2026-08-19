@@ -52,8 +52,8 @@ export function CreateLeagueDialog({
     });
     async function handleSubmit() {
         mutation.mutate({
-            name,
-            description,
+            name: name.trim(),
+            description: description.trim(),
             visibility,
             joinPolicy: joinPolicy,
             maxPlayers: maxPlayers,
