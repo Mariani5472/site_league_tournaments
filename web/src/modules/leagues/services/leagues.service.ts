@@ -2,6 +2,7 @@ import { api } from "@/services/api";
 import type { League } from "../types/league";
 import type { LeagueMember } from "../types/member";
 import type { LeagueRequest } from "../types/request";
+import type { LeagueInvitation } from "../types/invitation";
 import type { CreateLeagueInput } from "../types/createInput";
 import type { Lobby } from "@/modules/lobbies/types/lobby.types";
 import type { CursorPage } from "@/types/pagination";
@@ -59,6 +60,21 @@ export async function rejectRequest(leagueId: string, requestId: string) {
         status: "rejected",
     });
     return data;
+}
+
+export async function getMyInvitations(cursor?: string, limit = PAGE_LIMIT) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (cursor) params.set("cursor", cursor);
+    return (await api.get<CursorPage<LeagueInvitation>>(`/invitations?${params}`)).data;
+}
+
+export async function invitePlayer(leagueId: string, recipientId: string) {
+    return (await api.post<LeagueInvitation>(`/leagues/${leagueId}/invitations`, { recipientId }))
+        .data;
+}
+
+export async function respondToInvitation(invitationId: string, status: "accepted" | "rejected") {
+    return (await api.patch<LeagueInvitation>(`/invitations/${invitationId}`, { status })).data;
 }
 export async function createLeague(input: CreateLeagueInput) {
     const { data } = await api.post(`/leagues`, input);
