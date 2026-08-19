@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { renderApp } from "@/test/renderApp";
@@ -66,15 +66,17 @@ describe("LeagueSettingsPage authorization", () => {
     it.each([
         ["admins", "Somente owner e admins"],
         ["members", "Todos os membros"],
-    ] as const)("fills the lobby creation policy with %s", (policy, label) => {
+    ] as const)("fills the lobby creation policy with %s", async (policy, label) => {
         state.members.data = [{ userId: "user-1", role: "admin" }];
         state.league.data.lobbyCreationPolicy = policy;
 
         renderApp(page(), { route: "/leagues/league-1/settings" });
 
-        expect(screen.getByRole("combobox", { name: /quem pode criar lobbies/i })).toHaveTextContent(
-            label
-        );
+        await waitFor(() => {
+            expect(
+                screen.getByRole("combobox", { name: /quem pode criar lobbies/i })
+            ).toHaveTextContent(label);
+        });
     });
 
     it("redirects a non-admin only after authorization data loads", () => {
