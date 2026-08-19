@@ -38,6 +38,9 @@ vi.mock("../components/LeagueRequests", () => ({
 vi.mock("../components/LeagueLobbySelection", () => ({
     LeagueLobbySection: ({ lobbies }: { lobbies: unknown[] }) => <p>Lobbies: {lobbies.length}</p>,
 }));
+vi.mock("../components/InvitePlayer", () => ({
+    InvitePlayer: () => <p>Invite player</p>,
+}));
 vi.mock("@/modules/matches/LeagueResults", () => ({ LeagueResults: () => <p>League results</p> }));
 
 function page() {
