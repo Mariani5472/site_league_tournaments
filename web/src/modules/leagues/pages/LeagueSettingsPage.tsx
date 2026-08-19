@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,35 +30,42 @@ export function LeagueSettingsPage() {
     const { data: members, isLoading: areMembersLoading } = useLeagueMembers(leagueId);
     const roleData = useLeagueRole(members || []);
     const mutation = useUpdateLeague();
-    const { register, handleSubmit, setValue, reset, control } = useForm<LeagueSettingsForm>({
+    const formValues = useMemo<LeagueSettingsForm | undefined>(
+        () =>
+            league
+                ? {
+                      name: league.name,
+                      description: league.description || "",
+                      visibility: league.visibility,
+                      joinPolicy: league.joinPolicy,
+                      maxPlayers: league.maxPlayers,
+                      lobbyCreationPolicy: league.lobbyCreationPolicy ?? "admins",
+                      autoStartLobby: league.autoStartLobby ?? false,
+                  }
+                : undefined,
+        [league]
+    );
+    const { register, handleSubmit, setValue, watch, reset } = useForm<LeagueSettingsForm>({
         resolver: zodResolver(leagueSettingsSchema),
+        defaultValues: formValues ?? {
+            name: "",
+            description: "",
+            visibility: "private",
+            joinPolicy: "request",
+            maxPlayers: 10,
+            lobbyCreationPolicy: "admins",
+            autoStartLobby: false,
+        },
     });
-    const visibilityValue = useWatch({
-        control,
-        name: "visibility",
-        defaultValue: league?.visibility,
-    });
-    const joinPolicyValue = useWatch({
-        control,
-        name: "joinPolicy",
-        defaultValue: league?.joinPolicy,
-    });
-    const lobbyCreationPolicy = useWatch({ control, name: "lobbyCreationPolicy" });
-    const autoStartLobby = useWatch({ control, name: "autoStartLobby" });
+    const visibilityValue = watch("visibility");
+    const joinPolicyValue = watch("joinPolicy");
+    const lobbyCreationPolicy = watch("lobbyCreationPolicy");
+    const autoStartLobby = watch("autoStartLobby");
     useEffect(() => {
-        if (!league) {
-            return;
+        if (formValues) {
+            reset(formValues);
         }
-        reset({
-            name: league.name,
-            description: league.description || "",
-            visibility: league.visibility,
-            joinPolicy: league.joinPolicy,
-            maxPlayers: league.maxPlayers,
-            lobbyCreationPolicy: league.lobbyCreationPolicy,
-            autoStartLobby: league.autoStartLobby,
-        });
-    }, [league, reset]);
+    }, [formValues, reset]);
     const isAuthorizationLoading = isLoading || areMembersLoading;
     if (!isAuthorizationLoading && !roleData.isAdmin) {
         return <Navigate to={`/leagues/${leagueId}`} />;
@@ -201,7 +208,11 @@ export function LeagueSettingsPage() {
                         }
                     >
                         <SelectTrigger id="lobby-creation-policy">
-                            <SelectValue />
+                            <span>
+                                {lobbyCreationPolicy === "members"
+                                    ? t("settings.lobbyCreationMembers")
+                                    : t("settings.lobbyCreationAdmins")}
+                            </span>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="admins">

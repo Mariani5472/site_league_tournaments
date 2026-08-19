@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { renderApp } from "@/test/renderApp";
@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
             visibility: "private",
             joinPolicy: "request",
             maxPlayers: 10,
+            lobbyCreationPolicy: "admins" as "admins" | "members",
+            autoStartLobby: false,
         },
         isLoading: false,
     },
@@ -40,6 +42,7 @@ describe("LeagueSettingsPage authorization", () => {
         state.league.isLoading = false;
         state.members.isLoading = false;
         state.members.data = [];
+        state.league.data.lobbyCreationPolicy = "admins";
     });
 
     it("waits for members before deciding whether to redirect", () => {
@@ -58,6 +61,22 @@ describe("LeagueSettingsPage authorization", () => {
 
         expect(screen.getByRole("heading", { name: /editar liga/i })).toBeVisible();
         expect(screen.queryByText("League page")).not.toBeInTheDocument();
+    });
+
+    it.each([
+        ["admins", "Somente owner e admins"],
+        ["members", "Todos os membros"],
+    ] as const)("fills the lobby creation policy with %s", async (policy, label) => {
+        state.members.data = [{ userId: "user-1", role: "admin" }];
+        state.league.data.lobbyCreationPolicy = policy;
+
+        renderApp(page(), { route: "/leagues/league-1/settings" });
+
+        await waitFor(() => {
+            expect(
+                screen.getByRole("combobox", { name: /quem pode criar lobbies/i })
+            ).toHaveTextContent(label);
+        });
     });
 
     it("redirects a non-admin only after authorization data loads", () => {
