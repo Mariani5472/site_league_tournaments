@@ -15,7 +15,9 @@ export function EmptyState({
             <Inbox className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
             <h2 className="mt-3 text-lg font-semibold">{title}</h2>
             {description && (
-                <p className="mx-auto mt-1 max-w-lg text-sm text-muted-foreground">{description}</p>
+                <p className="mx-auto mt-1 max-w-lg text-center text-sm text-muted-foreground">
+                    {description}
+                </p>
             )}
             {action && <div className="mt-5">{action}</div>}
         </section>
