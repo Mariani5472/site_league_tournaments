@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CalendarDays, ImageOff, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatDate, formatDateTime, formatNumber, t } from "@/i18n";
+import { CompetitiveForm } from "@/modules/matches/CompetitiveForm";
 import type { PublicProfile } from "../types/profile";
 
 function SafeImage({
@@ -76,6 +77,16 @@ export function PlayerProfileView({
                         </article>
                     ))}
                 </div>
+                {profile.stats.recentForm.length > 0 && (
+                    <div className="mt-4 rounded-xl border bg-card p-4">
+                        <p className="mb-2 text-sm font-medium">{t("match.currentForm")}</p>
+                        <CompetitiveForm
+                            recentForm={profile.stats.recentForm}
+                            currentStreak={profile.stats.currentStreak}
+                            currentStreakResult={profile.stats.currentStreakResult}
+                        />
+                    </div>
+                )}
                 <p className="mt-2 text-xs text-muted-foreground">{t("profile.statsScope")}</p>
             </section>
             <section>

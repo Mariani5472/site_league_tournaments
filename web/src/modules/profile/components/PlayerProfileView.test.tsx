@@ -1,4 +1,4 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderApp } from "@/test/renderApp";
 import type { PublicProfile } from "../types/profile";
@@ -10,7 +10,14 @@ const profile: PublicProfile = {
     avatarUrl: "https://img.test/broken-avatar.png",
     bannerUrl: "https://img.test/broken-banner.png",
     createdAt: "2026-01-02T12:00:00.000Z",
-    stats: { matchesPlayed: 2, wins: 1, losses: 1 },
+    stats: {
+        matchesPlayed: 6,
+        wins: 3,
+        losses: 3,
+        recentForm: ["loss", "loss", "win", "win", "loss"],
+        currentStreakResult: "loss",
+        currentStreak: 2,
+    },
     publicLeagues: [
         { id: "league-1", name: "Liga pública", description: null, playerCount: 3, maxPlayers: 10 },
     ],
@@ -33,6 +40,10 @@ describe("PlayerProfileView", () => {
         expect(screen.getByRole("heading", { name: "Jogador" })).toBeVisible();
         expect(screen.getByText("JO")).toBeVisible();
         expect(screen.getAllByText("Liga pública")).toHaveLength(2);
+        expect(screen.getByText("2 derrotas seguidas")).toBeVisible();
+        const recentForm = screen.getByRole("list", { name: "Últimos 5 resultados" });
+        expect(within(recentForm).getAllByText("Vitória")).toHaveLength(2);
+        expect(within(recentForm).getAllByText("Derrota")).toHaveLength(3);
         expect(screen.queryByRole("button", { name: /editar perfil/i })).not.toBeInTheDocument();
 
         fireEvent.error(screen.getByAltText("Avatar do perfil"));

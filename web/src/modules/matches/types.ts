@@ -32,4 +32,7 @@ export type Standing = {
     wins: number;
     losses: number;
     winRate: number;
+    recentForm: Array<"win" | "loss">;
+    currentStreakResult: "win" | "loss" | null;
+    currentStreak: number;
 };

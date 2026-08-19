@@ -71,17 +71,46 @@ export class MatchesRepository {
     }
     async standings(leagueId: string) {
         const result = await db.query(`
+      WITH ordered_results AS (
+        SELECT mp.user_id, mp.result::text AS result,
+          ROW_NUMBER() OVER (
+            PARTITION BY mp.user_id ORDER BY m.finished_at DESC, m.id DESC
+          ) AS result_order,
+          LAG(mp.result::text) OVER (
+            PARTITION BY mp.user_id ORDER BY m.finished_at DESC, m.id DESC
+          ) AS previous_result
+        FROM match_players mp
+        JOIN matches m ON m.id = mp.match_id
+        WHERE m.league_id = $1 AND m.status = 'finished' AND mp.result IS NOT NULL
+      ), streak_groups AS (
+        SELECT user_id, result, result_order,
+          SUM(CASE WHEN previous_result IS NULL OR previous_result <> result THEN 1 ELSE 0 END)
+            OVER (PARTITION BY user_id ORDER BY result_order) AS streak_group
+        FROM ordered_results
+      ), aggregates AS (
+        SELECT user_id,
+          COUNT(*)::int AS games_played,
+          (COUNT(*) FILTER (WHERE result = 'win'))::int AS wins,
+          (COUNT(*) FILTER (WHERE result = 'loss'))::int AS losses,
+          ARRAY_AGG(result ORDER BY result_order) FILTER (WHERE result_order <= 5) AS recent_form,
+          MAX(result) FILTER (WHERE result_order = 1) AS current_streak_result,
+          (COUNT(*) FILTER (WHERE streak_group = 1))::int AS current_streak
+        FROM streak_groups
+        GROUP BY user_id
+      )
       SELECT u.id AS user_id, u.nickname, u.avatar_url,
-        COUNT(*) FILTER (WHERE mp.result IS NOT NULL)::int AS games_played,
-        COUNT(*) FILTER (WHERE mp.result = 'win')::int AS wins,
-        COUNT(*) FILTER (WHERE mp.result = 'loss')::int AS losses
+        COALESCE(a.games_played, 0)::int AS games_played,
+        COALESCE(a.wins, 0)::int AS wins,
+        COALESCE(a.losses, 0)::int AS losses,
+        COALESCE(a.recent_form, ARRAY[]::text[]) AS recent_form,
+        a.current_streak_result,
+        COALESCE(a.current_streak, 0)::int AS current_streak
       FROM league_members lm JOIN users u ON u.id = lm.user_id
-      LEFT JOIN match_players mp ON mp.user_id = u.id
-        AND EXISTS (SELECT 1 FROM matches m WHERE m.id = mp.match_id AND m.league_id = $1 AND m.status = 'finished')
+      LEFT JOIN aggregates a ON a.user_id = u.id
       WHERE lm.league_id = $1 AND lm.role IN ('owner', 'admin', 'player')
-      GROUP BY u.id ORDER BY wins DESC, losses ASC,
-        CASE WHEN COUNT(*) FILTER (WHERE mp.result IS NOT NULL) > 0
-          THEN COUNT(*) FILTER (WHERE mp.result = 'win')::numeric / COUNT(*) FILTER (WHERE mp.result IS NOT NULL) ELSE 0 END DESC,
+      ORDER BY wins DESC, losses ASC,
+        CASE WHEN COALESCE(a.games_played, 0) > 0
+          THEN a.wins::numeric / a.games_played ELSE 0 END DESC,
         u.nickname ASC`, [leagueId]);
         return result.rows.map((row, index) => ({
             ...row, position: index + 1,

@@ -25,10 +25,29 @@ export class ProfileRepository {
         return result.rows[0];
     }
     async getPublicStats(userId: string) {
-        const result = await db.query(`SELECT COUNT(*) FILTER (WHERE mp.result IS NOT NULL)::int AS matches_played,
-          COUNT(*) FILTER (WHERE mp.result = 'win')::int AS wins,
-          COUNT(*) FILTER (WHERE mp.result = 'loss')::int AS losses
-          FROM match_players mp WHERE mp.user_id = $1`, [userId]);
+        const result = await db.query(`WITH ordered_results AS (
+          SELECT mp.result::text AS result,
+            ROW_NUMBER() OVER (ORDER BY m.finished_at DESC, m.id DESC) AS result_order,
+            LAG(mp.result::text) OVER (ORDER BY m.finished_at DESC, m.id DESC) AS previous_result
+          FROM match_players mp
+          JOIN matches m ON m.id = mp.match_id
+          WHERE mp.user_id = $1 AND m.status = 'finished' AND mp.result IS NOT NULL
+        ), streak_groups AS (
+          SELECT result, result_order,
+            SUM(CASE WHEN previous_result IS NULL OR previous_result <> result THEN 1 ELSE 0 END)
+              OVER (ORDER BY result_order) AS streak_group
+          FROM ordered_results
+        )
+        SELECT COUNT(*)::int AS matches_played,
+          (COUNT(*) FILTER (WHERE result = 'win'))::int AS wins,
+          (COUNT(*) FILTER (WHERE result = 'loss'))::int AS losses,
+          COALESCE(
+            ARRAY_AGG(result ORDER BY result_order) FILTER (WHERE result_order <= 5),
+            ARRAY[]::text[]
+          ) AS recent_form,
+          MAX(result) FILTER (WHERE result_order = 1) AS current_streak_result,
+          (COUNT(*) FILTER (WHERE streak_group = 1))::int AS current_streak
+        FROM streak_groups`, [userId]);
         return result.rows[0];
     }
     async listPublicLeagues(userId: string) {

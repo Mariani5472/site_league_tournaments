@@ -21,6 +21,7 @@ import { SOCKET_EVENTS } from "../src/websocket/socket-events";
 import { SocketEmitter } from "../src/websocket/emitter";
 import { CaptainElectionWorker } from "../src/modules/lobbies/captain-election.worker";
 import { Clock } from "../src/utils/Clock";
+import { ProfileService } from "../src/modules/profile/profile.service";
 const ids = Array.from({ length: 10 }, (_, index) => `00000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`);
 const leagues = new LeaguesService();
 const members = new LeagueMembersService();
@@ -661,6 +662,60 @@ describe("critical domain flows", { concurrency: false }, () => {
         const standing = await matches.standings(league.id, ids[0]);
         assert.equal(standing.reduce((sum, row) => sum + row.gamesPlayed, 0), 2);
         await assert.rejects(() => matches.show(match.id, ids[2]));
+    });
+    test("standings and profile derive recent form, current streak and stable tie ordering", async () => {
+        const league = await createLeague(4);
+        await leagues.join(league.id, ids[1]);
+        await leagues.join(league.id, ids[2]);
+        await db.query("UPDATE users SET nickname = 'Beta' WHERE id = $1", [ids[0]]);
+        await db.query("UPDATE users SET nickname = 'Alpha' WHERE id = $1", [ids[1]]);
+
+        const ownerResults = ["win", "loss", "win", "win", "loss", "loss"] as const;
+        for (const [index, ownerResult] of ownerResults.entries()) {
+            const finishedAt = new Date(Date.UTC(2026, 0, index + 1, 12));
+            const lobby = await db.query<{ id: string }>(`
+                INSERT INTO lobbies (league_id, status, max_players, created_by, created_at)
+                VALUES ($1, 'finished', 2, $2, $3) RETURNING id
+            `, [league.id, ids[0], finishedAt]);
+            const match = await db.query<{ id: string }>(`
+                INSERT INTO matches (
+                    lobby_id, league_id, status, winner_team_number, resolution_type,
+                    started_at, finished_at, created_at
+                ) VALUES ($1, $2, 'finished', $3, 'admin', $4, $4, $4) RETURNING id
+            `, [
+                lobby.rows[0].id,
+                league.id,
+                ownerResult === "win" ? 1 : 2,
+                finishedAt,
+            ]);
+            await db.query(`
+                INSERT INTO match_players (
+                    match_id, user_id, team_number, nickname_snapshot, result
+                ) VALUES
+                    ($1, $2, 1, 'Beta', $4),
+                    ($1, $3, 2, 'Alpha', $5)
+            `, [
+                match.rows[0].id,
+                ids[0],
+                ids[1],
+                ownerResult,
+                ownerResult === "win" ? "loss" : "win",
+            ]);
+        }
+
+        const standings = await matches.standings(league.id, ids[0]);
+        assert.deepEqual(standings.slice(0, 2).map(row => row.nickname), ["Alpha", "Beta"]);
+        const owner = standings.find(row => row.userId === ids[0]);
+        assert.deepEqual(owner?.recentForm, ["loss", "loss", "win", "win", "loss"]);
+        assert.equal(owner?.currentStreakResult, "loss");
+        assert.equal(owner?.currentStreak, 2);
+        assert.equal(owner?.gamesPlayed, 6);
+        assert.equal(owner?.winRate, 0.5);
+
+        const profile = await new ProfileService().showPublic(ids[0]);
+        assert.deepEqual(profile.stats.recentForm, ["loss", "loss", "win", "win", "loss"]);
+        assert.equal(profile.stats.currentStreakResult, "loss");
+        assert.equal(profile.stats.currentStreak, 2);
     });
     test("a non-participant cannot vote and an admin from another league cannot resolve", async () => {
         const league = await createLeague(4);
