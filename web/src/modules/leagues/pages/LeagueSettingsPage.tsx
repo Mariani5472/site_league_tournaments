@@ -1,5 +1,5 @@
 import { useParams, Navigate, Link } from "react-router-dom";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export function LeagueSettingsPage() {
               autoStartLobby: league.autoStartLobby ?? false,
           }
         : undefined;
-    const { register, handleSubmit, setValue, control } = useForm<LeagueSettingsForm>({
+    const { register, handleSubmit, setValue, watch } = useForm<LeagueSettingsForm>({
         resolver: zodResolver(leagueSettingsSchema),
         defaultValues: {
             lobbyCreationPolicy: "admins",
@@ -48,26 +48,10 @@ export function LeagueSettingsPage() {
         },
         values: formValues,
     });
-    const visibilityValue = useWatch({
-        control,
-        name: "visibility",
-        defaultValue: league?.visibility,
-    });
-    const joinPolicyValue = useWatch({
-        control,
-        name: "joinPolicy",
-        defaultValue: league?.joinPolicy,
-    });
-    const lobbyCreationPolicy = useWatch({
-        control,
-        name: "lobbyCreationPolicy",
-        defaultValue: "admins",
-    });
-    const autoStartLobby = useWatch({
-        control,
-        name: "autoStartLobby",
-        defaultValue: false,
-    });
+    const visibilityValue = watch("visibility");
+    const joinPolicyValue = watch("joinPolicy");
+    const lobbyCreationPolicy = watch("lobbyCreationPolicy");
+    const autoStartLobby = watch("autoStartLobby");
     const isAuthorizationLoading = isLoading || areMembersLoading;
     if (!isAuthorizationLoading && !roleData.isAdmin) {
         return <Navigate to={`/leagues/${leagueId}`} />;
