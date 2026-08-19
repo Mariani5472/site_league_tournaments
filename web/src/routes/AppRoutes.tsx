@@ -61,6 +61,11 @@ const MatchDetailPage = lazy(() =>
         default: module.MatchDetailPage,
     }))
 );
+const InvitationsPage = lazy(() =>
+    import("@/modules/leagues/pages/InvitationsPage").then(module => ({
+        default: module.InvitationsPage,
+    }))
+);
 
 export function RouteLoadingFallback() {
     return (
@@ -93,6 +98,7 @@ export function AppRoutes() {
                         <Route path="/leagues" element={<LeaguesPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                         <Route path="/players" element={<PlayersPage />} />
+                        <Route path="/invitations" element={<InvitationsPage />} />
                         <Route path="/players/:userId" element={<PublicProfilePage />} />
                         <Route path="/matches/:matchId" element={<MatchDetailPage />} />
                         <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />

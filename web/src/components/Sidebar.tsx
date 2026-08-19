@@ -1,11 +1,12 @@
 import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Search, Trophy, UserRound } from "lucide-react";
+import { LayoutDashboard, MailCheck, Search, Trophy, UserRound } from "lucide-react";
 import { t } from "@/i18n";
 const links = [
     { to: "/main", label: t("sidebar.dashboard"), icon: LayoutDashboard },
     { to: "/leagues", label: t("sidebar.leagues"), icon: Trophy },
     { to: "/players", label: t("sidebar.players"), icon: Search },
+    { to: "/invitations", label: t("sidebar.invitations"), icon: MailCheck },
     { to: "/profile", label: t("sidebar.profile"), icon: UserRound },
 ];
 interface SidebarProps {

@@ -90,6 +90,64 @@ async function createLeague(ownerId = ids[0], overrides: Record<string, unknown>
 }
 
 describe("HTTP API contracts", { concurrency: false }, () => {
+    test("invite-only leagues persist recipient-controlled invitations and enforce capacity", async () => {
+        const league = await createLeague(ids[0], { joinPolicy: "invite_only", maxPlayers: 2 });
+        const invitePath = `/leagues/${league.id}/invitations`;
+        assert.equal((await request(invitePath, {
+            method: "POST", userId: ids[2], body: { recipientId: ids[1] }
+        })).status, 403);
+
+        const created = await request(invitePath, {
+            method: "POST", userId: ids[0], body: { recipientId: ids[1] }
+        });
+        assert.equal(created.status, 201);
+        const invitation = await created.json() as { id: string; status: string };
+        assert.equal(invitation.status, "pending");
+        assert.equal((await request(invitePath, {
+            method: "POST", userId: ids[0], body: { recipientId: ids[1] }
+        })).status, 409);
+
+        const recipientList = await request("/invitations?limit=10", { userId: ids[1] });
+        const page = await recipientList.json() as { items: Array<{ id: string }> };
+        assert.deepEqual(page.items.map(item => item.id), [invitation.id]);
+        assert.equal((await request(`/invitations/${invitation.id}`, {
+            method: "PATCH", userId: ids[2], body: { status: "accepted" }
+        })).status, 403);
+        const accepted = await request(`/invitations/${invitation.id}`, {
+            method: "PATCH", userId: ids[1], body: { status: "accepted" }
+        });
+        assert.equal(accepted.status, 200);
+        assert.equal((await accepted.json() as { status: string }).status, "accepted");
+
+        const fullInvitation = await request(invitePath, {
+            method: "POST", userId: ids[0], body: { recipientId: ids[2] }
+        });
+        const fullInvitationId = (await fullInvitation.json() as { id: string }).id;
+        assert.equal((await request(`/invitations/${fullInvitationId}`, {
+            method: "PATCH", userId: ids[2], body: { status: "accepted" }
+        })).status, 409);
+        const persisted = await db.query<{ status: string }>(
+            "SELECT status FROM league_invitations WHERE id = $1", [fullInvitationId]
+        );
+        assert.equal(persisted.rows[0].status, "pending");
+
+        const rejected = await request(`/invitations/${fullInvitationId}`, {
+            method: "PATCH", userId: ids[2], body: { status: "rejected" }
+        });
+        assert.equal(rejected.status, 200);
+        assert.equal((await rejected.json() as { status: string }).status, "rejected");
+
+        const cancellable = await request(invitePath, {
+            method: "POST", userId: ids[0], body: { recipientId: ids[3] }
+        });
+        const cancellableId = (await cancellable.json() as { id: string }).id;
+        const cancelled = await request(`${invitePath}/${cancellableId}`, {
+            method: "DELETE", userId: ids[0]
+        });
+        assert.equal(cancelled.status, 200);
+        assert.equal((await cancelled.json() as { status: string }).status, "cancelled");
+    });
+
     test("health works and public user creation remains unavailable", async () => {
         const address = server.address();
         assert.ok(address && typeof address !== "string");

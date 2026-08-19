@@ -11,6 +11,9 @@ export class SocketEmitter {
         const room = `lobby:${lobbyId}`;
         this.emit(room, event, payload, { lobbyId, leagueId: payload?.leagueId });
     }
+    static emitToUser(userId: string, event: string, payload: any) {
+        this.emit(`user:${userId}`, event, payload, { userId });
+    }
     private static emit(room: string, event: string, payload: any, identifiers: Record<string, string | undefined>) {
         const context = observabilityContext();
         const requestId = context?.requestId ?? correlationId(undefined);

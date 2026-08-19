@@ -19,6 +19,7 @@ export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthen
     io.use(rateLimiters.connection);
     io.use(createSocketAuthMiddleware(authenticate));
     io.on("connection", socket => {
+        void socket.join(`user:${socket.data.user.id}`);
         rateLimiters.events(socket);
         recordSocketConnected();
         logger.info({ operation: "socket.connect", userId: socket.data.user.id, socketId: socket.id }, "socket connected");

@@ -13,6 +13,7 @@ import { useLeagueRequests } from "../hooks/useLeagueRequests";
 import { useLeagueSocket } from "../hooks/useLeagueSocket";
 import { PageSkeleton } from "@/components/async/PageSkeleton";
 import { InlineError } from "@/components/async/InlineError";
+import { InvitePlayer } from "../components/InvitePlayer";
 
 const tabs = ["overview", "standings", "matches", "lobbies", "members"] as const;
 type Tab = (typeof tabs)[number];
@@ -102,6 +103,9 @@ export function LeaguePage() {
                         />
                         <Summary label={t("league.nextAction")} value={nextAction} />
                     </section>
+                    {isAdmin && league.data.joinPolicy === "invite_only" && (
+                        <InvitePlayer leagueId={id} />
+                    )}
                     {isAdmin &&
                         (requests.isLoading ? (
                             <p>{t("async.requests")}</p>

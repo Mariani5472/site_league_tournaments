@@ -20,6 +20,7 @@ export const queryKeys = {
         members: (leagueId: string) => ["leagues", "members", leagueId] as const,
         lobbies: (leagueId: string) => ["leagues", "lobbies", leagueId] as const,
         requests: (leagueId: string) => ["leagues", "requests", leagueId] as const,
+        invitations: ["league-invitations"] as const,
         matches: (leagueId: string) => ["leagues", "matches", leagueId] as const,
         standings: (leagueId: string) => ["leagues", "standings", leagueId] as const,
     },

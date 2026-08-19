@@ -40,7 +40,9 @@ describe("authentication pages", () => {
                 password: "correct horse battery staple",
             })
         );
-        expect(screen.getByLabelText("location")).toHaveTextContent("/leagues/league-1");
+        await waitFor(() =>
+            expect(screen.getByLabelText("location")).toHaveTextContent("/leagues/league-1")
+        );
     });
 
     it("never redirects login to an external returnTo", async () => {
