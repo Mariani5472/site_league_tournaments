@@ -210,7 +210,11 @@ export function LeagueSettingsPage() {
                         }
                     >
                         <SelectTrigger id="lobby-creation-policy">
-                            <SelectValue />
+                            <SelectValue>
+                                {lobbyCreationPolicy === "members"
+                                    ? t("settings.lobbyCreationMembers")
+                                    : t("settings.lobbyCreationAdmins")}
+                            </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="admins">
