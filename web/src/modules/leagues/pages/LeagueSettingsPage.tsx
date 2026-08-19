@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,12 +29,24 @@ export function LeagueSettingsPage() {
     const { data: members, isLoading: areMembersLoading } = useLeagueMembers(leagueId);
     const roleData = useLeagueRole(members || []);
     const mutation = useUpdateLeague();
-    const { register, handleSubmit, setValue, reset, control } = useForm<LeagueSettingsForm>({
+    const formValues: LeagueSettingsForm | undefined = league
+        ? {
+              name: league.name,
+              description: league.description || "",
+              visibility: league.visibility,
+              joinPolicy: league.joinPolicy,
+              maxPlayers: league.maxPlayers,
+              lobbyCreationPolicy: league.lobbyCreationPolicy ?? "admins",
+              autoStartLobby: league.autoStartLobby ?? false,
+          }
+        : undefined;
+    const { register, handleSubmit, setValue, control } = useForm<LeagueSettingsForm>({
         resolver: zodResolver(leagueSettingsSchema),
         defaultValues: {
             lobbyCreationPolicy: "admins",
             autoStartLobby: false,
         },
+        values: formValues,
     });
     const visibilityValue = useWatch({
         control,
@@ -57,20 +68,6 @@ export function LeagueSettingsPage() {
         name: "autoStartLobby",
         defaultValue: false,
     });
-    useEffect(() => {
-        if (!league) {
-            return;
-        }
-        reset({
-            name: league.name,
-            description: league.description || "",
-            visibility: league.visibility,
-            joinPolicy: league.joinPolicy,
-            maxPlayers: league.maxPlayers,
-            lobbyCreationPolicy: league.lobbyCreationPolicy ?? "admins",
-            autoStartLobby: league.autoStartLobby ?? false,
-        });
-    }, [league, reset]);
     const isAuthorizationLoading = isLoading || areMembersLoading;
     if (!isAuthorizationLoading && !roleData.isAdmin) {
         return <Navigate to={`/leagues/${leagueId}`} />;
