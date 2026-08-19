@@ -231,6 +231,36 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal(body.currentUserRole, "owner");
     });
 
+    test("league settings update persists every policy field and trims text", async () => {
+        const league = await createLeague();
+        const response = await request(`/leagues/${league.id}`, {
+            method: "PATCH",
+            userId: ids[0],
+            body: {
+                autoStartLobby: true,
+                description: "  a melhor liga por ser bacana  ",
+                joinPolicy: "request",
+                lobbyCreationPolicy: "members",
+                maxPlayers: 99,
+                name: "  Minha liga muito bacanuda  ",
+                visibility: "public"
+            }
+        });
+        assert.equal(response.status, 200);
+        const body = await response.json() as {
+            autoStartLobby: boolean;
+            description: string;
+            lobbyCreationPolicy: string;
+            maxPlayers: number;
+            name: string;
+        };
+        assert.equal(body.autoStartLobby, true);
+        assert.equal(body.description, "a melhor liga por ser bacana");
+        assert.equal(body.lobbyCreationPolicy, "members");
+        assert.equal(body.maxPlayers, 99);
+        assert.equal(body.name, "Minha liga muito bacanuda");
+    });
+
     test("auth sync and profile expose their successful contracts", async () => {
         const sync = await request("/auth/sync", { method: "POST", userId: ids[0] });
         assert.equal(sync.status, 201);

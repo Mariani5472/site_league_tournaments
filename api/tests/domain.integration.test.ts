@@ -299,6 +299,10 @@ describe("critical domain flows", { concurrency: false }, () => {
     });
     test("league update rejects unknown fields and invalid capacity reductions", async () => {
         assert.throws(() => updateLeagueSchema.parse({ name: "Valid name", ownerId: ids[2] }));
+        assert.deepEqual(
+            updateLeagueSchema.parse({ name: "  Valid name  ", description: "  Description  " }),
+            { name: "Valid name", description: "Description" }
+        );
         const league = await createLeague();
         await leagues.join(league.id, ids[1]);
         await assert.rejects(() => leagues.update(league.id, ids[0], { maxPlayers: 1 }));

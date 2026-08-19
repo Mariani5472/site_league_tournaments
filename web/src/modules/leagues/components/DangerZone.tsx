@@ -33,7 +33,8 @@ export function DangerZone({ leagueId, leagueName }: Props) {
         },
         onError: (error: unknown) => toast.error(mutationErrorMessage(error)),
     });
-    const confirmed = confirmation === leagueName;
+    const normalizedLeagueName = leagueName.trim();
+    const confirmed = confirmation.trim() === normalizedLeagueName;
     function changeOpen(nextOpen: boolean) {
         if (deleteMutation.isPending) return;
         setOpen(nextOpen);
@@ -76,9 +77,11 @@ export function DangerZone({ leagueId, leagueName }: Props) {
                 </DialogTrigger>
                 <DialogContent showCloseButton={!deleteMutation.isPending}>
                     <DialogHeader>
-                        <DialogTitle>{t("danger.confirmTitle", { name: leagueName })}</DialogTitle>
+                        <DialogTitle>
+                            {t("danger.confirmTitle", { name: normalizedLeagueName })}
+                        </DialogTitle>
                         <DialogDescription>
-                            {t("danger.confirmDescription", { name: leagueName })}
+                            {t("danger.confirmDescription", { name: normalizedLeagueName })}
                         </DialogDescription>
                     </DialogHeader>
                     <Input
