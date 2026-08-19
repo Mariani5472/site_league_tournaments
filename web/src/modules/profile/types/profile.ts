@@ -5,7 +5,14 @@ export type Profile = {
     avatarUrl: string | null;
     bannerUrl: string | null;
     createdAt: string;
-    stats: { matchesPlayed: number; wins: number; losses: number };
+    stats: {
+        matchesPlayed: number;
+        wins: number;
+        losses: number;
+        recentForm: Array<"win" | "loss">;
+        currentStreakResult: "win" | "loss" | null;
+        currentStreak: number;
+    };
     publicLeagues: Array<{
         id: string;
         name: string;

@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { formatDateTime, formatList, formatNumber, formatPercent, t } from "@/i18n";
+import { formatDateTime, formatList, formatNumber, formatPercent, t, tp } from "@/i18n";
 import { labelMatchStatus, labelResolution } from "@/i18n/labels";
 import { getMatches, getStandings } from "./services";
 import { uniqueItems } from "@/types/pagination";
 import { LoadMoreButton } from "@/components/LoadMoreButton";
 import { Link } from "react-router-dom";
+import { CompetitiveForm } from "./CompetitiveForm";
 
 export function LeagueResults({
     leagueId,
@@ -39,7 +40,7 @@ export function LeagueResults({
                         <p className="text-destructive">{t("match.standingsError")}</p>
                     ) : standings.data?.length ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[520px] text-sm">
+                            <table className="w-full min-w-[760px] text-sm">
                                 <thead>
                                     <tr className="text-left border-b">
                                         <th className="p-2">{t("match.position")}</th>
@@ -48,6 +49,8 @@ export function LeagueResults({
                                         <th>{t("match.wins")}</th>
                                         <th>{t("match.losses")}</th>
                                         <th>{t("match.winRate")}</th>
+                                        <th>{t("match.recentForm")}</th>
+                                        <th>{t("match.streak")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -59,6 +62,27 @@ export function LeagueResults({
                                             <td>{formatNumber(row.wins)}</td>
                                             <td>{formatNumber(row.losses)}</td>
                                             <td>{formatPercent(row.winRate)}</td>
+                                            <td className="py-2 pr-3">
+                                                <CompetitiveForm
+                                                    recentForm={row.recentForm}
+                                                    currentStreak={row.currentStreak}
+                                                    currentStreakResult={row.currentStreakResult}
+                                                    compact
+                                                />
+                                            </td>
+                                            <td className="pr-2 text-xs text-muted-foreground">
+                                                {row.currentStreakResult
+                                                    ? row.currentStreakResult === "win"
+                                                        ? tp(row.currentStreak, {
+                                                              one: "match.winStreak.one",
+                                                              other: "match.winStreak.other",
+                                                          })
+                                                        : tp(row.currentStreak, {
+                                                              one: "match.lossStreak.one",
+                                                              other: "match.lossStreak.other",
+                                                          })
+                                                    : t("match.formEmpty")}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
