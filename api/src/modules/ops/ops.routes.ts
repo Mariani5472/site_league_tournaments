@@ -19,6 +19,16 @@ opsRoutes.get("/session", controller.session.bind(controller));
 opsRoutes.get("/audit", requireSensitiveOpsAuth, controller.listAudit.bind(controller));
 opsRoutes.get("/users", opsSearchRateLimit, controller.listUsers.bind(controller));
 opsRoutes.get("/users/:userId", controller.userDetail.bind(controller));
+opsRoutes.post(
+    "/users/:userId/suspend",
+    requireSensitiveOpsAuth,
+    controller.suspendUser.bind(controller)
+);
+opsRoutes.post(
+    "/users/:userId/unsuspend",
+    requireSensitiveOpsAuth,
+    controller.unsuspendUser.bind(controller)
+);
 opsRoutes.get("/leagues", opsSearchRateLimit, controller.listLeagues.bind(controller));
 opsRoutes.get("/leagues/:leagueId", controller.leagueDetail.bind(controller));
 opsRoutes.post(

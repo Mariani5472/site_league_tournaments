@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { uniqueItems } from "@/types/pagination";
 import { queryKeys } from "@/lib/queryKeys";
 import {
@@ -7,6 +7,8 @@ import {
     getOpsUser,
     listOpsLeagues,
     listOpsUsers,
+    suspendOpsUser,
+    unsuspendOpsUser,
 } from "./ops.service";
 
 export function useOpsSession() {
@@ -35,6 +37,22 @@ export function useOpsLeagues(search: string) {
 
 export function useOpsUser(userId: string) {
     return useQuery({ queryKey: queryKeys.ops.user(userId), queryFn: () => getOpsUser(userId) });
+}
+
+export function useOpsUserContainment(userId: string) {
+    const queryClient = useQueryClient();
+    const refresh = () => queryClient.invalidateQueries({ queryKey: queryKeys.ops.user(userId) });
+    return {
+        suspend: useMutation({
+            mutationFn: (input: { reason: string; suspendedUntil: string }) =>
+                suspendOpsUser(userId, input),
+            onSuccess: refresh,
+        }),
+        unsuspend: useMutation({
+            mutationFn: (reason: string) => unsuspendOpsUser(userId, reason),
+            onSuccess: refresh,
+        }),
+    };
 }
 
 export function useOpsLeague(leagueId: string) {

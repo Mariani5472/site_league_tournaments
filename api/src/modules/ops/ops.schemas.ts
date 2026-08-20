@@ -15,7 +15,12 @@ export const platformRoleMutationSchema = z.object({
 export const platformAuditQuerySchema = cursorPaginationSchema
     .extend({
         actorId: z.uuid().optional(),
-        action: z.enum(["platform_role.granted", "platform_role.revoked"]).optional(),
+        action: z.enum([
+            "platform_role.granted",
+            "platform_role.revoked",
+            "user.suspended",
+            "user.unsuspended",
+        ]).optional(),
         targetType: z.enum(["user"]).optional(),
         targetId: z.uuid().optional(),
         from: z.iso.datetime({ offset: true }).transform(value => new Date(value)).optional(),
@@ -36,3 +41,10 @@ export const opsLeaguesQuerySchema = cursorPaginationSchema.extend({
     visibility: z.enum(["public", "private"]).optional(),
     operationalStatus: z.enum(["active", "idle"]).optional(),
 });
+
+export const userSuspensionSchema = z.object({
+    reason: platformRoleMutationSchema.shape.reason,
+    suspendedUntil: z.iso.datetime({ offset: true }).transform(value => new Date(value)),
+}).strict();
+
+export const userUnsuspensionSchema = platformRoleMutationSchema;

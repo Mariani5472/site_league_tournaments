@@ -5,6 +5,7 @@ import type {
     OpsSession,
     OpsUserDetail,
     OpsUsersPage,
+    OpsUserOperationalState,
 } from "./types";
 
 export async function getOpsSession() {
@@ -21,6 +22,18 @@ export async function listOpsUsers(search: string, cursor?: string) {
 
 export async function getOpsUser(userId: string) {
     return (await api.get<OpsUserDetail>(`/ops/users/${userId}`)).data;
+}
+
+export async function suspendOpsUser(
+    userId: string,
+    input: { reason: string; suspendedUntil: string }
+) {
+    return (await api.post<OpsUserOperationalState>(`/ops/users/${userId}/suspend`, input)).data;
+}
+
+export async function unsuspendOpsUser(userId: string, reason: string) {
+    return (await api.post<OpsUserOperationalState>(`/ops/users/${userId}/unsuspend`, { reason }))
+        .data;
 }
 
 export async function listOpsLeagues(search: string, cursor?: string) {

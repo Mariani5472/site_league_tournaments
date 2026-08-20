@@ -59,7 +59,8 @@ describe("abuse rate limits", () => {
         const io = initializeSocket(
             server,
             async token => ({ id: token, email: `${token}@test.local` }),
-            { connectionLimit: 10, eventLimit: 2, windowMs: 60_000 }
+            { connectionLimit: 10, eventLimit: 2, windowMs: 60_000 },
+            async () => undefined
         );
         io.on("connection", socket => {
             socket.on("burst:test", (ack: (result: unknown) => void) => ack({ ok: true }));
@@ -86,7 +87,8 @@ describe("abuse rate limits", () => {
         const io = initializeSocket(
             server,
             async token => { authentications += 1; return { id: token, email: `${token}@test.local` }; },
-            { connectionLimit: 2, eventLimit: 10, windowMs: 60_000 }
+            { connectionLimit: 2, eventLimit: 10, windowMs: 60_000 },
+            async () => undefined
         );
         const url = await listen(server);
         (await connect(url, "first")).disconnect();

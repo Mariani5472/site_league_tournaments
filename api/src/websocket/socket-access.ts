@@ -67,6 +67,14 @@ export class SocketAccess {
         await Promise.all(socketIds.map(socketId => this.revokeSocketLeague(socketId, leagueId)));
     }
 
+    static async disconnectUser(userId: string) {
+        const socketIds = [...(userSockets.get(userId) ?? [])];
+        await Promise.all(socketIds.map(async socketId => {
+            const socket = getIO().sockets.sockets.get(socketId);
+            if (socket) socket.disconnect(true);
+        }));
+    }
+
     private static async revokeSocketLeague(socketId: string, leagueId: string) {
         const grants = grantsBySocket.get(socketId);
         const socket = getIO().sockets.sockets.get(socketId);

@@ -10,6 +10,7 @@ import { SocketActionResult } from "../src/websocket/socket-action";
 import { SOCKET_EVENTS } from "../src/websocket/socket-events";
 import { SocketEmitter } from "../src/websocket/emitter";
 import { getIO, initializeSocket } from "../src/websocket/socket";
+import { SocketAccess } from "../src/websocket/socket-access";
 
 const ids = Array.from({ length: 4 }, (_, index) =>
     `30000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`
@@ -159,6 +160,22 @@ describe("Socket.IO transport contracts", { concurrency: false }, () => {
             process.off("unhandledRejection", onUnhandled);
             socket.disconnect();
         }
+    });
+
+    test("suspended users are disconnected immediately and cannot reconnect", async () => {
+        const socket = await connect(ids[1]);
+        const disconnected = new Promise<string>(resolve => socket.once("disconnect", resolve));
+        await db.query(`
+            UPDATE users SET operational_status = 'suspended',
+                restriction_reason = 'Realtime abuse under investigation',
+                suspended_until = current_timestamp + interval '1 hour',
+                restricted_at = current_timestamp, restricted_by = $1,
+                session_revocation_status = 'pending'
+            WHERE id = $2
+        `, [ids[0], ids[1]]);
+        await SocketAccess.disconnectUser(ids[1]);
+        assert.equal(await disconnected, "io server disconnect");
+        assert.match((await rejectedHandshake(ids[1])).message, /authentication failed/i);
     });
 
     test("revocation removes multiple tabs and reconnect cannot regain rooms", async () => {

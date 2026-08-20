@@ -47,3 +47,18 @@ dedicado por operador (`OPS_SEARCH_RATE_LIMIT`, padrão 30 por
 no detalhe de usuário. Busca e filtros aceitam apenas campos tipados, e todos os SQLs usam
 parâmetros. Detalhes agregam memberships e atividade recente sem expor tokens, Riot PUUID ou
 outros secrets.
+
+## Contenção de usuários
+
+`POST /ops/users/:userId/suspend` exige motivo, término futuro, MFA e reautenticação recente. A
+conta passa a ser bloqueada nos middlewares HTTP e Socket.IO antes de qualquer ação de domínio;
+conexões realtime existentes são desconectadas. Memberships, partidas, votos e demais históricos
+não são alterados. `POST /ops/users/:userId/unsuspend` reverte explicitamente a contenção, enquanto
+uma suspensão vencida deixa de bloquear acesso de forma determinística mesmo antes da limpeza
+administrativa do registro.
+
+A API usa `SUPABASE_SERVICE_ROLE_KEY` exclusivamente no servidor para solicitar a revogação das
+sessões no Supabase Auth. Falha externa não reabre a conta: a resposta é `202`, o estado
+`session_revocation_status = failed` permanece observável no detalhe Ops e a mesma suspensão pode
+ser reenviada para retry. Suspensão e reativação geram eventos append-only `user.suspended` e
+`user.unsuspended` com o mesmo correlation ID dos logs técnicos.

@@ -8,6 +8,7 @@ export type OpsUserSummary = {
     createdAt: string;
     isSuperAdmin: boolean;
     membershipCount: number;
+    operationalStatus: "active" | "suspended" | "banned";
 };
 export type OpsLeagueSummary = {
     id: string;
@@ -22,7 +23,11 @@ export type OpsLeagueSummary = {
 };
 export type OpsUserDetail = OpsUserSummary & {
     email: string;
-    accountStatus: "active";
+    restrictionReason: string | null;
+    suspendedUntil: string | null;
+    restrictedAt: string | null;
+    sessionRevocationStatus: "not_required" | "pending" | "succeeded" | "failed";
+    sessionRevocationAttemptedAt: string | null;
     platformRoles: string[];
     pendingRequestCount: number;
     pendingInvitationCount: number;
@@ -55,3 +60,14 @@ export type OpsLeagueDetail = OpsLeagueSummary & {
 };
 export type OpsUsersPage = CursorPage<OpsUserSummary>;
 export type OpsLeaguesPage = CursorPage<OpsLeagueSummary>;
+
+export type OpsUserOperationalState = Pick<
+    OpsUserDetail,
+    | "id"
+    | "operationalStatus"
+    | "restrictionReason"
+    | "suspendedUntil"
+    | "restrictedAt"
+    | "sessionRevocationStatus"
+    | "sessionRevocationAttemptedAt"
+>;

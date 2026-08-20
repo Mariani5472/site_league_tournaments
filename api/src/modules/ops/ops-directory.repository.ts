@@ -6,6 +6,8 @@ export class OpsDirectoryRepository {
     async listUsers(params: OpsUserListParams) {
         const result = await db.query(`
             SELECT u.id, u.nickname, u.avatar_url, u.created_at,
+                CASE WHEN u.operational_status = 'suspended' AND u.suspended_until <= current_timestamp
+                    THEN 'active' ELSE u.operational_status END AS operational_status,
                 EXISTS (
                     SELECT 1 FROM platform_roles pr
                     WHERE pr.user_id = u.id AND pr.role = 'super_admin' AND pr.revoked_at IS NULL
@@ -47,6 +49,10 @@ export class OpsDirectoryRepository {
     async userDetail(userId: string) {
         const user = await db.query(`
             SELECT u.id, u.email, u.nickname, u.avatar_url, u.created_at,
+                CASE WHEN u.operational_status = 'suspended' AND u.suspended_until <= current_timestamp
+                    THEN 'active' ELSE u.operational_status END AS operational_status,
+                u.restriction_reason, u.suspended_until, u.restricted_at,
+                u.session_revocation_status, u.session_revocation_attempted_at,
                 COALESCE((
                     SELECT array_agg(pr.role ORDER BY pr.role)
                     FROM platform_roles pr
@@ -88,7 +94,6 @@ export class OpsDirectoryRepository {
         ]);
         return {
             ...user.rows[0],
-            accountStatus: "active",
             activeLobby: activeLobby.rows[0] ?? null,
             memberships: memberships.rows,
             recentMatches: matches.rows,

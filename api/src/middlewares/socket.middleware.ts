@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { supabase } from "../lib/supabase";
 import { UserIdentity } from "../modules/users/users.types";
+import { assertUserOperationalAccess } from "../security/user-operational-access";
 
 export type SocketAuthenticator = (token: string) => Promise<UserIdentity>;
 
@@ -15,7 +16,10 @@ const authenticateWithSupabase: SocketAuthenticator = async token => {
     };
 };
 
-export function createSocketAuthMiddleware(authenticate: SocketAuthenticator = authenticateWithSupabase) {
+export function createSocketAuthMiddleware(
+    authenticate: SocketAuthenticator = authenticateWithSupabase,
+    authorize: (userId: string) => Promise<void> = assertUserOperationalAccess
+) {
     return async (socket: Socket, next: (err?: Error) => void) => {
     try {
         const token = socket.handshake.auth.token;
@@ -23,6 +27,7 @@ export function createSocketAuthMiddleware(authenticate: SocketAuthenticator = a
             return next(new Error("Token missing"));
         }
         socket.data.user = await authenticate(token);
+        await authorize(socket.data.user.id);
         next();
     }
     catch {

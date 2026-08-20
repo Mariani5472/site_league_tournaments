@@ -8,15 +8,19 @@ import {
     opsUsersQuerySchema,
     platformRoleMutationSchema,
     platformRoleParamsSchema,
+    userSuspensionSchema,
+    userUnsuspensionSchema,
 } from "./ops.schemas";
 import { PlatformAuditService } from "./platform-audit.service";
 import { PlatformRolesService } from "./platform-roles.service";
 import { OpsDirectoryService } from "./ops-directory.service";
+import { UserContainmentService } from "./user-containment.service";
 
 export class OpsController {
     private readonly roles = new PlatformRolesService();
     private readonly audit = new PlatformAuditService();
     private readonly directory = new OpsDirectoryService();
+    private readonly containment = new UserContainmentService();
 
     session(request: Request, response: Response) {
         return response.json({
@@ -78,6 +82,44 @@ export class OpsController {
     async userDetail(request: Request, response: Response) {
         const { userId } = opsUserParamsSchema.parse(request.params);
         return response.json(await this.directory.userDetail(userId));
+    }
+
+    async suspendUser(request: Request, response: Response) {
+        const { userId } = opsUserParamsSchema.parse(request.params);
+        const { reason, suspendedUntil } = userSuspensionSchema.parse(request.body);
+        const state = await this.containment.suspend({
+            actorId: request.user.id,
+            userId,
+            reason,
+            suspendedUntil,
+            correlationId: request.requestId,
+        });
+        request.log.info({
+            operation: "ops.user.suspend",
+            targetType: "user",
+            targetId: userId,
+            correlationId: request.requestId,
+            sessionRevocationStatus: state?.sessionRevocationStatus,
+        }, "user containment completed");
+        return response.status(state?.sessionRevocationStatus === "failed" ? 202 : 200).json(state);
+    }
+
+    async unsuspendUser(request: Request, response: Response) {
+        const { userId } = opsUserParamsSchema.parse(request.params);
+        const { reason } = userUnsuspensionSchema.parse(request.body);
+        const state = await this.containment.unsuspend({
+            actorId: request.user.id,
+            userId,
+            reason,
+            correlationId: request.requestId,
+        });
+        request.log.info({
+            operation: "ops.user.unsuspend",
+            targetType: "user",
+            targetId: userId,
+            correlationId: request.requestId,
+        }, "user containment reverted");
+        return response.json(state);
     }
 
     async listLeagues(request: Request, response: Response) {

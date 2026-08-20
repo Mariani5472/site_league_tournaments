@@ -89,6 +89,13 @@ export function OpsDirectoryPage() {
                                             {t("ops.memberships", { count: item.membershipCount })}
                                         </p>
                                         <p className="text-muted-foreground">
+                                            {item.operationalStatus === "active"
+                                                ? t("ops.account.active")
+                                                : item.operationalStatus === "suspended"
+                                                  ? t("ops.account.suspended")
+                                                  : t("ops.account.banned")}
+                                        </p>
+                                        <p className="text-muted-foreground">
                                             {t("ops.since", { date: formatDate(item.createdAt) })}
                                         </p>
                                     </div>

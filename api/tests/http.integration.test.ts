@@ -230,6 +230,81 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.deepEqual(detail.recentMatches.map(item => item.id), [match.rows[0].id]);
     });
 
+    test("ops suspension blocks access, expires deterministically and remains auditable", async () => {
+        await db.query(
+            "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",
+            [ids[6]]
+        );
+        const path = `/ops/users/${ids[7]}/suspend`;
+        const suspension = {
+            reason: "Repeated abusive realtime activity",
+            suspendedUntil: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        };
+
+        assert.equal((await request(path, {
+            method: "POST",
+            userId: ids[8],
+            body: suspension,
+        })).status, 403);
+        assert.equal((await request(path, {
+            method: "POST",
+            userId: ids[6],
+            body: { ...suspension, reason: "short" },
+        })).status, 400);
+        assert.equal((await request(`/ops/users/${ids[6]}/suspend`, {
+            method: "POST",
+            userId: ids[6],
+            body: suspension,
+        })).status, 409);
+
+        const previousServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const suspended = await request(path, {
+            method: "POST",
+            userId: ids[6],
+            requestId: "ops-suspend-correlation",
+            body: suspension,
+        });
+        if (previousServiceKey) process.env.SUPABASE_SERVICE_ROLE_KEY = previousServiceKey;
+        assert.equal(suspended.status, 202);
+        const state = await suspended.json() as {
+            operationalStatus: string;
+            sessionRevocationStatus: string;
+        };
+        assert.equal(state.operationalStatus, "suspended");
+        assert.equal(state.sessionRevocationStatus, "failed");
+        assert.equal((await request("/profile", { userId: ids[7] })).status, 403);
+
+        const detail = await request(`/ops/users/${ids[7]}`, { userId: ids[6] });
+        const detailBody = await detail.json() as {
+            operationalStatus: string;
+            restrictionReason: string;
+            sessionRevocationStatus: string;
+        };
+        assert.equal(detailBody.operationalStatus, "suspended");
+        assert.equal(detailBody.restrictionReason, suspension.reason);
+        assert.equal(detailBody.sessionRevocationStatus, "failed");
+
+        const audit = await request(
+            `/ops/audit?action=user.suspended&targetId=${ids[7]}`,
+            { userId: ids[6] }
+        );
+        assert.equal(audit.status, 200);
+        const auditBody = await audit.json() as { items: Array<{ correlationId: string }> };
+        assert.equal(auditBody.items[0].correlationId, "ops-suspend-correlation");
+
+        await db.query("UPDATE users SET suspended_until = current_timestamp - interval '1 second' WHERE id = $1", [ids[7]]);
+        assert.equal((await request("/profile", { userId: ids[7] })).status, 200);
+
+        const unsuspended = await request(`/ops/users/${ids[7]}/unsuspend`, {
+            method: "POST",
+            userId: ids[6],
+            body: { reason: "Restriction period completed safely" },
+        });
+        assert.equal(unsuspended.status, 200);
+        assert.equal((await unsuspended.json() as { operationalStatus: string }).operationalStatus, "active");
+    });
+
     test("sensitive ops require MFA and recent authentication", async () => {
         await db.query(
             "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",
@@ -679,18 +754,34 @@ describe("HTTP API contracts", { concurrency: false }, () => {
     });
 
     test("PostgreSQL 23503 and 23514 use safe public error contracts", async () => {
-        const foreignKey = await request("/leagues", {
-            method: "POST",
-            userId: randomUUID(),
-            body: {
-                name: "Missing owner", visibility: "private",
-                joinPolicy: "request", maxPlayers: 4
-            }
-        });
-        const foreignKeyBody = await foreignKey.text();
-        assert.equal(foreignKey.status, 409);
-        assert.equal(JSON.parse(foreignKeyBody).code, "CONFLICT");
-        assert.equal(foreignKeyBody.includes("violates foreign key"), false);
+        await db.query(`
+            CREATE FUNCTION force_http_fk() RETURNS trigger AS $$
+            BEGIN
+              RAISE EXCEPTION 'private foreign key detail' USING ERRCODE = '23503';
+            END;
+            $$ LANGUAGE plpgsql
+        `);
+        await db.query(`
+            CREATE TRIGGER force_http_fk BEFORE INSERT ON leagues
+            FOR EACH ROW EXECUTE FUNCTION force_http_fk()
+        `);
+        try {
+            const foreignKey = await request("/leagues", {
+                method: "POST",
+                userId: ids[0],
+                body: {
+                    name: "Missing owner", visibility: "private",
+                    joinPolicy: "request", maxPlayers: 4
+                }
+            });
+            const foreignKeyBody = await foreignKey.text();
+            assert.equal(foreignKey.status, 409);
+            assert.equal(JSON.parse(foreignKeyBody).code, "CONFLICT");
+            assert.equal(foreignKeyBody.includes("foreign key detail"), false);
+        } finally {
+            await db.query("DROP TRIGGER force_http_fk ON leagues");
+            await db.query("DROP FUNCTION force_http_fk()");
+        }
 
         await db.query(`
             CREATE FUNCTION force_http_check() RETURNS trigger AS $$

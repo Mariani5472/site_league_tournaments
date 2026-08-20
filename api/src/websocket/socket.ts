@@ -7,7 +7,12 @@ import { logger } from "../observability/logger";
 import { recordSocketConnected, recordSocketDisconnected } from "../observability/metrics";
 import { createSocketRateLimiters, SocketRateLimitOptions } from "../rate-limit/socket-rate-limit";
 let io: Server;
-export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthenticator, rateLimitOptions?: SocketRateLimitOptions) {
+export function initializeSocket(
+    server: HTTPServer,
+    authenticate?: SocketAuthenticator,
+    rateLimitOptions?: SocketRateLimitOptions,
+    authorize?: (userId: string) => Promise<void>
+) {
     io = new Server(server, {
         maxHttpBufferSize: 100000,
         cors: {
@@ -17,7 +22,7 @@ export function initializeSocket(server: HTTPServer, authenticate?: SocketAuthen
     });
     const rateLimiters = createSocketRateLimiters(rateLimitOptions);
     io.use(rateLimiters.connection);
-    io.use(createSocketAuthMiddleware(authenticate));
+    io.use(createSocketAuthMiddleware(authenticate, authorize));
     io.on("connection", socket => {
         void socket.join(`user:${socket.data.user.id}`);
         rateLimiters.events(socket);

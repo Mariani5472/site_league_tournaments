@@ -7,10 +7,12 @@ import { OpsUserDetailPage } from "./OpsUserDetailPage";
 const useOpsUsers = vi.hoisted(() => vi.fn());
 const useOpsLeagues = vi.hoisted(() => vi.fn());
 const useOpsUser = vi.hoisted(() => vi.fn());
+const useOpsUserContainment = vi.hoisted(() => vi.fn());
 vi.mock("../hooks", () => ({
     useOpsUsers,
     useOpsLeagues,
     useOpsUser,
+    useOpsUserContainment,
     useOpsLeague: vi.fn(),
 }));
 
@@ -26,6 +28,10 @@ const listQuery = {
 
 describe("Ops pages", () => {
     beforeEach(() => {
+        useOpsUserContainment.mockReturnValue({
+            suspend: { mutate: vi.fn(), isPending: false },
+            unsuspend: { mutate: vi.fn(), isPending: false },
+        });
         useOpsUsers.mockReturnValue({
             ...listQuery,
             data: [
@@ -36,6 +42,7 @@ describe("Ops pages", () => {
                     createdAt: "2026-08-20T12:00:00.000Z",
                     isSuperAdmin: false,
                     membershipCount: 2,
+                    operationalStatus: "active",
                 },
             ],
         });
@@ -50,7 +57,12 @@ describe("Ops pages", () => {
                 createdAt: "2026-08-20T12:00:00.000Z",
                 isSuperAdmin: false,
                 membershipCount: 1,
-                accountStatus: "active",
+                operationalStatus: "active",
+                restrictionReason: null,
+                suspendedUntil: null,
+                restrictedAt: null,
+                sessionRevocationStatus: "not_required",
+                sessionRevocationAttemptedAt: null,
                 platformRoles: [],
                 pendingRequestCount: 0,
                 pendingInvitationCount: 0,
