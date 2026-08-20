@@ -15,7 +15,36 @@ const authenticateWithSupabase: HttpAuthenticator = async token => {
     if (!data.user.email) {
         throw new AppError("Authenticated user has no email", 401);
     }
-    return { id: data.user.id, email: data.user.email };
+    let claims: {
+        aal?: unknown;
+        amr?: Array<{ method?: unknown; timestamp?: unknown }>;
+        sub?: unknown;
+    } = {};
+    try {
+        const payload = token.split(".")[1];
+        if (payload) claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    } catch {
+        // The token was already validated by Supabase; missing optional claims deny sensitive Ops actions.
+    }
+    const latestAuthentication = Array.isArray(claims.amr)
+        ? Math.max(
+              ...claims.amr
+                  .map(authentication => authentication.timestamp)
+                  .filter((timestamp): timestamp is number => typeof timestamp === "number")
+          )
+        : Number.NaN;
+    return {
+        id: data.user.id,
+        email: data.user.email,
+        authenticationAssuranceLevel:
+            claims.sub === data.user.id && ["aal1", "aal2"].includes(String(claims.aal))
+                ? (claims.aal as "aal1" | "aal2")
+                : undefined,
+        authenticatedAt:
+            claims.sub === data.user.id && Number.isFinite(latestAuthentication)
+                ? new Date(latestAuthentication * 1000)
+                : undefined,
+    };
 };
 
 let authenticate: HttpAuthenticator = authenticateWithSupabase;

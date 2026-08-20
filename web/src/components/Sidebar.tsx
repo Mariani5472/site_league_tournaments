@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, MailCheck, Search, Trophy, UserRound } from "lucide-react";
+import { LayoutDashboard, MailCheck, Search, ShieldCheck, Trophy, UserRound } from "lucide-react";
 import { t } from "@/i18n";
+import { useOpsSession } from "@/modules/ops/hooks";
 const links = [
     { to: "/main", label: t("sidebar.dashboard"), icon: LayoutDashboard },
     { to: "/leagues", label: t("sidebar.leagues"), icon: Trophy },
@@ -14,6 +15,7 @@ interface SidebarProps {
     onClose: () => void;
 }
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+    const opsSession = useOpsSession();
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     useEffect(() => {
         if (isOpen) closeButtonRef.current?.focus();
@@ -74,6 +76,23 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </NavLink>
                     );
                 })}
+                {opsSession.data && (
+                    <NavLink
+                        to="/ops"
+                        onClick={onClose}
+                        className={({
+                            isActive,
+                        }) => `flex items-center rounded-md px-4 py-2.5 text-sm font-medium transition-all
+              ${
+                  isActive
+                      ? "border-l-4 border-sidebar-primary bg-sidebar-accent pl-3 text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              }`}
+                    >
+                        <ShieldCheck className="mr-3 h-4 w-4" />
+                        {t("sidebar.ops")}
+                    </NavLink>
+                )}
             </nav>
         </aside>
     );

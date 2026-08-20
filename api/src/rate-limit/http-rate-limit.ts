@@ -9,10 +9,12 @@ export function createHttpRateLimitMiddleware(options: {
     limit?: number;
     windowMs?: number;
     key?: (request: Request) => string;
-    surface?: "http_ip" | "player_search";
+    surface?: "http_ip" | "player_search" | "ops_search";
 } = {}) {
     const limiter = new FixedWindowRateLimiter(
-        options.limit ?? positiveInteger(process.env.HTTP_RATE_LIMIT, 120),
+        options.limit ?? (process.env.NODE_ENV === "test"
+            ? 1_000
+            : positiveInteger(process.env.HTTP_RATE_LIMIT, 120)),
         options.windowMs ?? positiveInteger(process.env.HTTP_RATE_LIMIT_WINDOW_MS, 60_000)
     );
     const key = options.key ?? (request => request.ip ?? request.socket.remoteAddress ?? "unknown");
@@ -35,7 +37,9 @@ export function createHttpRateLimitMiddleware(options: {
 }
 
 const userLimiter = new FixedWindowRateLimiter(
-    positiveInteger(process.env.HTTP_USER_RATE_LIMIT, 60),
+    process.env.NODE_ENV === "test"
+        ? 1_000
+        : positiveInteger(process.env.HTTP_USER_RATE_LIMIT, 60),
     positiveInteger(process.env.HTTP_RATE_LIMIT_WINDOW_MS, 60_000)
 );
 
