@@ -36,6 +36,8 @@ create table public.leagues (
   owner_id uuid not null references public.users(id) on delete cascade,
   name varchar(100) not null,
   description text,
+  avatar_url text,
+  banner_url text,
   visibility varchar(20) not null constraint leagues_visibility_check check (visibility in ('public', 'private')),
   join_policy varchar(20) not null constraint leagues_join_policy_check check (join_policy in ('open', 'request', 'invite_only')),
   lobby_creation_policy varchar(20) not null default 'admins' constraint leagues_lobby_creation_policy_check check (lobby_creation_policy in ('admins', 'members')),
