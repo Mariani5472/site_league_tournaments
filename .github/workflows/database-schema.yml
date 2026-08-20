@@ -66,11 +66,13 @@ jobs:
         id: previous
         shell: bash
         run: |
-          previous=$(find migrations -maxdepth 1 -type f -name '*.js' -printf '%f\n' | sort | tail -n 2 | head -n 1 | sed 's/\.js$//')
-          test -n "$previous"
-          echo "name=$previous" >> "$GITHUB_OUTPUT"
-          npm run migrate:up
-          npm run migrate:down
+          psql "$BASELINE_DATABASE_URL" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/migrations/20260805210000_initial_schema.sql
+
+          psql "$BASELINE_DATABASE_URL" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/migrations/20260820030000_add_user_operational_state.sql
         env:
           DATABASE_URL: ${{ env.LEGACY_REFERENCE_DATABASE_URL }}
       - name: Restore representative legacy schema without migration history
