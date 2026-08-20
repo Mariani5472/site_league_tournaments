@@ -202,6 +202,8 @@ export const ptBR = {
         "Crie sua conta, encontre outros jogadores e organize a próxima partida em poucos passos.",
     "landing.cta.button": "Criar minha conta",
     "landing.footer.description": "Ligas, lobbies e partidas competitivas entre amigos.",
+    "landing.footer.riotBoilerplate":
+        "O Ligas não é endossado pela Riot Games e não reflete as visões ou opiniões da Riot Games ou de qualquer pessoa oficialmente envolvida na produção ou gestão das propriedades da Riot Games. A Riot Games e todas as propriedades associadas são marcas comerciais ou marcas registradas da Riot Games, Inc.",
     "landing.footer.copyright": "© {year} Vini Mariani. Projeto pessoal.",
     "onboarding.eyebrow": "Primeiros passos",
     "onboarding.title": "Prepare sua experiência na plataforma",

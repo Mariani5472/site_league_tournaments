@@ -52,7 +52,7 @@ Os estados usados nesta auditoria são:
 | --- | --- | --- | --- | --- |
 | Aviso legal | O boilerplate oficial deve estar prontamente visível aos jogadores | O rodapé de `LandingPage.tsx` não contém o aviso; a busca no produto também não o encontrou | **Não conforme** | Inserir no produto o texto exato indicado pela Riot, substituindo o nome do produto, em local visível e não apenas nesta documentação |
 | Registro do produto | Produto que atende jogadores deve ser registrado e manter descrição/metadados atualizados | Não há como provar registro ou estado do produto pelo repositório | **Não verificável / bloqueante** | Registrar FPL_LOL no Developer Portal, enviar o fluxo funcional para revisão e atualizar o cadastro a cada mudança relevante |
-| Chave para ambiente público | Chave de desenvolvimento serve a protótipo não público; produto público requer chave de produção | O backend usa a variável `RIOT_DEVELOPMENT_API_KEY` | **Condicionalmente não conforme** | Em produção pública, usar uma chave de produção aprovada e renomear a configuração para não induzir uso de chave de desenvolvimento |
+| Chave para ambiente público | Chave de desenvolvimento serve a protótipo não público; produto público requer chave de produção | O backend usa a variável `RIOT_API_KEY` | **Condicionalmente não conforme** | Em produção pública, usar uma chave de produção aprovada e renomear a configuração para não induzir uso de chave de desenvolvimento |
 | Chave para projeto privado | Chave pessoal só pode atender o desenvolvedor ou pequena comunidade privada, nunca consumo público ou alpha/beta aberto | O tipo real da chave e o público do deploy não são observáveis | **Não verificável** | Documentar a classificação do ambiente e impedir ativação pública com chave pessoal/de desenvolvimento |
 | Segurança da chave | Chave fora do código, acesso via HTTPS e uma chave de produção por produto | Chave vem de variável de ambiente, não é enviada ao frontend e a base URL usa HTTPS | **Conforme no código** | Confirmar externamente que não há reutilização entre produtos e que o segredo não aparece em logs ou configuração de cliente |
 | Endpoint e identificador | Para Riot ID, a Riot documenta `ACCOUNT-V1 /accounts/by-riot-id/{gameName}/{tagLine}` e recomenda PUUID | O cliente usa exatamente esse endpoint e armazena PUUID | **Conforme** | Manter acompanhamento de versões e deprecações |
@@ -98,7 +98,7 @@ A política específica de League of Legends determina registro para qualquer pr
 **Severidade:** bloqueante se o ambiente for público  
 **Estado:** condicionalmente não conforme
 
-`riot.config.ts` lê exclusivamente `RIOT_DEVELOPMENT_API_KEY`. Uma development key expira em 24 horas e não pode sustentar produto público. Uma personal key também não pode ser usada em consumo público, incluindo alpha ou beta abertos.
+`riot.config.ts` lê exclusivamente `RIOT_API_KEY`. Uma development key expira em 24 horas e não pode sustentar produto público. Uma personal key também não pode ser usada em consumo público, incluindo alpha ou beta abertos.
 
 O repositório não contém a chave e o `.gitignore` ignora `.env`, o que é correto. O problema não é armazená-la em env; é assegurar que **o tipo de credencial corresponda ao ambiente**.
 
@@ -171,7 +171,7 @@ O caso de uso atual pode ser descrito honestamente como organização de ligas e
 | Desenvolvimento local, integração Riot desabilitada | **Aceitável para desenvolvimento** |
 | Protótipo privado com development key válida | **Aceitável temporariamente**, desde que não seja disponibilizado ao público |
 | Pequena comunidade estritamente privada com personal key registrada | **Depende da aprovação/classificação da Riot** |
-| Site público com `RIOT_DEVELOPMENT_API_KEY` ou personal key | **Não lançar** |
+| Site público com `RIOT_API_KEY` ou personal key | **Não lançar** |
 | Site público sem aviso legal visível | **Não lançar** |
 | Site público registrado, production key, aviso legal e rate limit corrigidos | **Tecnicamente elegível**, sujeito à decisão final da Riot |
 | Torneios com menos de 20 participantes | **Não lançar como torneio Riot** |

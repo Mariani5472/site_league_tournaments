@@ -230,6 +230,9 @@ export function LandingPage() {
                         <p className="mt-1 text-sm text-muted-foreground">
                             {t("landing.footer.description")}
                         </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            {t("landing.footer.description")}
+                        </p>
                         <p className="mt-2 text-xs text-muted-foreground">
                             {t("landing.footer.copyright", { year: new Date().getFullYear() })}
                         </p>

@@ -118,6 +118,6 @@ As páginas do frontend são divididas por rota e carregadas sob demanda. O buil
 
 A tabela de conta Riot foi preservada apenas como metadado opcional de perfil para ambientes que já a utilizavam. Nenhuma liga, lobby, partida, voto ou classificação exige conta ou credencial Riot. Campos antigos de sincronização de partidas são removidos pela migration nova.
 
-A API inicia normalmente sem `RIOT_DEVELOPMENT_API_KEY` e `RIOT_REGION`. O cliente Riot é criado somente durante uma tentativa de vinculação quando ambas estão configuradas. Sem configuração, o frontend oculta o formulário; contas já vinculadas continuam visíveis e podem ser desvinculadas.
+A API inicia normalmente sem `RIOT_API_KEY` e `RIOT_REGION`. O cliente Riot é criado somente durante uma tentativa de vinculação quando ambas estão configuradas. Sem configuração, o frontend oculta o formulário; contas já vinculadas continuam visíveis e podem ser desvinculadas.
 
 Não há correção administrativa de uma partida já finalizada; a resolução administrativa é permitida somente enquanto a votação está aberta. A autenticação HTTP completa continua dependendo de um projeto Supabase configurado; os testes de domínio e autorização interna usam PostgreSQL isolado e não criam usuários no Supabase.
