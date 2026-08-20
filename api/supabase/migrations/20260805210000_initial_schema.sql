@@ -38,8 +38,6 @@ create table public.leagues (
   description text,
   visibility varchar(20) not null constraint leagues_visibility_check check (visibility in ('public', 'private')),
   join_policy varchar(20) not null constraint leagues_join_policy_check check (join_policy in ('open', 'request', 'invite_only')),
-  lobby_creation_policy varchar(20) not null default 'admins' constraint leagues_lobby_creation_policy_check check (lobby_creation_policy in ('admins', 'members')),
-  auto_start_lobby boolean not null default false,
   max_players integer not null constraint leagues_max_players_check check (max_players between 2 and 500),
   created_at timestamp default current_timestamp
 );
@@ -64,23 +62,6 @@ create table public.league_join_requests (
 create unique index unique_pending_join_request
   on public.league_join_requests (league_id, user_id)
   where status = 'pending';
-
-create table public.league_invitations (
-  id uuid primary key default gen_random_uuid(),
-  league_id uuid not null references public.leagues(id) on delete cascade,
-  recipient_id uuid not null references public.users(id) on delete cascade,
-  invited_by uuid not null references public.users(id) on delete cascade,
-  status varchar(20) not null default 'pending' constraint league_invitations_status_check check (status in ('pending', 'accepted', 'rejected', 'cancelled')),
-  created_at timestamp not null default current_timestamp,
-  updated_at timestamp not null default current_timestamp
-);
-
-create unique index unique_pending_league_invitation
-  on public.league_invitations (league_id, recipient_id)
-  where status = 'pending';
-
-create index league_invitations_recipient_cursor_idx
-  on public.league_invitations (recipient_id, id);
 
 create table public.lobbies (
   id uuid primary key default gen_random_uuid(),
@@ -267,7 +248,6 @@ alter table public.riot_accounts enable row level security;
 alter table public.leagues enable row level security;
 alter table public.league_members enable row level security;
 alter table public.league_join_requests enable row level security;
-alter table public.league_invitations enable row level security;
 alter table public.lobbies enable row level security;
 alter table public.lobby_players enable row level security;
 alter table public.matches enable row level security;
