@@ -8,7 +8,9 @@ const databaseUrl = process.env.DATABASE_URL;
 const referenceUrl = process.env.REFERENCE_DATABASE_URL;
 
 if (!cutoff || !databaseUrl || !referenceUrl) {
-  console.error("Usage: DATABASE_URL=... REFERENCE_DATABASE_URL=... npm run migrate:adopt -- <cutoff-migration-name>");
+  console.error(
+    "Usage: DATABASE_URL=... REFERENCE_DATABASE_URL=... npm run migrate:adopt -- <cutoff-migration-name>"
+  );
   process.exit(2);
 }
 if (databaseUrl === referenceUrl) {
