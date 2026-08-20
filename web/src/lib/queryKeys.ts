@@ -1,4 +1,11 @@
 export const queryKeys = {
+    ops: {
+        session: ["ops", "session"] as const,
+        users: (search: string) => ["ops", "users", search] as const,
+        user: (userId: string) => ["ops", "users", userId, "detail"] as const,
+        leagues: (search: string) => ["ops", "leagues", search] as const,
+        league: (leagueId: string) => ["ops", "leagues", leagueId, "detail"] as const,
+    },
     dashboard: ["dashboard"] as const,
     profile: {
         me: ["profile", "me"] as const,

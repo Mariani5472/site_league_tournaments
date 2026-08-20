@@ -2,6 +2,8 @@ import { z } from "zod";
 import { cursorPaginationSchema } from "../../schemas/pagination.schemas";
 
 export const platformRoleParamsSchema = z.object({ userId: z.uuid() }).strict();
+export const opsUserParamsSchema = z.object({ userId: z.uuid() }).strict();
+export const opsLeagueParamsSchema = z.object({ leagueId: z.uuid() }).strict();
 const secretLikeReason =
     /(?:bearer\s+|(?:token|secret|password|api[_-]?key)\s*[:=]|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.)/i;
 export const platformRoleMutationSchema = z.object({
@@ -23,3 +25,14 @@ export const platformAuditQuerySchema = cursorPaginationSchema
         message: "from must be before or equal to to",
         path: ["from"],
     });
+
+export const opsUsersQuerySchema = cursorPaginationSchema.extend({
+    search: z.string().trim().max(100).default(""),
+    platformRole: z.enum(["super_admin", "none"]).optional(),
+});
+
+export const opsLeaguesQuerySchema = cursorPaginationSchema.extend({
+    search: z.string().trim().max(100).default(""),
+    visibility: z.enum(["public", "private"]).optional(),
+    operationalStatus: z.enum(["active", "idle"]).optional(),
+});

@@ -66,6 +66,24 @@ const InvitationsPage = lazy(() =>
         default: module.InvitationsPage,
     }))
 );
+const OpsGuard = lazy(() =>
+    import("@/modules/ops/OpsGuard").then(module => ({ default: module.OpsGuard }))
+);
+const OpsDirectoryPage = lazy(() =>
+    import("@/modules/ops/pages/OpsDirectoryPage").then(module => ({
+        default: module.OpsDirectoryPage,
+    }))
+);
+const OpsUserDetailPage = lazy(() =>
+    import("@/modules/ops/pages/OpsUserDetailPage").then(module => ({
+        default: module.OpsUserDetailPage,
+    }))
+);
+const OpsLeagueDetailPage = lazy(() =>
+    import("@/modules/ops/pages/OpsLeagueDetailPage").then(module => ({
+        default: module.OpsLeagueDetailPage,
+    }))
+);
 
 export function RouteLoadingFallback() {
     return (
@@ -103,6 +121,14 @@ export function AppRoutes() {
                         <Route path="/matches/:matchId" element={<MatchDetailPage />} />
                         <Route path="/leagues/:id/settings" element={<LeagueSettingsPage />} />
                         <Route path="/leagues/:leagueId/lobbies/:lobbyId" element={<LobbyPage />} />
+                        <Route element={<OpsGuard />}>
+                            <Route path="/ops" element={<OpsDirectoryPage />} />
+                            <Route path="/ops/users/:userId" element={<OpsUserDetailPage />} />
+                            <Route
+                                path="/ops/leagues/:leagueId"
+                                element={<OpsLeagueDetailPage />}
+                            />
+                        </Route>
                     </Route>
                     <Route path="/forbidden" element={<HttpStatusPage kind="forbidden" />} />
                     <Route path="*" element={<HttpStatusPage kind="notFound" />} />

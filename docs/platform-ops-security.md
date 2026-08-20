@@ -38,3 +38,12 @@ edição ou exclusão. `GET /ops/audit` exige super admin, MFA e reautenticaçã
 e limite, além de filtros por `actorId`, `action`, `targetType`, `targetId`, `from` e `to`. A
 ordenação estável é `created_at DESC, id DESC`. O `correlationId` retornado é o mesmo request ID
 presente nos logs técnicos da operação.
+
+## Diretório operacional
+
+`GET /ops/users` e `GET /ops/leagues` usam projeções mínimas, paginação por cursor e um rate limit
+dedicado por operador (`OPS_SEARCH_RATE_LIMIT`, padrão 30 por
+`OPS_SEARCH_RATE_LIMIT_WINDOW_MS`, padrão 60000 ms). Listas não retornam email; ele aparece somente
+no detalhe de usuário. Busca e filtros aceitam apenas campos tipados, e todos os SQLs usam
+parâmetros. Detalhes agregam memberships e atividade recente sem expor tokens, Riot PUUID ou
+outros secrets.

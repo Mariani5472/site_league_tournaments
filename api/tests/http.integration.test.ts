@@ -124,6 +124,112 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal((await authorized.json() as { role: string }).role, "super_admin");
     });
 
+    test("ops directory paginates minimal lists and exposes operational details", async () => {
+        await db.query(
+            "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",
+            [ids[6]]
+        );
+        const league = await createLeague(ids[7], {
+            name: "Operations League",
+            visibility: "public",
+        });
+        const lobby = await db.query<{ id: string }>(`
+            INSERT INTO lobbies (league_id, status, max_players, created_by)
+            VALUES ($1, 'in_game', 2, $2) RETURNING id
+        `, [league.id, ids[7]]);
+        await db.query(`
+            INSERT INTO lobby_players (lobby_id, user_id, team_number, is_ready)
+            VALUES ($1, $2, 1, true)
+        `, [lobby.rows[0].id, ids[7]]);
+        const match = await db.query<{ id: string }>(`
+            INSERT INTO matches (lobby_id, league_id, status, started_at)
+            VALUES ($1, $2, 'in_game', current_timestamp) RETURNING id
+        `, [lobby.rows[0].id, league.id]);
+        await db.query(`
+            INSERT INTO match_players (match_id, user_id, team_number, nickname_snapshot)
+            VALUES ($1, $2, 1, 'ops-owner')
+        `, [match.rows[0].id, ids[7]]);
+
+        assert.equal((await request("/ops/users?limit=2", { userId: ids[8] })).status, 403);
+        const usersResponse = await request("/ops/users?limit=2", { userId: ids[6] });
+        assert.equal(usersResponse.status, 200);
+        const users = await usersResponse.json() as {
+            items: Array<Record<string, unknown> & { id: string }>;
+            nextCursor: string | null;
+        };
+        assert.equal(users.items.length, 2);
+        assert.ok(users.nextCursor);
+        assert.equal("email" in users.items[0], false);
+        const nextUsers = await request(`/ops/users?limit=2&cursor=${users.nextCursor}`, {
+            userId: ids[6],
+        });
+        const nextUsersPage = await nextUsers.json() as { items: Array<{ id: string }> };
+        assert.equal(nextUsersPage.items.some(item => users.items.some(first => first.id === item.id)), false);
+
+        const nicknameSearch = await request("/ops/users?search=http-user8", {
+            userId: ids[6],
+        });
+        const nicknameUsers = await nicknameSearch.json() as { items: Array<{ id: string }> };
+        assert.deepEqual(nicknameUsers.items.map(item => item.id), [ids[7]]);
+        const uuidSearch = await request(`/ops/users?search=${ids[7]}`, { userId: ids[6] });
+        assert.deepEqual(
+            (await uuidSearch.json() as { items: Array<{ id: string }> }).items.map(item => item.id),
+            [ids[7]]
+        );
+        const roleFilter = await request("/ops/users?platformRole=super_admin", {
+            userId: ids[6],
+        });
+        assert.deepEqual(
+            (await roleFilter.json() as { items: Array<{ id: string }> }).items.map(item => item.id),
+            [ids[6]]
+        );
+
+        const userDetail = await request(`/ops/users/${ids[7]}`, { userId: ids[6] });
+        const user = await userDetail.json() as {
+            email: string;
+            memberships: Array<{ leagueId: string }>;
+            activeLobby: { id: string } | null;
+            recentMatches: Array<{ id: string }>;
+        };
+        assert.equal(user.email, "http-user8@test.local");
+        assert.deepEqual(user.memberships.map(item => item.leagueId), [league.id]);
+        assert.equal(user.activeLobby?.id, lobby.rows[0].id);
+        assert.deepEqual(user.recentMatches.map(item => item.id), [match.rows[0].id]);
+
+        const leaguesResponse = await request("/ops/leagues?search=http-user8&operationalStatus=active", {
+            userId: ids[6],
+        });
+        const leagues = await leaguesResponse.json() as {
+            items: Array<Record<string, unknown> & { id: string }>;
+        };
+        assert.deepEqual(leagues.items.map(item => item.id), [league.id]);
+        assert.equal("email" in leagues.items[0], false);
+        const leagueUuidSearch = await request(
+            `/ops/leagues?search=${league.id}&visibility=public`,
+            { userId: ids[6] }
+        );
+        assert.deepEqual(
+            (await leagueUuidSearch.json() as { items: Array<{ id: string }> }).items.map(
+                item => item.id
+            ),
+            [league.id]
+        );
+
+        const leagueDetail = await request(`/ops/leagues/${league.id}`, { userId: ids[6] });
+        const detail = await leagueDetail.json() as {
+            ownerId: string;
+            operationalStatus: string;
+            members: Array<{ userId: string }>;
+            recentLobbies: Array<{ id: string }>;
+            recentMatches: Array<{ id: string }>;
+        };
+        assert.equal(detail.ownerId, ids[7]);
+        assert.equal(detail.operationalStatus, "active");
+        assert.ok(detail.members.some(member => member.userId === ids[7]));
+        assert.deepEqual(detail.recentLobbies.map(item => item.id), [lobby.rows[0].id]);
+        assert.deepEqual(detail.recentMatches.map(item => item.id), [match.rows[0].id]);
+    });
+
     test("sensitive ops require MFA and recent authentication", async () => {
         await db.query(
             "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",

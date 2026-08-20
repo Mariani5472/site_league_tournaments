@@ -2,15 +2,21 @@ import type { Request, Response } from "express";
 import { opsSecurityPolicy } from "../../middlewares/ops-auth.middleware";
 import {
     platformAuditQuerySchema,
+    opsLeagueParamsSchema,
+    opsLeaguesQuerySchema,
+    opsUserParamsSchema,
+    opsUsersQuerySchema,
     platformRoleMutationSchema,
     platformRoleParamsSchema,
 } from "./ops.schemas";
 import { PlatformAuditService } from "./platform-audit.service";
 import { PlatformRolesService } from "./platform-roles.service";
+import { OpsDirectoryService } from "./ops-directory.service";
 
 export class OpsController {
     private readonly roles = new PlatformRolesService();
     private readonly audit = new PlatformAuditService();
+    private readonly directory = new OpsDirectoryService();
 
     session(request: Request, response: Response) {
         return response.json({
@@ -63,5 +69,25 @@ export class OpsController {
     async listAudit(request: Request, response: Response) {
         const query = platformAuditQuerySchema.parse(request.query);
         return response.json(await this.audit.list(query));
+    }
+
+    async listUsers(request: Request, response: Response) {
+        return response.json(await this.directory.listUsers(opsUsersQuerySchema.parse(request.query)));
+    }
+
+    async userDetail(request: Request, response: Response) {
+        const { userId } = opsUserParamsSchema.parse(request.params);
+        return response.json(await this.directory.userDetail(userId));
+    }
+
+    async listLeagues(request: Request, response: Response) {
+        return response.json(
+            await this.directory.listLeagues(opsLeaguesQuerySchema.parse(request.query))
+        );
+    }
+
+    async leagueDetail(request: Request, response: Response) {
+        const { leagueId } = opsLeagueParamsSchema.parse(request.params);
+        return response.json(await this.directory.leagueDetail(leagueId));
     }
 }
