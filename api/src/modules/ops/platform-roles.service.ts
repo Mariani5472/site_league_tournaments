@@ -3,18 +3,29 @@ import { AppError } from "../../utils/AppError";
 import { UsersRepository } from "../users/users.repository";
 import { PlatformRolesRepository } from "./platform-roles.repository";
 import type { PlatformRole } from "./platform-roles.types";
+import { PlatformAuditRepository } from "./platform-audit.repository";
+
+type ChangePlatformRole = {
+    actorId: string;
+    userId: string;
+    role: PlatformRole;
+    reason: string;
+    correlationId: string;
+};
 
 export class PlatformRolesService {
     constructor(
         private readonly roles = new PlatformRolesRepository(),
-        private readonly users = new UsersRepository()
+        private readonly users = new UsersRepository(),
+        private readonly audit = new PlatformAuditRepository()
     ) {}
 
     findActive(userId: string, role: PlatformRole) {
         return this.roles.findActive(userId, role);
     }
 
-    async grant(actorId: string, userId: string, role: PlatformRole) {
+    async grant(command: ChangePlatformRole) {
+        const { actorId, userId, role, reason, correlationId } = command;
         if (actorId === userId) {
             throw new AppError("Operators cannot change their own platform role", 409);
         }
@@ -24,10 +35,35 @@ export class PlatformRolesService {
         if (await this.roles.findActive(userId, role)) {
             throw new AppError("Platform role is already active", 409);
         }
-        return this.roles.grant(userId, role, actorId);
+        const client = await db.connect();
+        try {
+            await client.query("BEGIN");
+            const options = { executor: client };
+            const assignment = await this.roles.grant(userId, role, actorId, options);
+            await this.audit.append(
+                {
+                    actorId,
+                    action: "platform_role.granted",
+                    targetType: "user",
+                    targetId: userId,
+                    reason,
+                    metadata: { role },
+                    correlationId,
+                },
+                options
+            );
+            await client.query("COMMIT");
+            return assignment;
+        } catch (error) {
+            await client.query("ROLLBACK");
+            throw error;
+        } finally {
+            client.release();
+        }
     }
 
-    async revoke(actorId: string, userId: string, role: PlatformRole) {
+    async revoke(command: ChangePlatformRole) {
+        const { actorId, userId, role, reason, correlationId } = command;
         if (actorId === userId) {
             throw new AppError("Operators cannot change their own platform role", 409);
         }
@@ -42,6 +78,18 @@ export class PlatformRolesService {
                 throw new AppError("Platform must retain at least one active super admin", 409);
             }
             const revoked = await this.roles.revoke(assignment.id, actorId, options);
+            await this.audit.append(
+                {
+                    actorId,
+                    action: "platform_role.revoked",
+                    targetType: "user",
+                    targetId: userId,
+                    reason,
+                    metadata: { role },
+                    correlationId,
+                },
+                options
+            );
             await client.query("COMMIT");
             return revoked;
         } catch (error) {

@@ -1,10 +1,16 @@
 import type { Request, Response } from "express";
 import { opsSecurityPolicy } from "../../middlewares/ops-auth.middleware";
-import { platformRoleParamsSchema } from "./ops.schemas";
+import {
+    platformAuditQuerySchema,
+    platformRoleMutationSchema,
+    platformRoleParamsSchema,
+} from "./ops.schemas";
+import { PlatformAuditService } from "./platform-audit.service";
 import { PlatformRolesService } from "./platform-roles.service";
 
 export class OpsController {
     private readonly roles = new PlatformRolesService();
+    private readonly audit = new PlatformAuditService();
 
     session(request: Request, response: Response) {
         return response.json({
@@ -18,13 +24,44 @@ export class OpsController {
 
     async grantSuperAdmin(request: Request, response: Response) {
         const { userId } = platformRoleParamsSchema.parse(request.params);
-        const assignment = await this.roles.grant(request.user.id, userId, "super_admin");
+        const { reason } = platformRoleMutationSchema.parse(request.body);
+        const assignment = await this.roles.grant({
+            actorId: request.user.id,
+            userId,
+            role: "super_admin",
+            reason,
+            correlationId: request.requestId,
+        });
+        request.log.info({
+            operation: "ops.platform_role.grant",
+            targetType: "user",
+            targetId: userId,
+            correlationId: request.requestId,
+        }, "sensitive platform operation completed");
         return response.status(201).json(assignment);
     }
 
     async revokeSuperAdmin(request: Request, response: Response) {
         const { userId } = platformRoleParamsSchema.parse(request.params);
-        await this.roles.revoke(request.user.id, userId, "super_admin");
+        const { reason } = platformRoleMutationSchema.parse(request.body);
+        await this.roles.revoke({
+            actorId: request.user.id,
+            userId,
+            role: "super_admin",
+            reason,
+            correlationId: request.requestId,
+        });
+        request.log.info({
+            operation: "ops.platform_role.revoke",
+            targetType: "user",
+            targetId: userId,
+            correlationId: request.requestId,
+        }, "sensitive platform operation completed");
         return response.status(204).send();
+    }
+
+    async listAudit(request: Request, response: Response) {
+        const query = platformAuditQuerySchema.parse(request.query);
+        return response.json(await this.audit.list(query));
     }
 }

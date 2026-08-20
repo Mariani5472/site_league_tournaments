@@ -60,6 +60,7 @@ async function request(path: string, options: {
     method?: string;
     userId?: string;
     token?: string;
+    requestId?: string;
     body?: unknown;
 } = {}) {
     const address = server.address();
@@ -72,6 +73,9 @@ async function request(path: string, options: {
     }
     if (options.body !== undefined) {
         headers["content-type"] = "application/json";
+    }
+    if (options.requestId) {
+        headers["x-request-id"] = options.requestId;
     }
     return fetch(`http://127.0.0.1:${address.port}${path}`, {
         method: options.method ?? "GET",
@@ -130,15 +134,101 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal((await request(path, {
             method: "POST",
             token: `aal1:${ids[10]}`,
+            body: { reason: "Grant required for platform operations" },
         })).status, 403);
         assert.equal((await request(path, {
             method: "POST",
             token: `stale:${ids[10]}`,
+            body: { reason: "Grant required for platform operations" },
         })).status, 403);
+        assert.equal((await request(path, {
+            method: "POST",
+            userId: ids[10],
+            body: { reason: "Bearer sensitive-credential" },
+        })).status, 400);
+        assert.equal((await request(path, {
+            method: "POST",
+            userId: ids[10],
+            body: {
+                reason: "Grant required for platform operations",
+                metadata: { token: "raw-secret" },
+            },
+        })).status, 400);
 
-        const granted = await request(path, { method: "POST", userId: ids[10] });
+        const granted = await request(path, {
+            method: "POST",
+            userId: ids[10],
+            requestId: "ops-grant-correlation",
+            body: { reason: "Grant required for platform operations" },
+        });
         assert.equal(granted.status, 201);
         assert.equal((await granted.json() as { role: string }).role, "super_admin");
+
+        const audit = await request(
+            `/ops/audit?action=platform_role.granted&targetType=user&targetId=${ids[11]}&limit=1`,
+            { userId: ids[10] }
+        );
+        assert.equal(audit.status, 200);
+        const page = await audit.json() as {
+            items: Array<{
+                actorId: string;
+                targetId: string;
+                reason: string;
+                metadata: Record<string, unknown>;
+                correlationId: string;
+            }>;
+            nextCursor: string | null;
+        };
+        assert.equal(page.items.length, 1);
+        assert.equal(page.items[0].actorId, ids[10]);
+        assert.equal(page.items[0].targetId, ids[11]);
+        assert.equal(page.items[0].correlationId, "ops-grant-correlation");
+        assert.deepEqual(page.items[0].metadata, { role: "super_admin" });
+        assert.equal(page.nextCursor, null);
+
+        const revoked = await request(path, {
+            method: "DELETE",
+            userId: ids[10],
+            requestId: "ops-revoke-correlation",
+            body: { reason: "Access is no longer operationally required" },
+        });
+        assert.equal(revoked.status, 204);
+
+        const firstPage = await request(`/ops/audit?actorId=${ids[10]}&limit=1`, {
+            userId: ids[10],
+        });
+        const first = await firstPage.json() as {
+            items: Array<{ action: string; correlationId: string }>;
+            nextCursor: string | null;
+        };
+        assert.equal(first.items[0].action, "platform_role.revoked");
+        assert.equal(first.items[0].correlationId, "ops-revoke-correlation");
+        assert.ok(first.nextCursor);
+
+        const secondPage = await request(
+            `/ops/audit?actorId=${ids[10]}&limit=1&cursor=${first.nextCursor}`,
+            { userId: ids[10] }
+        );
+        const second = await secondPage.json() as {
+            items: Array<{ action: string }>;
+            nextCursor: string | null;
+        };
+        assert.deepEqual(second.items.map(item => item.action), ["platform_role.granted"]);
+        assert.equal(second.nextCursor, null);
+
+        const period = await request(
+            `/ops/audit?from=2020-01-01T00:00:00.000Z&to=2099-01-01T00:00:00.000Z&targetType=user&targetId=${ids[11]}`,
+            { userId: ids[10] }
+        );
+        const periodPage = await period.json() as { items: Array<{ action: string }> };
+        assert.deepEqual(periodPage.items.map(item => item.action), [
+            "platform_role.revoked",
+            "platform_role.granted",
+        ]);
+        assert.equal((await request(
+            "/ops/audit?from=2099-01-01T00:00:00.000Z&to=2020-01-01T00:00:00.000Z",
+            { userId: ids[10] }
+        )).status, 400);
     });
 
     test("ops reject dangerous self-actions and preserve the last super admin", async () => {
@@ -151,14 +241,57 @@ describe("HTTP API contracts", { concurrency: false }, () => {
         assert.equal((await request(selfPath, {
             method: "POST",
             userId: ids[12],
+            body: { reason: "Attempted unsafe self role change" },
         })).status, 409);
         assert.equal((await request(selfPath, {
             method: "DELETE",
             userId: ids[12],
+            body: { reason: "Attempted unsafe self role change" },
         })).status, 409);
 
         await assert.rejects(
             db.query("DELETE FROM platform_roles WHERE id = $1", [assignment.rows[0].id]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+    });
+
+    test("platform audit logs reject mutation and metadata outside the allowlist", async () => {
+        const audit = await db.query<{ id: string }>(`
+            INSERT INTO platform_audit_logs (
+                actor_id, action, target_type, target_id, reason, metadata, correlation_id
+            ) VALUES ($1, 'platform_role.granted', 'user', $2, $3, $4, $5)
+            RETURNING id
+        `, [
+            ids[6],
+            ids[7],
+            "Approved after a documented access review",
+            { role: "super_admin" },
+            "audit-append-only",
+        ]);
+
+        await assert.rejects(
+            db.query("UPDATE platform_audit_logs SET reason = $1 WHERE id = $2", [
+                "Attempted audit history replacement",
+                audit.rows[0].id,
+            ]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+        await assert.rejects(
+            db.query("DELETE FROM platform_audit_logs WHERE id = $1", [audit.rows[0].id]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+        await assert.rejects(
+            db.query(`
+                INSERT INTO platform_audit_logs (
+                    actor_id, action, target_type, target_id, reason, metadata, correlation_id
+                ) VALUES ($1, 'platform_role.granted', 'user', $2, $3, $4, $5)
+            `, [
+                ids[6],
+                ids[7],
+                "Invalid metadata must never be persisted",
+                { role: "super_admin", token: "secret" },
+                "audit-invalid-metadata",
+            ]),
             (error: NodeJS.ErrnoException) => error.code === "23514"
         );
     });

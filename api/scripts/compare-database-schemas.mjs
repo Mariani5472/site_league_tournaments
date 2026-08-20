@@ -71,7 +71,8 @@ export async function describeDatabase(databaseUrl) {
              'check_league_owner_consistency',
              'enforce_league_owner_from_league',
              'enforce_league_owner_from_member',
-             'protect_last_super_admin'
+             'protect_last_super_admin',
+             'protect_platform_audit_logs'
            )
          ORDER BY routine.proname
       `),

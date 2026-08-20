@@ -24,3 +24,17 @@ ambientes controlados; produção deve manter o padrão habilitado.
 
 Um operador não pode conceder ou revogar a própria role. A combinação dessa regra com a proteção
 do último administrador reduz erros irreversíveis e exige revisão por outro super admin.
+
+## Auditoria
+
+Concessões e revogações exigem uma justificativa explícita e gravam um registro em
+`platform_audit_logs` na mesma transação da alteração. O registro contém somente actor, ação,
+alvo, justificativa, correlation ID e a metadata allowlisted `{ role }`; payloads HTTP, tokens,
+segredos, email e outros dados pessoais não são copiados. Justificativas com formato aparente de
+credencial são rejeitadas.
+
+A tabela é append-only por trigger, possui RLS sem policies de cliente e não tem endpoints de
+edição ou exclusão. `GET /ops/audit` exige super admin, MFA e reautenticação recente, aceita cursor
+e limite, além de filtros por `actorId`, `action`, `targetType`, `targetId`, `from` e `to`. A
+ordenação estável é `created_at DESC, id DESC`. O `correlationId` retornado é o mesmo request ID
+presente nos logs técnicos da operação.

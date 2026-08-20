@@ -8,6 +8,7 @@ const controller = new OpsController();
 
 opsRoutes.use(authMiddleware, requirePlatformRole("super_admin"));
 opsRoutes.get("/session", controller.session.bind(controller));
+opsRoutes.get("/audit", requireSensitiveOpsAuth, controller.listAudit.bind(controller));
 opsRoutes.post(
     "/platform-roles/:userId/super-admin",
     requireSensitiveOpsAuth,
