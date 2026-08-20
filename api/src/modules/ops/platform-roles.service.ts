@@ -40,18 +40,15 @@ export class PlatformRolesService {
             await client.query("BEGIN");
             const options = { executor: client };
             const assignment = await this.roles.grant(userId, role, actorId, options);
-            await this.audit.append(
-                {
-                    actorId,
-                    action: "platform_role.granted",
-                    targetType: "user",
-                    targetId: userId,
-                    reason,
-                    metadata: { role },
-                    correlationId,
-                },
-                options
-            );
+            await this.audit.append({
+                actorId,
+                action: "platform_role.granted",
+                targetType: "user",
+                targetId: userId,
+                reason,
+                metadata: { role },
+                correlationId,
+            }, options);
             await client.query("COMMIT");
             return assignment;
         } catch (error) {
@@ -78,18 +75,15 @@ export class PlatformRolesService {
                 throw new AppError("Platform must retain at least one active super admin", 409);
             }
             const revoked = await this.roles.revoke(assignment.id, actorId, options);
-            await this.audit.append(
-                {
-                    actorId,
-                    action: "platform_role.revoked",
-                    targetType: "user",
-                    targetId: userId,
-                    reason,
-                    metadata: { role },
-                    correlationId,
-                },
-                options
-            );
+            await this.audit.append({
+                actorId,
+                action: "platform_role.revoked",
+                targetType: "user",
+                targetId: userId,
+                reason,
+                metadata: { role },
+                correlationId,
+            }, options);
             await client.query("COMMIT");
             return revoked;
         } catch (error) {
