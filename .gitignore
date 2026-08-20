@@ -3,6 +3,7 @@ node_modules/
 .pnpm-store/
 .vite/
 dist/
+api/supabase/.temp/
 
 # Variáveis de ambiente (Segurança!)
 .env
