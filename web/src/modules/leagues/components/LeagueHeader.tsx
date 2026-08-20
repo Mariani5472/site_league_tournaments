@@ -62,19 +62,19 @@ export function LeagueHeader({ league, isAdmin, isOwner, role }: Props) {
                     </Avatar>
                     <div className="min-w-0 flex-1 space-y-3">
                         <div className="flex flex-wrap gap-2">
-                        <span
-                            className="
+                            <span
+                                className="
               rounded-md
               border
               px-2
               py-1
               text-xs
             "
-                        >
-                            {labelVisibility(league.visibility)}
-                        </span>
+                            >
+                                {labelVisibility(league.visibility)}
+                            </span>
 
-                        <JoinPolicyBadge policy={league.joinPolicy} />
+                            <JoinPolicyBadge policy={league.joinPolicy} />
                         </div>
                         <h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">
                             {league.name}

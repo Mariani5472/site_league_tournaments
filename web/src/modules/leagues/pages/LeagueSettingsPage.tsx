@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ export function LeagueSettingsPage() {
                 : undefined,
         [league]
     );
-    const { register, handleSubmit, setValue, watch, reset, formState } =
+    const { register, handleSubmit, setValue, reset, formState, control } =
         useForm<LeagueSettingsForm>({
             resolver: zodResolver(leagueSettingsSchema),
             defaultValues: formValues ?? {
@@ -62,10 +62,10 @@ export function LeagueSettingsPage() {
                 bannerUrl: "",
             },
         });
-    const visibilityValue = watch("visibility");
-    const joinPolicyValue = watch("joinPolicy");
-    const lobbyCreationPolicy = watch("lobbyCreationPolicy");
-    const autoStartLobby = watch("autoStartLobby");
+    const [visibilityValue, joinPolicyValue, lobbyCreationPolicy, autoStartLobby] = useWatch({
+        control,
+        name: ["visibility", "joinPolicy", "lobbyCreationPolicy", "autoStartLobby"],
+    });
     useEffect(() => {
         if (formValues) {
             reset(formValues);
