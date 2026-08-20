@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { cursorPaginationSchema } from "../../schemas/pagination.schemas";
+import { imageUrlSchema } from "../../schemas/image.schemas";
 export const leagueParamsSchema = z.object({ leagueId: z.uuid() });
 export const listLeaguesQuerySchema = z.object({
     membership: z.union([z.string(), z.array(z.string())]).optional().transform(value => value ? [value].flat() : undefined),
@@ -39,7 +40,9 @@ export const updateLeagueSchema = z.object({
     joinPolicy: z.enum(["open", "request", "invite_only"]).optional(),
     maxPlayers: z.number().int().min(2).max(500).optional(),
     lobbyCreationPolicy: z.enum(["admins", "members"]).optional(),
-    autoStartLobby: z.boolean().optional()
+    autoStartLobby: z.boolean().optional(),
+    avatarUrl: imageUrlSchema.nullable().optional(),
+    bannerUrl: imageUrlSchema.nullable().optional()
 }).strict().refine(body => Object.keys(body).length > 0, {
     message: "At least one field must be provided"
 });

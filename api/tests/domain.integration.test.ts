@@ -300,6 +300,10 @@ describe("critical domain flows", { concurrency: false }, () => {
     });
     test("league update rejects unknown fields and invalid capacity reductions", async () => {
         assert.throws(() => updateLeagueSchema.parse({ name: "Valid name", ownerId: ids[2] }));
+        assert.throws(() => updateLeagueSchema.parse({ avatarUrl: "javascript:alert(1)" }));
+        assert.throws(() => updateLeagueSchema.parse({ avatarUrl: "ftp://images.test/league.png" }));
+        assert.throws(() => updateLeagueSchema.parse({ bannerUrl: "data:image/png;base64,nope" }));
+        assert.deepEqual(updateLeagueSchema.parse({ avatarUrl: null }), { avatarUrl: null });
         assert.deepEqual(
             updateLeagueSchema.parse({ name: "  Valid name  ", description: "  Description  " }),
             { name: "Valid name", description: "Description" }
@@ -307,6 +311,22 @@ describe("critical domain flows", { concurrency: false }, () => {
         const league = await createLeague();
         await leagues.join(league.id, ids[1]);
         await assert.rejects(() => leagues.update(league.id, ids[0], { maxPlayers: 1 }));
+        await assert.rejects(
+            () => leagues.update(league.id, ids[2], { avatarUrl: "https://images.test/nope.png" }),
+            /permissions/i
+        );
+        const withAvatar = await leagues.update(league.id, ids[0], {
+            avatarUrl: "https://images.test/league.png"
+        });
+        assert.equal(withAvatar.avatarUrl, "https://images.test/league.png");
+        const withoutAvatar = await leagues.update(league.id, ids[0], { avatarUrl: null });
+        assert.equal(withoutAvatar.avatarUrl, null);
+        const withBanner = await leagues.update(league.id, ids[0], {
+            bannerUrl: "https://images.test/league-banner.png"
+        });
+        assert.equal(withBanner.bannerUrl, "https://images.test/league-banner.png");
+        const withoutBanner = await leagues.update(league.id, ids[0], { bannerUrl: null });
+        assert.equal(withoutBanner.bannerUrl, null);
         const updated = await leagues.update(league.id, ids[0], { description: null });
         assert.equal(updated.description, null);
     });

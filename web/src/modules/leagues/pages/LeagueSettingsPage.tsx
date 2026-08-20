@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -41,26 +41,31 @@ export function LeagueSettingsPage() {
                       maxPlayers: league.maxPlayers,
                       lobbyCreationPolicy: league.lobbyCreationPolicy ?? "admins",
                       autoStartLobby: league.autoStartLobby ?? false,
+                      avatarUrl: league.avatarUrl ?? "",
+                      bannerUrl: league.bannerUrl ?? "",
                   }
                 : undefined,
         [league]
     );
-    const { register, handleSubmit, setValue, watch, reset } = useForm<LeagueSettingsForm>({
-        resolver: zodResolver(leagueSettingsSchema),
-        defaultValues: formValues ?? {
-            name: "",
-            description: "",
-            visibility: "private",
-            joinPolicy: "request",
-            maxPlayers: 10,
-            lobbyCreationPolicy: "admins",
-            autoStartLobby: false,
-        },
+    const { register, handleSubmit, setValue, reset, formState, control } =
+        useForm<LeagueSettingsForm>({
+            resolver: zodResolver(leagueSettingsSchema),
+            defaultValues: formValues ?? {
+                name: "",
+                description: "",
+                visibility: "private",
+                joinPolicy: "request",
+                maxPlayers: 10,
+                lobbyCreationPolicy: "admins",
+                autoStartLobby: false,
+                avatarUrl: "",
+                bannerUrl: "",
+            },
+        });
+    const [visibilityValue, joinPolicyValue, lobbyCreationPolicy, autoStartLobby] = useWatch({
+        control,
+        name: ["visibility", "joinPolicy", "lobbyCreationPolicy", "autoStartLobby"],
     });
-    const visibilityValue = watch("visibility");
-    const joinPolicyValue = watch("joinPolicy");
-    const lobbyCreationPolicy = watch("lobbyCreationPolicy");
-    const autoStartLobby = watch("autoStartLobby");
     useEffect(() => {
         if (formValues) {
             reset(formValues);
@@ -72,7 +77,14 @@ export function LeagueSettingsPage() {
     }
     function onSubmit(data: LeagueSettingsForm) {
         mutation.mutate(
-            { leagueId, data },
+            {
+                leagueId,
+                data: {
+                    ...data,
+                    avatarUrl: data.avatarUrl || null,
+                    bannerUrl: data.bannerUrl || null,
+                },
+            },
             {
                 onSuccess: () => {
                     toast.success(t("settings.updated"));
@@ -137,6 +149,54 @@ export function LeagueSettingsPage() {
                     <label htmlFor="league-description">{t("league.descriptionLabel")}</label>
 
                     <Input id="league-description" {...register("description")} />
+                </div>
+
+                <div>
+                    <label htmlFor="league-avatar-url">{t("settings.avatarUrl")}</label>
+                    <Input
+                        id="league-avatar-url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://"
+                        aria-describedby="league-avatar-help league-avatar-error"
+                        {...register("avatarUrl")}
+                    />
+                    <p id="league-avatar-help" className="mt-1 text-sm text-muted-foreground">
+                        {t("settings.avatarHelp")}
+                    </p>
+                    {formState.errors.avatarUrl && (
+                        <p
+                            id="league-avatar-error"
+                            role="alert"
+                            className="mt-1 text-sm text-destructive"
+                        >
+                            {formState.errors.avatarUrl.message}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <label htmlFor="league-banner-url">{t("settings.bannerUrl")}</label>
+                    <Input
+                        id="league-banner-url"
+                        type="url"
+                        inputMode="url"
+                        placeholder="https://"
+                        aria-describedby="league-banner-help league-banner-error"
+                        {...register("bannerUrl")}
+                    />
+                    <p id="league-banner-help" className="mt-1 text-sm text-muted-foreground">
+                        {t("settings.bannerHelp")}
+                    </p>
+                    {formState.errors.bannerUrl && (
+                        <p
+                            id="league-banner-error"
+                            role="alert"
+                            className="mt-1 text-sm text-destructive"
+                        >
+                            {formState.errors.bannerUrl.message}
+                        </p>
+                    )}
                 </div>
 
                 <div>

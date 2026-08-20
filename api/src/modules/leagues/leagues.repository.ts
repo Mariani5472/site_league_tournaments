@@ -142,6 +142,8 @@ export class LeaguesRepository {
         maxPlayers?: number;
         lobbyCreationPolicy?: "admins" | "members";
         autoStartLobby?: boolean;
+        avatarUrl?: string | null;
+        bannerUrl?: string | null;
     }, options: QueryOptions = {}): Promise<League> {
         const { executor = db } = options;
         const query = `
@@ -153,7 +155,9 @@ export class LeaguesRepository {
         join_policy = COALESCE($6, join_policy),
         max_players = COALESCE($7, max_players),
         lobby_creation_policy = COALESCE($8, lobby_creation_policy),
-        auto_start_lobby = COALESCE($9, auto_start_lobby)
+        auto_start_lobby = COALESCE($9, auto_start_lobby),
+        avatar_url = CASE WHEN $10::boolean THEN $11 ELSE avatar_url END,
+        banner_url = CASE WHEN $12::boolean THEN $13 ELSE banner_url END
       WHERE id = $1
       RETURNING *
     `;
@@ -166,7 +170,11 @@ export class LeaguesRepository {
             params.joinPolicy ?? null,
             params.maxPlayers ?? null,
             params.lobbyCreationPolicy ?? null,
-            params.autoStartLobby ?? null
+            params.autoStartLobby ?? null,
+            Object.hasOwn(params, "avatarUrl"),
+            params.avatarUrl ?? null,
+            Object.hasOwn(params, "bannerUrl"),
+            params.bannerUrl ?? null
         ]);
         return result.rows[0];
     }

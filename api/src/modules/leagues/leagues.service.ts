@@ -121,6 +121,8 @@ export class LeaguesService {
         maxPlayers?: number;
         lobbyCreationPolicy?: "admins" | "members";
         autoStartLobby?: boolean;
+        avatarUrl?: string | null;
+        bannerUrl?: string | null;
     }) {
         if (!leagueId) {
             throw new AppError("League not found", 404);

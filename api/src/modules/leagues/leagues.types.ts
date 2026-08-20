@@ -3,6 +3,8 @@ export type League = {
     ownerId: string;
     name: string;
     description?: string;
+    avatarUrl: string | null;
+    bannerUrl: string | null;
     visibility: "public" | "private";
     joinPolicy: "open" | "request" | "invite_only";
     lobbyCreationPolicy: "admins" | "members";

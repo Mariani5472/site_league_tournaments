@@ -281,6 +281,14 @@ export const ptBR = {
     "settings.title": "Editar liga",
     "settings.description": "Atualize as informações e regras da sua liga.",
     "settings.updated": "Liga atualizada.",
+    "settings.avatarUrl": "URL do avatar da liga",
+    "settings.avatarHelp":
+        "Use uma imagem HTTP ou HTTPS. Deixe vazio para remover e usar as iniciais da liga.",
+    "league.avatarAlt": "Avatar da liga {name}",
+    "settings.bannerUrl": "URL do banner da liga",
+    "settings.bannerHelp":
+        "Use uma imagem horizontal em HTTP ou HTTPS. Deixe vazio para remover o banner.",
+    "league.bannerAlt": "Banner da liga {name}",
     "settings.lobbyCreationPolicy": "Quem pode criar lobbies",
     "settings.lobbyCreationAdmins": "Somente owner e admins",
     "settings.lobbyCreationMembers": "Todos os membros",
