@@ -228,7 +228,7 @@ export function LandingPage() {
                     <div>
                         <p className="font-bold">FPL_LOL</p>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            {t("landing.footer.description")}
+                            {t("landing.footer.riotBoilerplate")}
                         </p>
                         <p className="mt-1 text-sm text-muted-foreground">
                             {t("landing.footer.description")}
