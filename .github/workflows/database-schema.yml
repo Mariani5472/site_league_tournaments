@@ -100,7 +100,11 @@ jobs:
         env:
           DATABASE_URL: ${{ env.UPGRADE_DATABASE_URL }}
       - name: Apply legacy Supabase baseline
-        run: psql "$BASELINE_DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260805210000_initial_schema.sql
+        run: |
+          find supabase/migrations -maxdepth 1 -type f -name '*.sql' | sort | while read -r file; do
+            echo "Running $file"
+            psql "$BASELINE_DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
+          done
       - name: Detect structural divergence
         run: npm run schema:compare -- "$CANONICAL_DATABASE_URL" "$BASELINE_DATABASE_URL"
       - name: Adopt current Supabase baseline history

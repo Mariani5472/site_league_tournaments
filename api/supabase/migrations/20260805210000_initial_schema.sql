@@ -11,27 +11,8 @@ create table public.users (
   avatar_url text,
   banner_url text,
   bio text,
-  operational_status varchar(20) not null default 'active',
-  restriction_reason varchar(500),
-  suspended_until timestamptz,
-  restricted_at timestamptz,
-  restricted_by uuid references public.users(id) on delete restrict,
-  session_revocation_status varchar(20) not null default 'not_required',
-  session_revocation_attempted_at timestamptz,
-  constraint users_operational_status_check
-    check (operational_status in ('active', 'suspended', 'banned')),
-  constraint users_session_revocation_status_check
-    check (session_revocation_status in ('not_required', 'pending', 'succeeded', 'failed')),
-  constraint users_operational_state_check check (
-    (operational_status = 'active' and restriction_reason is null and suspended_until is null)
-    or (operational_status = 'suspended' and restriction_reason is not null and suspended_until is not null)
-    or (operational_status = 'banned' and restriction_reason is not null and suspended_until is null)
-  ),
   created_at timestamp default current_timestamp
 );
-
-create index users_operational_status_index
-  on public.users (operational_status, suspended_until);
 
 create table public.platform_roles (
   id uuid primary key default gen_random_uuid(),
@@ -67,24 +48,17 @@ create table public.platform_audit_logs (
   correlation_id varchar(100) not null,
   created_at timestamp not null default current_timestamp,
   constraint platform_audit_logs_action_check check (
-    action in ('platform_role.granted', 'platform_role.revoked', 'user.suspended', 'user.unsuspended')
+    action in ('platform_role.granted', 'platform_role.revoked')
   ),
   constraint platform_audit_logs_target_type_check check (target_type in ('user')),
   constraint platform_audit_logs_reason_check check (
     char_length(btrim(reason)) between 10 and 500
   ),
   constraint platform_audit_logs_metadata_check check (
-    jsonb_typeof(metadata) = 'object' and (
-      (action in ('platform_role.granted', 'platform_role.revoked')
-        and metadata - 'role' = '{}'::jsonb and metadata ? 'role'
-        and metadata ->> 'role' in ('super_admin'))
-      or (action = 'user.suspended'
-        and metadata - array['status', 'suspendedUntil', 'sessionRevocationStatus'] = '{}'::jsonb
-        and metadata ->> 'status' = 'suspended'
-        and metadata ->> 'sessionRevocationStatus' = 'pending')
-      or (action = 'user.unsuspended'
-        and metadata - 'status' = '{}'::jsonb and metadata ->> 'status' = 'active')
-    )
+    jsonb_typeof(metadata) = 'object'
+    and metadata - 'role' = '{}'::jsonb
+    and metadata ? 'role'
+    and metadata ->> 'role' in ('super_admin')
   ),
   constraint platform_audit_logs_correlation_check check (
     correlation_id ~ '^[A-Za-z0-9._:-]{1,100}$'
