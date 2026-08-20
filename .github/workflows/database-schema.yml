@@ -80,7 +80,7 @@ jobs:
           dropdb --if-exists schema_upgrade
           createdb --template=schema_legacy_reference schema_upgrade
           psql "$UPGRADE_DATABASE_URL" -v ON_ERROR_STOP=1 \
-            -c 'DROP TABLE public.pgmigrations'
+            -c 'DROP TABLE IF EXISTS public.pgmigrations'
       - name: Verify legacy schema before adopting history
         run: npm run schema:compare -- "$LEGACY_REFERENCE_DATABASE_URL" "$UPGRADE_DATABASE_URL"
       - name: Adopt legacy migration history without replay
