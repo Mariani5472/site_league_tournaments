@@ -70,7 +70,8 @@ export async function describeDatabase(databaseUrl) {
            AND routine.proname IN (
              'check_league_owner_consistency',
              'enforce_league_owner_from_league',
-             'enforce_league_owner_from_member'
+             'enforce_league_owner_from_member',
+             'protect_last_super_admin'
            )
          ORDER BY routine.proname
       `),

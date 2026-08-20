@@ -8,7 +8,7 @@ import { setHttpAuthenticatorForTests } from "../src/middlewares/auth.middleware
 import { initializeSocket } from "../src/websocket/socket";
 import { AppError } from "../src/utils/AppError";
 
-const ids = Array.from({ length: 6 }, (_, index) =>
+const ids = Array.from({ length: 14 }, (_, index) =>
     `10000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`
 );
 const server = http.createServer(app);
@@ -29,7 +29,15 @@ before(async () => {
         if (token === "invalid") {
             throw new AppError("Invalid token", 401);
         }
-        return { id: token, email: `${token}@test.local` };
+        const isAal1 = token.startsWith("aal1:");
+        const isStale = token.startsWith("stale:");
+        const id = isAal1 || isStale ? token.slice(token.indexOf(":") + 1) : token;
+        return {
+            id,
+            email: `${id}@test.local`,
+            authenticationAssuranceLevel: isAal1 ? "aal1" : "aal2",
+            authenticatedAt: new Date(Date.now() - (isStale ? 60 * 60 * 1000 : 0)),
+        };
     });
     await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
 });
@@ -90,6 +98,85 @@ async function createLeague(ownerId = ids[0], overrides: Record<string, unknown>
 }
 
 describe("HTTP API contracts", { concurrency: false }, () => {
+    test("ops authorization isolates platform roles from common and league roles", async () => {
+        await db.query(
+            "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",
+            [ids[6]]
+        );
+        const league = await createLeague(ids[7]);
+        await db.query(
+            `INSERT INTO league_members (league_id, user_id, role)
+             VALUES ($1, $2, 'admin')`,
+            [league.id, ids[8]]
+        );
+
+        assert.equal((await request("/ops/session")).status, 401);
+        assert.equal((await request("/ops/session", { userId: ids[9] })).status, 403);
+        assert.equal((await request("/ops/session", { userId: ids[7] })).status, 403);
+        assert.equal((await request("/ops/session", { userId: ids[8] })).status, 403);
+
+        const authorized = await request("/ops/session", { userId: ids[6] });
+        assert.equal(authorized.status, 200);
+        assert.equal((await authorized.json() as { role: string }).role, "super_admin");
+    });
+
+    test("sensitive ops require MFA and recent authentication", async () => {
+        await db.query(
+            "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin')",
+            [ids[10]]
+        );
+        const path = `/ops/platform-roles/${ids[11]}/super-admin`;
+
+        assert.equal((await request(path, {
+            method: "POST",
+            token: `aal1:${ids[10]}`,
+        })).status, 403);
+        assert.equal((await request(path, {
+            method: "POST",
+            token: `stale:${ids[10]}`,
+        })).status, 403);
+
+        const granted = await request(path, { method: "POST", userId: ids[10] });
+        assert.equal(granted.status, 201);
+        assert.equal((await granted.json() as { role: string }).role, "super_admin");
+    });
+
+    test("ops reject dangerous self-actions and preserve the last super admin", async () => {
+        const assignment = await db.query<{ id: string }>(
+            "INSERT INTO platform_roles (user_id, role) VALUES ($1, 'super_admin') RETURNING id",
+            [ids[12]]
+        );
+        const selfPath = `/ops/platform-roles/${ids[12]}/super-admin`;
+
+        assert.equal((await request(selfPath, {
+            method: "POST",
+            userId: ids[12],
+        })).status, 409);
+        assert.equal((await request(selfPath, {
+            method: "DELETE",
+            userId: ids[12],
+        })).status, 409);
+
+        await assert.rejects(
+            db.query("DELETE FROM platform_roles WHERE id = $1", [assignment.rows[0].id]),
+            (error: NodeJS.ErrnoException) => error.code === "23514"
+        );
+    });
+
+    test("the common profile contract cannot mutate platform roles", async () => {
+        const response = await request("/profile", {
+            method: "PATCH",
+            userId: ids[13],
+            body: { nickname: "safe-profile", platformRole: "super_admin" },
+        });
+        assert.equal(response.status, 400);
+        const assignment = await db.query(
+            "SELECT id FROM platform_roles WHERE user_id = $1 AND revoked_at IS NULL",
+            [ids[13]]
+        );
+        assert.equal(assignment.rowCount, 0);
+    });
+
     test("invite-only leagues persist recipient-controlled invitations and enforce capacity", async () => {
         const league = await createLeague(ids[0], { joinPolicy: "invite_only", maxPlayers: 2 });
         const invitePath = `/leagues/${league.id}/invitations`;

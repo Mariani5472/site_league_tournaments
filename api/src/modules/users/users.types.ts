@@ -21,7 +21,10 @@ export type User = {
 /**
  * Contrato público minimalista contendo apenas os dados essenciais de identificação.
  */
-export type UserIdentity = Pick<User, 'id' | 'email'>;
+export type UserIdentity = Pick<User, 'id' | 'email'> & {
+    authenticationAssuranceLevel?: "aal1" | "aal2";
+    authenticatedAt?: Date;
+};
 /**
  * Dados necessários para a criação de um novo usuário no sistema.
  */

@@ -3,6 +3,7 @@ declare global {
     namespace Express {
         interface Request {
             user: UserIdentity;
+            platformRole?: "super_admin";
             requestId: string;
         }
     }
