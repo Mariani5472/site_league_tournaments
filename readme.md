@@ -167,6 +167,7 @@ Os testes de integração limpam as tabelas entre cenários. Execute-os somente 
 As decisões e rotinas de engenharia permanecem documentadas para quem quiser explorar o projeto em profundidade:
 
 - [Decisões arquiteturais](docs/adr)
+- [Handoff de produto e fluxos para UI/UX](docs/product/README.md)
 - [Migrations e evolução do schema](docs/migrations.md)
 - [Contrato de erros](docs/error-contract.md)
 - [Sessão, cache e realtime no frontend](docs/frontend-session-query-realtime.md)
